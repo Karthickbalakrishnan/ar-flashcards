@@ -234,13 +234,12 @@
     device-orientation-permission-ui="enabled: false">
     
     <a-assets>
-      <!-- Base Liver Model -->
       <a-asset-item id="liverModel" src="./liver.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Dynamic Lighting System -->
+    <!-- Scene Lighting -->
     <a-light id="ambient-light" type="ambient" intensity="1.8"></a-light>
     <a-light id="dir-light" type="directional" position="1 2 3" intensity="2.5"></a-light>
 
@@ -271,7 +270,7 @@
 
     <!-- TARGET 5: Visceral Anatomy -->
     <a-entity mindar-image-target="targetIndex: 5" id="target-5">
-      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="90 45 0" gesture-rotation></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="90 45 0" gesture-controls></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 6: Diaphragmatic Surface -->
@@ -300,13 +299,11 @@
       const cardDesc = document.getElementById("card-desc");
       const impactTag = document.getElementById("impact-tag");
 
-      // App State
       let activeTarget = null;
       let activeStage = "healthy";
       let alcoholActive = false;
       let smokingActive = false;
 
-      // Loading Screen Dismissal
       const dismissLoading = () => {
         loadingScreen.style.opacity = "0";
         setTimeout(() => { loadingScreen.style.display = "none"; }, 400);
@@ -314,7 +311,6 @@
       sceneEl.addEventListener("arReady", dismissLoading);
       setTimeout(dismissLoading, 4000);
 
-      // Base Anatomical Descriptions
       const cardDetails = {
         "target-0": { title: "Anterior View", desc: "Showcases the right and left lobes, falciform ligament, and gallbladder." },
         "target-1": { title: "Posterior View", desc: "Exposes the portal triad (portal vein, hepatic artery, bile duct) and IVC." },
@@ -327,7 +323,44 @@
         "target-8": { title: "Hepatic Segments", desc: "Vascular tree mapping 8 Couinaud functional segments." }
       };
 
-      // Updates Card Info Based on Combined Lifestyle Effects
+      // Real-time Material & Mesh Morphing Engine
+      const applyPathologyToMesh = () => {
+        document.querySelectorAll(".target-model").forEach((modelEl) => {
+          const mesh = modelEl.getObject3D('mesh');
+          if (!mesh) return;
+
+          mesh.traverse((node) => {
+            if (node.isMesh && node.material) {
+              // Reset base color
+              let targetColor = new THREE.Color(0xffffff);
+              let targetRoughness = 0.5;
+
+              // Stage Morphing Logic
+              if (activeStage === "fatty") {
+                targetColor.setHex(0xd97706); // Fatty yellowish-brown hue
+                targetRoughness = 0.25;        // Greasy sheen
+              } else if (activeStage === "cirrhosis") {
+                targetColor.setHex(0x7f1d1d); // Dark fibrotic purple-red
+                targetRoughness = 0.95;        // Rough, scarred surface
+              }
+
+              // Habit Impact Morphing
+              if (smokingActive && !alcoholActive) {
+                targetColor.multiplyScalar(0.65); // Hypoxia / toxic darkening
+              } else if (alcoholActive && !smokingActive) {
+                if (activeStage === "healthy") targetColor.setHex(0xb91c1c); // Inflammation / Acute Hepatitis
+              } else if (alcoholActive && smokingActive) {
+                targetColor.setHex(0x450a0a); // Severe combined necrotic tissue damage
+              }
+
+              node.material.color = targetColor;
+              node.material.roughness = targetRoughness;
+              node.material.needsUpdate = true;
+            }
+          });
+        });
+      };
+
       const updateCardDisplay = () => {
         if (!activeTarget) return;
 
@@ -335,19 +368,17 @@
         cardTitle.innerText = `${base.title} (${activeStage.toUpperCase()})`;
 
         let descriptionText = base.desc;
-
         if (activeStage === "fatty") {
-          descriptionText = "Steatosis: Triglycerides accumulate in hepatocytes, enlarging the liver with a yellowish tint.";
+          descriptionText = "Steatosis: Triglycerides accumulate in hepatocytes, enlarging the organ with a greasy yellowish tint.";
         } else if (activeStage === "cirrhosis") {
-          descriptionText = "Cirrhosis: Irreversible fibrotic scarring replaces functional parenchymal tissue.";
+          descriptionText = "Cirrhosis: Fibrotic scarring destroys hepatic lobules, causing permanent vascular restriction.";
         }
 
         cardDesc.innerText = descriptionText;
 
-        // Custom Habit Impact Banner Text
         let impacts = [];
         if (alcoholActive) impacts.push("🍺 Acetaldehyde Toxicity & Lipid Accumulation");
-        if (smokingActive) impacts.push("🚬 Vasoconstriction & Oxidative Stress");
+        if (smokingActive) impacts.push("🚬 Vasoconstriction & Hypoxic Stress");
 
         if (impacts.length > 0) {
           impactTag.innerText = impacts.join(" | ");
@@ -357,23 +388,14 @@
         }
       };
 
-      // Stage Selector Click Handler
+      // Stage Selection Handler
       document.querySelectorAll(".stage-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           document.querySelectorAll(".stage-btn").forEach((b) => b.classList.remove("active"));
           e.target.classList.add("active");
           activeStage = e.target.dataset.stage;
 
-          // Visual Shader/Lighting Modification to Simulate Liver Stages
-          const ambLight = document.getElementById("ambient-light");
-          if (activeStage === "fatty") {
-            ambLight.setAttribute("color", "#fef08a"); // Yellowish cast for steatosis
-          } else if (activeStage === "cirrhosis") {
-            ambLight.setAttribute("color", "#fca5a5"); // Darker/reddish-brown fibrotic tint
-          } else {
-            ambLight.setAttribute("color", "#ffffff"); // Healthy natural light
-          }
-
+          applyPathologyToMesh();
           updateCardDisplay();
         });
       });
@@ -383,6 +405,7 @@
       btnAlcohol.addEventListener("click", () => {
         alcoholActive = !alcoholActive;
         btnAlcohol.classList.toggle("active", alcoholActive);
+        applyPathologyToMesh();
         updateCardDisplay();
       });
 
@@ -390,10 +413,11 @@
       btnSmoking.addEventListener("click", () => {
         smokingActive = !smokingActive;
         btnSmoking.classList.toggle("active", smokingActive);
+        applyPathologyToMesh();
         updateCardDisplay();
       });
 
-      // Zoom Controls
+      // Zoom Button Handlers
       document.getElementById("btn-zoom-in").addEventListener("click", () => {
         document.querySelectorAll(".target-model").forEach((model) => {
           if (model.components['gesture-controls']) model.components['gesture-controls'].zoomIn();
@@ -406,11 +430,13 @@
         });
       });
 
-      // Target Scanning Event Listeners
+      // Target Tracking Handler
       const targets = document.querySelectorAll("[mindar-image-target]");
       targets.forEach((target) => {
         target.addEventListener("targetFound", (event) => {
           activeTarget = event.target.id;
+          // Apply active pathology settings when model loads
+          setTimeout(applyPathologyToMesh, 200);
           updateCardDisplay();
           infoCard.style.display = "block";
         });
