@@ -1,260 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>AR Flashcard — Camera View</title>
-
-  <!-- A-Frame: the 3D/AR scene framework -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <!-- MindAR: image-tracking engine (recognizes your flashcard photo via the camera) -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
-  <style>
-    body { margin: 0; overflow: hidden; font-family: sans-serif; }
-    #loading {
-      position: fixed; inset: 0; background: #101915; color: #f4f6f5;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px; z-index: 10;
-    }
-    #hint {
-      position: fixed; bottom: 24px; left: 0; right: 0; text-align: center;
-      color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.6); font-size: 14px; z-index: 5;
-      pointer-events: none;
-    }
-  </style>
 </head>
 <body>
-  <div id="loading">Loading AR — allow camera access when prompted…</div>
-  <div id="hint">Point your camera at the flashcard</div>
 
-  <!--
-    targets.mind = the file you generate at
-    https://hiukim.github.io/mind-ar-js-doc/tools/compile
-    from a photo of your flashcard. Put it in the same folder as this file.
-    You can compile MULTIPLE card images into one targets.mind file at once —
-    each gets a targetIndex (0, 1, 2, ...) in the order you uploaded them.
-  -->
-  <a-scene
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: no;"
-    color-space="sRGB"
-    renderer="colorManagement: true, physicallyCorrectLights"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-    embedded
-    style="width: 100%; height: 100vh;"
-  >
-    <a-assets></a-assets>
+  <!-- Loading Screen Overlay -->
+  <div id="loading" style="position: fixed; z-index: 999; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; color: #fff; display: flex; align-items: center; justify-content: center;">
+    Loading AR Experience...
+  </div>
+
+  <!-- A-Frame Scene configured with your mind target file -->
+  <a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    
+    <!-- Preload your 3D Models (.glb) -->
+    <a-assets>
+      <a-asset-item id="limbicModel" src="./limbic_system.glb"></a-asset-item>
+      <a-asset-item id="neuronModel" src="./neuron.glb"></a-asset-item>
+      <a-asset-item id="brainstemModel" src="./brainstem.glb"></a-asset-item>
+    </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Target 0 = your first compiled flashcard image -->
+    <!-- TARGET 0: First image uploaded -->
     <a-entity mindar-image-target="targetIndex: 0">
-      <!--
-        Placeholder model: a simple ball-and-stick water molecule built from
-        primitives, so this works with zero extra assets. Swap this whole
-        block for <a-gltf-model src="#waterGlb" ...> once you export real
-        .glb models (e.g. from the Three.js scene in the other prototype,
-        or from Blender / Molview exports).
-      -->
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere position="0 0 0" radius="1" color="#d1594a"></a-sphere>
-        <a-sphere position="1.4 1.1 0" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="-1.4 1.1 0" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-cylinder position="0.7 0.55 0" radius="0.14" height="1.7"
-          rotation="0 0 -38" color="#b9c2c8"></a-cylinder>
-        <a-cylinder position="-0.7 0.55 0" radius="0.14" height="1.7"
-          rotation="0 0 38" color="#b9c2c8"></a-cylinder>
-        <a-animation attribute="rotation" dur="6000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-
-      <a-entity
-        text="value: H\u2082O — bent, 104.5\u00b0; align: center; color: white; width: 3"
-        position="0 -1.1 0.1"
-      ></a-entity>
+      <a-gltf-model src="#limbicModel" position="0 0 0" scale="0.2 0.2 0.2" rotation="0 0 0"></a-gltf-model>
     </a-entity>
 
-    <!-- Target 1: Methane CH4 -->
+    <!-- TARGET 1: Second image uploaded -->
     <a-entity mindar-image-target="targetIndex: 1">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="0.82 0.82 0.82" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="0.82 -0.82 -0.82" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="-0.82 0.82 -0.82" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="-0.82 -0.82 0.82" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-animation attribute="rotation" dur="6000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: CH\u2084 — tetrahedral, 109.5\u00b0; align: center; color: white; width: 3" position="0 -1.1 0.1"></a-entity>
+      <a-gltf-model src="#neuronModel" position="0 0 0" scale="0.2 0.2 0.2" rotation="0 0 0"></a-gltf-model>
     </a-entity>
 
-    <!-- Target 2: Ammonia NH3 -->
+    <!-- TARGET 2: Third image uploaded -->
     <a-entity mindar-image-target="targetIndex: 2">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere radius="1" color="#4f7fd1"></a-sphere>
-        <a-sphere position="0.92 -0.9 0" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="-0.46 -0.9 0.8" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="-0.46 -0.9 -0.8" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-animation attribute="rotation" dur="6000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: NH\u2083 — trigonal pyramidal; align: center; color: white; width: 3" position="0 -1.3 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 3: Carbon dioxide CO2 -->
-    <a-entity mindar-image-target="targetIndex: 3">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere position="-1.3 0 0" radius="1" color="#d1594a"></a-sphere>
-        <a-sphere position="0 0 0" radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="1.3 0 0" radius="1" color="#d1594a"></a-sphere>
-        <a-animation attribute="rotation" dur="6000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: CO\u2082 — linear, 180\u00b0; align: center; color: white; width: 3" position="0 -1.1 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 4: Benzene C6H6 -->
-    <a-entity mindar-image-target="targetIndex: 4">
-      <a-entity position="0 0 0.1" scale="0.13 0.13 0.13" rotation="90 0 0">
-        <a-sphere position="1.4 0 0" radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="0.7 0 1.21" radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="-0.7 0 1.21" radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="-1.4 0 0" radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="-0.7 0 -1.21" radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="0.7 0 -1.21" radius="1" color="#2b2f33"></a-sphere>
-        <a-animation attribute="rotation" dur="8000" to="90 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: C\u2086H\u2086 — aromatic ring; align: center; color: white; width: 3" position="0 -1.1 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 5: Oxygen gas O2 -->
-    <a-entity mindar-image-target="targetIndex: 5">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere position="-0.6 0 0" radius="1" color="#d1594a"></a-sphere>
-        <a-sphere position="0.6 0 0" radius="1" color="#d1594a"></a-sphere>
-        <a-animation attribute="rotation" dur="6000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: O\u2082 — double bond; align: center; color: white; width: 3" position="0 -1.1 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 6: Nitrogen gas N2 -->
-    <a-entity mindar-image-target="targetIndex: 6">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere position="-0.6 0 0" radius="1" color="#4f7fd1"></a-sphere>
-        <a-sphere position="0.6 0 0" radius="1" color="#4f7fd1"></a-sphere>
-        <a-animation attribute="rotation" dur="6000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: N\u2082 — triple bond; align: center; color: white; width: 3" position="0 -1.1 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 7: Ethylene C2H4 -->
-    <a-entity mindar-image-target="targetIndex: 7">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere position="-0.65 0 0" radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="0.65 0 0" radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="-1.25 0.95 0" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="-1.25 -0.95 0" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="1.25 0.95 0" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="1.25 -0.95 0" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-animation attribute="rotation" dur="6000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: C\u2082H\u2084 — trigonal planar; align: center; color: white; width: 3" position="0 -1.2 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 8: Formaldehyde CH2O -->
-    <a-entity mindar-image-target="targetIndex: 8">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere radius="1" color="#2b2f33"></a-sphere>
-        <a-sphere position="0 1.2 0" radius="1" color="#d1594a"></a-sphere>
-        <a-sphere position="1.05 -0.55 0" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="-1.05 -0.55 0" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-animation attribute="rotation" dur="6000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: CH\u2082O — trigonal planar; align: center; color: white; width: 3" position="0 -1.3 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 9: Hydrogen peroxide H2O2 -->
-    <a-entity mindar-image-target="targetIndex: 9">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere position="-0.5 0 0" radius="1" color="#d1594a"></a-sphere>
-        <a-sphere position="0.5 0 0" radius="1" color="#d1594a"></a-sphere>
-        <a-sphere position="-0.9 0.75 0.55" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-sphere position="0.9 0.75 -0.55" radius="0.68" color="#f2f4f3"></a-sphere>
-        <a-animation attribute="rotation" dur="6000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: H\u2082O\u2082 — non-planar; align: center; color: white; width: 3" position="0 -1.2 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 10: Neuron -->
-    <a-entity mindar-image-target="targetIndex: 10">
-      <a-entity position="0 0 0.1" scale="0.13 0.13 0.13">
-        <a-sphere position="-0.9 0.15 0" radius="1" scale="0.62 0.55 0.62" color="#e0a458"></a-sphere>
-        <a-cylinder position="0.55 0 0" radius="0.13" height="2.6" rotation="0 0 90" color="#e0a458"></a-cylinder>
-        <a-torus position="0 0 0" radius="0.22" radius-tubular="0.06" rotation="0 90 0" color="#f2f4f3"></a-torus>
-        <a-torus position="0.55 0 0" radius="0.22" radius-tubular="0.06" rotation="0 90 0" color="#f2f4f3"></a-torus>
-        <a-torus position="1.1 0 0" radius="0.22" radius-tubular="0.06" rotation="0 90 0" color="#f2f4f3"></a-torus>
-        <a-cylinder position="-1.35 0.55 0" radius="0.06" height="0.6" rotation="0 0 -35" color="#e0a458"></a-cylinder>
-        <a-cylinder position="-1.35 -0.1 0.3" radius="0.06" height="0.6" rotation="30 0 -25" color="#e0a458"></a-cylinder>
-        <a-sphere position="1.75 0.12 0" radius="0.18" color="#e0a458"></a-sphere>
-        <a-animation attribute="rotation" dur="7000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: Neuron — myelin speeds signals; align: center; color: white; width: 3" position="0 -1.2 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 11: Heart -->
-    <a-entity mindar-image-target="targetIndex: 11">
-      <a-entity position="0 0 0.1" scale="0.14 0.14 0.14">
-        <a-sphere position="-0.4 -0.3 0" radius="1" scale="0.85 1.05 0.8" color="#b23b3b"></a-sphere>
-        <a-sphere position="0.5 -0.15 0" radius="1" scale="0.7 0.9 0.7" color="#c9534f"></a-sphere>
-        <a-cylinder position="-0.1 1.0 0" radius="0.16" height="0.9" rotation="0 0 -12" color="#d1594a"></a-cylinder>
-        <a-cylinder position="0.3 0.9 0.25" radius="0.14" height="0.75" rotation="15 0 15" color="#4f7fd1"></a-cylinder>
-        <a-animation attribute="rotation" dur="7000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: Heart — two circuits, kept separate; align: center; color: white; width: 3" position="0 -1.3 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 12: Eye -->
-    <a-entity mindar-image-target="targetIndex: 12">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere radius="1" color="#f2f4f3"></a-sphere>
-        <a-sphere position="0 0 0.86" radius="1" scale="0.42 0.42 0.16" color="#6f4a2b"></a-sphere>
-        <a-sphere position="0 0 0.97" radius="1" scale="0.16 0.16 0.08" color="#101915"></a-sphere>
-        <a-cylinder position="0 0 -1.05" radius="0.2" height="0.55" rotation="90 0 0" color="#e6c9a0"></a-cylinder>
-        <a-animation attribute="rotation" dur="7000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: Eye — lens focuses light on retina; align: center; color: white; width: 3" position="0 -1.2 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 13: Lungs -->
-    <a-entity mindar-image-target="targetIndex: 13">
-      <a-entity position="0 0 0.1" scale="0.13 0.13 0.13">
-        <a-cylinder position="0 1.05 0" radius="0.15" height="0.85" color="#e6c9c2"></a-cylinder>
-        <a-cylinder position="-0.5 0.35 0" radius="0.11" height="0.7" rotation="0 0 25" color="#e6c9c2"></a-cylinder>
-        <a-cylinder position="0.5 0.35 0" radius="0.11" height="0.7" rotation="0 0 -25" color="#e6c9c2"></a-cylinder>
-        <a-sphere position="-0.95 -0.55 0" radius="1" scale="0.72 1.05 0.52" color="#d98f8a"></a-sphere>
-        <a-sphere position="0.95 -0.55 0" radius="1" scale="0.72 1.05 0.52" color="#d98f8a"></a-sphere>
-        <a-animation attribute="rotation" dur="7000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: Lungs — branching = more surface area; align: center; color: white; width: 3" position="0 -1.3 0.1"></a-entity>
-    </a-entity>
-
-    <!-- Target 14: Kidney -->
-    <a-entity mindar-image-target="targetIndex: 14">
-      <a-entity position="0 0 0.1" scale="0.15 0.15 0.15">
-        <a-sphere position="0 0.2 0" radius="1" scale="0.8 1.15 0.55" color="#8a3a3a"></a-sphere>
-        <a-cylinder position="0.7 0.35 0" radius="0.08" height="0.5" rotation="0 0 -70" color="#d1594a"></a-cylinder>
-        <a-cylinder position="0.7 0.05 0" radius="0.07" height="0.5" rotation="0 0 -70" color="#4f7fd1"></a-cylinder>
-        <a-cylinder position="0 -1.15 0" radius="0.09" height="0.85" color="#e0a458"></a-cylinder>
-        <a-sphere position="0 -2.0 0" radius="1" scale="0.4 0.32 0.4" color="#c9a15a"></a-sphere>
-        <a-animation attribute="rotation" dur="7000" to="0 360 0" repeat="indefinite" easing="linear"></a-animation>
-      </a-entity>
-      <a-entity text="value: Kidney — filters blood into urine; align: center; color: white; width: 3" position="0 -1.4 0.1"></a-entity>
+      <a-gltf-model src="#brainstemModel" position="0 0 0" scale="0.2 0.2 0.2" rotation="0 0 0"></a-gltf-model>
     </a-entity>
 
   </a-scene>
 
+  <!-- Existing Loading Script -->
   <script>
     const scene = document.querySelector("a-scene");
     scene.addEventListener("loaded", () => {
       document.getElementById("loading").style.display = "none";
     });
   </script>
+
 </body>
 </html>
