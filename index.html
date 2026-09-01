@@ -3,11 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Hepatic Physiology & Pathology AR</title>
+  <title>Hepatic Physiology & Pathology WebAR</title>
 
-  <!-- A-Frame and MindAR Libraries -->
+  <!-- A-Frame & MindAR WebAR Libraries -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <!-- Custom A-Frame Component for Touch Swipe Rotation -->
+  <script>
+    AFRAME.registerComponent('gesture-rotation', {
+      schema: {
+        factor: { type: 'number', default: 5 }
+      },
+      init: function () {
+        this.handleTouchStart = this.handleTouchStart.bind(this);
+        this.handleTouchMove = this.handleTouchMove.bind(this);
+        
+        this.touchX = 0;
+        this.touchY = 0;
+        
+        window.addEventListener('touchstart', this.handleTouchStart);
+        window.addEventListener('touchmove', this.handleTouchMove);
+      },
+      handleTouchStart: function (evt) {
+        if (evt.touches.length === 1) {
+          this.touchX = evt.touches[0].clientX;
+          this.touchY = evt.touches[0].clientY;
+        }
+      },
+      handleTouchMove: function (evt) {
+        if (evt.touches.length === 1) {
+          const deltaX = evt.touches[0].clientX - this.touchX;
+          const deltaY = evt.touches[0].clientY - this.touchY;
+
+          const currentRotation = this.el.getAttribute('rotation');
+
+          this.el.setAttribute('rotation', {
+            x: currentRotation.x + deltaY * (this.data.factor * 0.1),
+            y: currentRotation.y + deltaX * (this.data.factor * 0.1),
+            z: currentRotation.z
+          });
+
+          this.touchX = evt.touches[0].clientX;
+          this.touchY = evt.touches[0].clientY;
+        }
+      },
+      remove: function () {
+        window.removeEventListener('touchstart', this.handleTouchStart);
+        window.removeEventListener('touchmove', this.handleTouchMove);
+      }
+    });
+  </script>
 
   <style>
     body {
@@ -16,6 +62,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
+    /* Fullscreen Loading Overlay */
     #loading-screen {
       position: fixed;
       top: 0;
@@ -44,6 +91,7 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Floating Medical Information Card */
     #info-card {
       position: fixed;
       bottom: 24px;
@@ -63,22 +111,44 @@
       text-align: center;
     }
 
-    #info-card h3 { margin: 0 0 6px 0; font-size: 1.1rem; color: #38bdf8; }
-    #info-card p { margin: 0; font-size: 0.88rem; color: #cbd5e1; line-height: 1.35; }
+    #info-card h3 { 
+      margin: 0 0 6px 0; 
+      font-size: 1.1rem; 
+      color: #38bdf8; 
+    }
+
+    #info-card p { 
+      margin: 0; 
+      font-size: 0.88rem; 
+      color: #cbd5e1; 
+      line-height: 1.35; 
+    }
+
+    #touch-hint {
+      display: block;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Loading Screen -->
   <div id="loading-screen">
     <div class="spinner"></div>
     <div>Loading Hepatic Physiology AR...</div>
   </div>
 
+  <!-- Medical UI Information Overlay -->
   <div id="info-card">
     <h3 id="card-title">Liver Anatomy</h3>
     <p id="card-desc">Scan a flashcard to inspect structures.</p>
+    <span id="touch-hint">👆 Drag finger across screen to rotate 3D model</span>
   </div>
 
+  <!-- WebAR Scene with MindAR Integration -->
   <a-scene 
     mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.0001; filterBeta: 0.001;" 
     color-space="sRGB" 
@@ -92,53 +162,54 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- TARGET 0: 1.png (Anterior View) -->
+    <!-- TARGET 0: Card 1 (Anterior View) -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 0 0"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 1: 2.png (Posterior View) -->
+    <!-- TARGET 1: Card 2 (Posterior View) -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 180 0"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 2: 3.png (Inferior View) -->
+    <!-- TARGET 2: Card 3 (Inferior View) -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-2">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 0 0"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 3: 4.png (Superior View) -->
+    <!-- TARGET 3: Card 4 (Superior View) -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-3">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 0 0"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 4: 5.png (Lateral View) -->
+    <!-- TARGET 4: Card 5 (Lateral View) -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-4">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 -90 0"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 5: 6.png (Inferior Alt) -->
+    <!-- TARGET 5: Card 6 (Visceral Anatomy) -->
     <a-entity mindar-image-target="targetIndex: 5" id="target-5">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 45 0"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 6: 7.png (Superior Alt) -->
+    <!-- TARGET 6: Card 7 (Diaphragmatic Surface) -->
     <a-entity mindar-image-target="targetIndex: 6" id="target-6">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 45 0"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 7: 8.png (Lateral Alt) -->
+    <!-- TARGET 7: Card 8 (Costal Profile) -->
     <a-entity mindar-image-target="targetIndex: 7" id="target-7">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 90 0"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 8: 9.png (Hepatic Segments) -->
+    <!-- TARGET 8: Card 9 (Hepatic Segments) -->
     <a-entity mindar-image-target="targetIndex: 8" id="target-8">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 45 0"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
   </a-scene>
 
+  <!-- Interactive Logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const sceneEl = document.querySelector("a-scene");
@@ -153,15 +224,15 @@
       });
 
       const cardDetails = {
-        "target-0": { title: "Card 1: Anterior View", desc: "Showcases the right and left lobes, falciform ligament, and gallbladder." },
-        "target-1": { title: "Card 2: Posterior View", desc: "Exposes the portal triad (portal vein, hepatic artery, bile duct) and IVC." },
-        "target-2": { title: "Card 3: Inferior View", desc: "Visceral surface displaying organ impressions and porta hepatis." },
-        "target-3": { title: "Card 4: Superior View", desc: "Diaphragmatic surface showing bare area and coronary ligaments." },
-        "target-4": { title: "Card 5: Lateral View", desc: "Convex lateral profile resting against lower costal margin." },
-        "target-5": { title: "Card 6: Visceral Anatomy", desc: "Detailed inferior aspect mapping gallbladder bed and caudate lobe." },
-        "target-6": { title: "Card 7: Diaphragmatic Surface", desc: "Superior convex interface fitting beneath the thoracic diaphragm." },
-        "target-7": { title: "Card 8: Costal Profile", desc: "Lateral right lobe view showing intercostal relationship." },
-        "target-8": { title: "Card 9: Hepatic Segments", desc: "Vascular tree mapping 8 Couinaud functional segments." }
+        "target-0": { title: "Anterior View", desc: "Showcases the right and left lobes, falciform ligament, and gallbladder." },
+        "target-1": { title: "Posterior View", desc: "Exposes the portal triad (portal vein, hepatic artery, bile duct) and IVC." },
+        "target-2": { title: "Inferior View", desc: "Visceral surface displaying organ impressions and porta hepatis." },
+        "target-3": { title: "Superior View", desc: "Diaphragmatic surface showing bare area and coronary ligaments." },
+        "target-4": { title: "Lateral View", desc: "Convex lateral profile resting against lower costal margin." },
+        "target-5": { title: "Visceral Anatomy", desc: "Detailed inferior aspect mapping gallbladder bed and caudate lobe." },
+        "target-6": { title: "Diaphragmatic Surface", desc: "Superior convex interface fitting beneath the thoracic diaphragm." },
+        "target-7": { title: "Costal Profile", desc: "Lateral right lobe view showing intercostal relationship." },
+        "target-8": { title: "Hepatic Segments", desc: "Vascular tree mapping 8 Couinaud functional segments." }
       };
 
       const targets = document.querySelectorAll("[mindar-image-target]");
