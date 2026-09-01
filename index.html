@@ -9,15 +9,23 @@
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
-  <!-- Touch Swipe Rotation Component -->
+  <!-- Touch Gesture Component: Rotation (1 Finger) & Pinch-Zoom (2 Fingers) -->
   <script>
-    AFRAME.registerComponent('gesture-rotation', {
-      schema: { factor: { type: 'number', default: 5 } },
+    AFRAME.registerComponent('gesture-controls', {
+      schema: {
+        rotationFactor: { type: 'number', default: 5 },
+        zoomFactor: { type: 'number', default: 0.005 },
+        minScale: { type: 'number', default: 0.5 },
+        maxScale: { type: 'number', default: 8.0 }
+      },
       init: function () {
         this.handleTouchStart = this.handleTouchStart.bind(this);
         this.handleTouchMove = this.handleTouchMove.bind(this);
+        
         this.touchX = 0;
         this.touchY = 0;
+        this.initialPinchDistance = null;
+
         window.addEventListener('touchstart', this.handleTouchStart);
         window.addEventListener('touchmove', this.handleTouchMove);
       },
@@ -25,20 +33,50 @@
         if (evt.touches.length === 1) {
           this.touchX = evt.touches[0].clientX;
           this.touchY = evt.touches[0].clientY;
+        } else if (evt.touches.length === 2) {
+          // Calculate initial distance between two fingers for zoom
+          const dx = evt.touches[0].clientX - evt.touches[1].clientX;
+          const dy = evt.touches[0].clientY - evt.touches[1].clientY;
+          this.initialPinchDistance = Math.hypot(dx, dy);
         }
       },
       handleTouchMove: function (evt) {
+        // Single-Finger Touch: Rotate
         if (evt.touches.length === 1) {
           const deltaX = evt.touches[0].clientX - this.touchX;
           const deltaY = evt.touches[0].clientY - this.touchY;
           const currentRotation = this.el.getAttribute('rotation');
+
           this.el.setAttribute('rotation', {
-            x: currentRotation.x + deltaY * (this.data.factor * 0.1),
-            y: currentRotation.y + deltaX * (this.data.factor * 0.1),
+            x: currentRotation.x + deltaY * (this.data.rotationFactor * 0.1),
+            y: currentRotation.y + deltaX * (this.data.rotationFactor * 0.1),
             z: currentRotation.z
           });
+
           this.touchX = evt.touches[0].clientX;
           this.touchY = evt.touches[0].clientY;
+        } 
+        // Two-Finger Pinch: Zoom In / Zoom Out
+        else if (evt.touches.length === 2 && this.initialPinchDistance) {
+          const dx = evt.touches[0].clientX - evt.touches[1].clientX;
+          const dy = evt.touches[0].clientY - evt.touches[1].clientY;
+          const currentPinchDistance = Math.hypot(dx, dy);
+
+          const distanceDelta = currentPinchDistance - this.initialPinchDistance;
+          const currentScale = this.el.getAttribute('scale');
+
+          let newScale = currentScale.x + distanceDelta * this.data.zoomFactor;
+          
+          // Clamp scale to defined min and max boundaries
+          newScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
+
+          this.el.setAttribute('scale', {
+            x: newScale,
+            y: newScale,
+            z: newScale
+          });
+
+          this.initialPinchDistance = currentPinchDistance;
         }
       },
       remove: function () {
@@ -117,7 +155,7 @@
   <div id="info-card">
     <h3 id="card-title">Liver Anatomy</h3>
     <p id="card-desc">Scan a flashcard to inspect structures.</p>
-    <span id="touch-hint">👆 Drag finger across screen to rotate 3D model</span>
+    <span id="touch-hint">👆 Drag 1 finger to rotate | Pinch 2 fingers to zoom</span>
   </div>
 
   <a-scene 
@@ -139,47 +177,47 @@
 
     <!-- TARGET 0: 1.png (Anterior View) -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" gesture-controls></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 1: 2.png (Posterior View) -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 180 0" gesture-controls></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 2: 3.png (Inferior View) -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-2">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="90 0 0" gesture-controls></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 3: 4.png (Superior View) -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-3">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="-90 0 0" gesture-controls></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 4: 5.png (Lateral View) -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-4">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 -90 0" gesture-controls></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 5: 6.png (Visceral Anatomy) -->
     <a-entity mindar-image-target="targetIndex: 5" id="target-5">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="90 45 0" gesture-controls></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 6: 7.png (Diaphragmatic Surface) -->
     <a-entity mindar-image-target="targetIndex: 6" id="target-6">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="-90 45 0" gesture-controls></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 7: 8.png (Costal Profile) -->
     <a-entity mindar-image-target="targetIndex: 7" id="target-7">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 90 0" gesture-controls></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 8: 9.png (Hepatic Segments) -->
     <a-entity mindar-image-target="targetIndex: 8" id="target-8">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 45 0" gesture-controls></a-gltf-model>
     </a-entity>
 
   </a-scene>
