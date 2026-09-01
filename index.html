@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Neuroanatomy WebAR Flashcards</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Neuroanatomy WebAR - Subcortical Structures</title>
 
-  <!-- A-Frame and MindAR Libraries -->
+  <!-- A-Frame and MindAR WebAR Libraries -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
@@ -13,30 +13,30 @@
     body {
       margin: 0;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Loading Overlay */
+    /* Fullscreen Loading Overlay */
     #loading-screen {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background-color: #0f172a;
+      background: #0f172a;
       color: #ffffff;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 9999;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.4s ease;
     }
 
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
+      width: 44px;
+      height: 44px;
+      border: 4px solid rgba(255, 255, 255, 0.15);
       border-left-color: #38bdf8;
       border-radius: 50%;
       animation: spin 1s linear infinite;
@@ -47,24 +47,37 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Dynamic UI Notification Label */
-    #ui-card-label {
+    /* Bottom Information UI Box */
+    #info-card {
       position: fixed;
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(8px);
-      color: #38bdf8;
-      padding: 12px 24px;
-      border-radius: 24px;
-      font-weight: 600;
-      font-size: 0.95rem;
+      width: 88%;
+      max-width: 420px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(10px);
       border: 1px solid rgba(56, 189, 248, 0.3);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      color: #ffffff;
+      padding: 16px 20px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
       z-index: 1000;
       display: none;
-      pointer-events: none;
+      text-align: center;
+    }
+
+    #info-card h3 {
+      margin: 0 0 6px 0;
+      font-size: 1.1rem;
+      color: #38bdf8;
+    }
+
+    #info-card p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.35;
     }
   </style>
 </head>
@@ -73,79 +86,96 @@
   <!-- Loading Screen -->
   <div id="loading-screen">
     <div class="spinner"></div>
-    <div>Loading Neuroanatomy AR...</div>
+    <div>Initializing Neuroanatomy AR...</div>
   </div>
 
-  <!-- Dynamic Active Card Badge -->
-  <div id="ui-card-label">Scanning target...</div>
+  <!-- Interactive Info Box Overlay -->
+  <div id="info-card">
+    <h3 id="card-title">Subcortical Model</h3>
+    <p id="card-desc">Scanning for subcortical target image...</p>
+  </div>
 
-  <!-- A-Frame AR Scene -->
+  <!-- AR Scene Configuration -->
   <a-scene 
-    mindar-image="imageTargetSrc: ./targets.mind;" 
+    mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.0001; filterBeta: 0.001;" 
     color-space="sRGB" 
-    renderer="colorManagement: true, physicallyCorrectLights" 
+    renderer="colorManagement: true, physicallyCorrectLights: true" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
     
-    <!-- Preload 3D Model Assets -->
+    <!-- Asset Pipeline -->
     <a-assets>
-      <a-asset-item id="limbicModel" src="./limbic_system.glb"></a-asset-item>
-      <a-asset-item id="neuronModel" src="./neuron.glb"></a-asset-item>
-      <a-asset-item id="brainstemModel" src="./brainstem.glb"></a-asset-item>
+      <a-asset-item id="subcorticalModel" src="./limbic_system.glb"></a-asset-item>
     </a-assets>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <!-- Camera Setup with Raycaster support for tapping objects -->
+    <a-camera position="0 0 0" look-controls="enabled: false" raycaster="objects: .clickable" cursor="fuse: false; rayOrigin: mouse"></a-camera>
 
-    <!-- TARGET 0: First image in targets.mind -->
-    <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model src="#limbicModel" position="0 0 0" scale="0.2 0.2 0.2" rotation="0 0 0"></a-gltf-model>
+    <!-- TARGET 0: Anterior/Frontal View (subcort2.jpg) -->
+    <a-entity mindar-image-target="targetIndex: 0" id="target-anterior">
+      <a-gltf-model 
+        class="clickable"
+        src="#subcorticalModel" 
+        position="0 0 0" 
+        scale="0.25 0.25 0.25" 
+        rotation="90 0 0">
+      </a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 1: Second image in targets.mind -->
-    <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-gltf-model src="#neuronModel" position="0 0 0" scale="0.2 0.2 0.2" rotation="0 0 0"></a-gltf-model>
-    </a-entity>
-
-    <!-- TARGET 2: Third image in targets.mind -->
-    <a-entity mindar-image-target="targetIndex: 2" id="target-2">
-      <a-gltf-model src="#brainstemModel" position="0 0 0" scale="0.2 0.2 0.2" rotation="0 0 0"></a-gltf-model>
+    <!-- TARGET 1: Lateral/Side View (subcort3.jpg) -->
+    <a-entity mindar-image-target="targetIndex: 1" id="target-lateral">
+      <a-gltf-model 
+        class="clickable"
+        src="#subcorticalModel" 
+        position="0 0 0" 
+        scale="0.25 0.25 0.25" 
+        rotation="0 90 0">
+      </a-gltf-model>
     </a-entity>
 
   </a-scene>
 
-  <!-- Interactive Logic & Event Handling -->
+  <!-- Application Logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const sceneEl = document.querySelector("a-scene");
       const loadingScreen = document.getElementById("loading-screen");
-      const uiLabel = document.getElementById("ui-card-label");
+      const infoCard = document.getElementById("info-card");
+      const cardTitle = document.getElementById("card-title");
+      const cardDesc = document.getElementById("card-desc");
 
-      // Hide loading overlay when scene is fully mounted
+      // Hide loading overlay on mount
       sceneEl.addEventListener("loaded", () => {
         loadingScreen.style.opacity = "0";
-        setTimeout(() => {
-          loadingScreen.style.display = "none";
-        }, 500);
+        setTimeout(() => { loadingScreen.style.display = "none"; }, 400);
       });
 
-      // Target Names mapped to targetIndex order
-      const targetDetails = {
-        "target-0": "Limbic System Detected",
-        "target-1": "Neuron / Synapse Detected",
-        "target-2": "Brain Stem Detected"
+      // Target Metadata Mapping
+      const viewDetails = {
+        "target-anterior": {
+          title: "Subcortical Structures (Anterior View)",
+          desc: "Viewing thalamic bodies and ventral brainstem pathways. Essential for sensory relay tracking."
+        },
+        "target-lateral": {
+          title: "Subcortical Structures (Lateral View)",
+          desc: "Exposing C-shaped hippocampal arc, caudate nucleus, and brainstem interface."
+        }
       };
 
-      // Listen for target detection events
+      // Event Listeners for Target Detection
       const targets = document.querySelectorAll("[mindar-image-target]");
       targets.forEach((target) => {
         target.addEventListener("targetFound", (event) => {
           const targetId = event.target.id;
-          uiLabel.innerText = targetDetails[targetId] || "Card Detected";
-          uiLabel.style.display = "block";
+          const details = viewDetails[targetId] || { title: "Target Found", desc: "Subcortical model detected." };
+          
+          cardTitle.innerText = details.title;
+          cardDesc.innerText = details.desc;
+          infoCard.style.display = "block";
         });
 
         target.addEventListener("targetLost", () => {
-          uiLabel.style.display = "none";
+          infoCard.style.display = "none";
         });
       });
     });
