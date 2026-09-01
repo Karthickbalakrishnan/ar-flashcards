@@ -3,83 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Hepatic AR Diagnostic</title>
+  <title>Hepatic Physiology & Pathology WebAR</title>
 
   <!-- Essential WebAR Libraries -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
+  <!-- Touch Swipe Rotation Component -->
+  <script>
+    AFRAME.registerComponent('gesture-rotation', {
+      schema: { factor: { type: 'number', default: 5 } },
+      init: function () {
+        this.handleTouchStart = this.handleTouchStart.bind(this);
+        this.handleTouchMove = this.handleTouchMove.bind(this);
+        this.touchX = 0;
+        this.touchY = 0;
+        window.addEventListener('touchstart', this.handleTouchStart);
+        window.addEventListener('touchmove', this.handleTouchMove);
+      },
+      handleTouchStart: function (evt) {
+        if (evt.touches.length === 1) {
+          this.touchX = evt.touches[0].clientX;
+          this.touchY = evt.touches[0].clientY;
+        }
+      },
+      handleTouchMove: function (evt) {
+        if (evt.touches.length === 1) {
+          const deltaX = evt.touches[0].clientX - this.touchX;
+          const deltaY = evt.touches[0].clientY - this.touchY;
+          const currentRotation = this.el.getAttribute('rotation');
+          this.el.setAttribute('rotation', {
+            x: currentRotation.x + deltaY * (this.data.factor * 0.1),
+            y: currentRotation.y + deltaX * (this.data.factor * 0.1),
+            z: currentRotation.z
+          });
+          this.touchX = evt.touches[0].clientX;
+          this.touchY = evt.touches[0].clientY;
+        }
+      },
+      remove: function () {
+        window.removeEventListener('touchstart', this.handleTouchStart);
+        window.removeEventListener('touchmove', this.handleTouchMove);
+      }
+    });
+  </script>
+
   <style>
     body {
       margin: 0;
       overflow: hidden;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-
-    #loading-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #0f172a;
-      color: #ffffff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      transition: opacity 0.3s ease;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(255, 255, 255, 0.2);
-      border-left-color: #38bdf8;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 12px;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
 
     #info-card {
       position: fixed;
-      bottom: 20px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
-      width: 85%;
-      max-width: 400px;
+      width: 88%;
+      max-width: 420px;
       background: rgba(15, 23, 42, 0.92);
-      border: 1px solid #38bdf8;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.3);
       color: #ffffff;
-      padding: 14px;
-      border-radius: 12px;
+      padding: 16px 20px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
       z-index: 1000;
       display: none;
       text-align: center;
     }
 
-    #info-card h3 { margin: 0 0 4px 0; font-size: 1rem; color: #38bdf8; }
-    #info-card p { margin: 0; font-size: 0.85rem; color: #cbd5e1; }
+    #info-card h3 { margin: 0 0 6px 0; font-size: 1.1rem; color: #38bdf8; }
+    #info-card p { margin: 0; font-size: 0.88rem; color: #cbd5e1; line-height: 1.35; }
+    #touch-hint { display: block; margin-top: 8px; font-size: 0.75rem; color: #94a3b8; font-style: italic; }
   </style>
 </head>
 <body>
 
-  <div id="loading-screen">
-    <div class="spinner"></div>
-    <div id="loading-text">Starting Camera & AR Engine...</div>
-  </div>
-
+  <!-- Floating Medical Information Card -->
   <div id="info-card">
-    <h3 id="card-title">Target Detected</h3>
-    <p id="card-desc">Anatomy card recognized.</p>
+    <h3 id="card-title">Liver Anatomy</h3>
+    <p id="card-desc">Scan a flashcard to inspect structures.</p>
+    <span id="touch-hint">👆 Drag finger across screen to rotate 3D model</span>
   </div>
 
+  <!-- WebAR Scene -->
   <a-scene 
-    id="ar-scene"
-    mindar-image="imageTargetSrc: ./livertargets.mind; autoStart: true; uiLoading: no; uiError: no;" 
+    mindar-image="imageTargetSrc: ./livertargets.mind;" 
     color-space="sRGB" 
     renderer="colorManagement: true, physicallyCorrectLights: true" 
     vr-mode-ui="enabled: false" 
@@ -87,50 +98,80 @@
     
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Fallback Box + Light for Immediate Visual Confirmation -->
+    <!-- Scene Lighting -->
     <a-light type="ambient" intensity="1.5"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
-    <!-- TARGET 0: Anterior View -->
+    <!-- TARGET 0: 1.png (Anterior View) -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-box position="0 0 0.1" scale="0.3 0.3 0.3" color="#38bdf8"></a-box>
+      <a-gltf-model src="./liver.glb" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 1: Posterior View -->
+    <!-- TARGET 1: 2.png (Posterior View) -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-box position="0 0 0.1" scale="0.3 0.3 0.3" color="#10b981"></a-box>
+      <a-gltf-model src="./liver.glb" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
+    </a-entity>
+
+    <!-- TARGET 2: 3.png (Inferior View) -->
+    <a-entity mindar-image-target="targetIndex: 2" id="target-2">
+      <a-gltf-model src="./liver.glb" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+    </a-entity>
+
+    <!-- TARGET 3: 4.png (Superior View) -->
+    <a-entity mindar-image-target="targetIndex: 3" id="target-3">
+      <a-gltf-model src="./liver.glb" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+    </a-entity>
+
+    <!-- TARGET 4: 5.png (Lateral View) -->
+    <a-entity mindar-image-target="targetIndex: 4" id="target-4">
+      <a-gltf-model src="./liver.glb" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
+    </a-entity>
+
+    <!-- TARGET 5: 6.png (Visceral Anatomy) -->
+    <a-entity mindar-image-target="targetIndex: 5" id="target-5">
+      <a-gltf-model src="./liver.glb" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+    </a-entity>
+
+    <!-- TARGET 6: 7.png (Diaphragmatic Surface) -->
+    <a-entity mindar-image-target="targetIndex: 6" id="target-6">
+      <a-gltf-model src="./liver.glb" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+    </a-entity>
+
+    <!-- TARGET 7: 8.png (Costal Profile) -->
+    <a-entity mindar-image-target="targetIndex: 7" id="target-7">
+      <a-gltf-model src="./liver.glb" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
+    </a-entity>
+
+    <!-- TARGET 8: 9.png (Hepatic Segments) -->
+    <a-entity mindar-image-target="targetIndex: 8" id="target-8">
+      <a-gltf-model src="./liver.glb" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
   </a-scene>
 
+  <!-- Target Tracking Event Listener -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const sceneEl = document.querySelector("#ar-scene");
-      const loadingScreen = document.getElementById("loading-screen");
-      const loadingText = document.getElementById("loading-text");
       const infoCard = document.getElementById("info-card");
       const cardTitle = document.getElementById("card-title");
       const cardDesc = document.getElementById("card-desc");
 
-      // Force loading screen dismissal on AR engine initialization
-      sceneEl.addEventListener("arReady", () => {
-        loadingScreen.style.opacity = "0";
-        setTimeout(() => { loadingScreen.style.display = "none"; }, 300);
-      });
-
-      sceneEl.addEventListener("arError", (err) => {
-        loadingText.innerText = "Camera permission or WebGL error. Please refresh.";
-      });
-
       const cardDetails = {
-        "target-0": { title: "Anterior View Detected", desc: "Showing test cyan cube over falciform ligament." },
-        "target-1": { title: "Posterior View Detected", desc: "Showing test green cube over portal triad." }
+        "target-0": { title: "Anterior View", desc: "Showcases the right and left lobes, falciform ligament, and gallbladder." },
+        "target-1": { title: "Posterior View", desc: "Exposes the portal triad (portal vein, hepatic artery, bile duct) and IVC." },
+        "target-2": { title: "Inferior View", desc: "Visceral surface displaying organ impressions and porta hepatis." },
+        "target-3": { title: "Superior View", desc: "Diaphragmatic surface showing bare area and coronary ligaments." },
+        "target-4": { title: "Lateral View", desc: "Convex lateral profile resting against lower costal margin." },
+        "target-5": { title: "Visceral Anatomy", desc: "Detailed inferior aspect mapping gallbladder bed and caudate lobe." },
+        "target-6": { title: "Diaphragmatic Surface", desc: "Superior convex interface fitting beneath the thoracic diaphragm." },
+        "target-7": { title: "Costal Profile", desc: "Lateral right lobe view showing intercostal relationship." },
+        "target-8": { title: "Hepatic Segments", desc: "Vascular tree mapping 8 Couinaud functional segments." }
       };
 
       const targets = document.querySelectorAll("[mindar-image-target]");
       targets.forEach((target) => {
         target.addEventListener("targetFound", (event) => {
-          const details = cardDetails[event.target.id] || { title: "Target Active", desc: "Card tracked successfully." };
+          const details = cardDetails[event.target.id] || { title: "Target Found", desc: "Hepatic structure detected." };
           cardTitle.innerText = details.title;
           cardDesc.innerText = details.desc;
           infoCard.style.display = "block";
