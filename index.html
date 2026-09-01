@@ -144,17 +144,16 @@
     <span id="touch-hint">👆 Drag finger across screen to rotate 3D model</span>
   </div>
 
-  <!-- Note the added cache-busting string '?v=liver2' -->
+  <!-- Points directly to livertargets.mind -->
   <a-scene 
-    mindar-image="imageTargetSrc: ./targets.mind?v=liver2; filterMinCF: 0.0001; filterBeta: 0.001;" 
+    mindar-image="imageTargetSrc: ./livertargets.mind; filterMinCF: 0.0001; filterBeta: 0.001;" 
     color-space="sRGB" 
     renderer="colorManagement: true, physicallyCorrectLights: true" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
     
     <a-assets>
-      <!-- Note the added cache-busting string '?v=liver2' -->
-      <a-asset-item id="liverModel" src="./liver.glb?v=liver2"></a-asset-item>
+      <a-asset-item id="liverModel" src="./liver.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
