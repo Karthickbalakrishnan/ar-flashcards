@@ -2,21 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Hepatic Physiology & Pathology WebAR</title>
 
   <!-- Stable A-Frame and MindAR Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
-  <!-- Touch Gesture Component: Rotation (1 Finger) & Pinch-Zoom (2 Fingers) -->
+  <!-- Gesture Handling Component -->
   <script>
     AFRAME.registerComponent('gesture-controls', {
       schema: {
         rotationFactor: { type: 'number', default: 5 },
-        zoomFactor: { type: 'number', default: 0.005 },
+        zoomStep: { type: 'number', default: 0.5 },
         minScale: { type: 'number', default: 0.5 },
-        maxScale: { type: 'number', default: 8.0 }
+        maxScale: { type: 'number', default: 10.0 }
       },
       init: function () {
         this.handleTouchStart = this.handleTouchStart.bind(this);
@@ -26,22 +26,22 @@
         this.touchY = 0;
         this.initialPinchDistance = null;
 
-        window.addEventListener('touchstart', this.handleTouchStart);
-        window.addEventListener('touchmove', this.handleTouchMove);
+        // Force prevent browser viewport zoom conflicts
+        window.addEventListener('touchstart', this.handleTouchStart, { passive: false });
+        window.addEventListener('touchmove', this.handleTouchMove, { passive: false });
       },
       handleTouchStart: function (evt) {
         if (evt.touches.length === 1) {
           this.touchX = evt.touches[0].clientX;
           this.touchY = evt.touches[0].clientY;
         } else if (evt.touches.length === 2) {
-          // Calculate initial distance between two fingers for zoom
+          evt.preventDefault();
           const dx = evt.touches[0].clientX - evt.touches[1].clientX;
           const dy = evt.touches[0].clientY - evt.touches[1].clientY;
           this.initialPinchDistance = Math.hypot(dx, dy);
         }
       },
       handleTouchMove: function (evt) {
-        // Single-Finger Touch: Rotate
         if (evt.touches.length === 1) {
           const deltaX = evt.touches[0].clientX - this.touchX;
           const deltaY = evt.touches[0].clientY - this.touchY;
@@ -55,9 +55,8 @@
 
           this.touchX = evt.touches[0].clientX;
           this.touchY = evt.touches[0].clientY;
-        } 
-        // Two-Finger Pinch: Zoom In / Zoom Out
-        else if (evt.touches.length === 2 && this.initialPinchDistance) {
+        } else if (evt.touches.length === 2 && this.initialPinchDistance) {
+          evt.preventDefault();
           const dx = evt.touches[0].clientX - evt.touches[1].clientX;
           const dy = evt.touches[0].clientY - evt.touches[1].clientY;
           const currentPinchDistance = Math.hypot(dx, dy);
@@ -65,19 +64,22 @@
           const distanceDelta = currentPinchDistance - this.initialPinchDistance;
           const currentScale = this.el.getAttribute('scale');
 
-          let newScale = currentScale.x + distanceDelta * this.data.zoomFactor;
-          
-          // Clamp scale to defined min and max boundaries
+          let newScale = currentScale.x + (distanceDelta * 0.01);
           newScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
 
-          this.el.setAttribute('scale', {
-            x: newScale,
-            y: newScale,
-            z: newScale
-          });
-
+          this.el.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
           this.initialPinchDistance = currentPinchDistance;
         }
+      },
+      zoomIn: function () {
+        const currentScale = this.el.getAttribute('scale');
+        let newScale = Math.min(currentScale.x + this.data.zoomStep, this.data.maxScale);
+        this.el.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
+      },
+      zoomOut: function () {
+        const currentScale = this.el.getAttribute('scale');
+        let newScale = Math.max(currentScale.x - this.data.zoomStep, this.data.minScale);
+        this.el.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
       },
       remove: function () {
         window.removeEventListener('touchstart', this.handleTouchStart);
@@ -91,6 +93,7 @@
       margin: 0;
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: none;
     }
 
     #loading-screen {
@@ -142,7 +145,40 @@
 
     #info-card h3 { margin: 0 0 6px 0; font-size: 1.1rem; color: #38bdf8; }
     #info-card p { margin: 0; font-size: 0.88rem; color: #cbd5e1; line-height: 1.35; }
-    #touch-hint { display: block; margin-top: 8px; font-size: 0.75rem; color: #94a3b8; font-style: italic; }
+
+    /* On-Screen Zoom Button Overlay */
+    #zoom-controls {
+      position: fixed;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 2000;
+    }
+
+    .zoom-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      font-size: 1.5rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      outline: none;
+      user-select: none;
+    }
+
+    .zoom-btn:active {
+      background: #38bdf8;
+      color: #0f172a;
+    }
   </style>
 </head>
 <body>
@@ -155,7 +191,12 @@
   <div id="info-card">
     <h3 id="card-title">Liver Anatomy</h3>
     <p id="card-desc">Scan a flashcard to inspect structures.</p>
-    <span id="touch-hint">👆 Drag 1 finger to rotate | Pinch 2 fingers to zoom</span>
+  </div>
+
+  <!-- UI Controls for Zoom -->
+  <div id="zoom-controls">
+    <button class="zoom-btn" id="btn-zoom-in">+</button>
+    <button class="zoom-btn" id="btn-zoom-out">−</button>
   </div>
 
   <a-scene 
@@ -175,49 +216,49 @@
     <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.5"></a-light>
 
-    <!-- TARGET 0: 1.png (Anterior View) -->
+    <!-- TARGET 0: Anterior View -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" gesture-controls></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 1: 2.png (Posterior View) -->
+    <!-- TARGET 1: Posterior View -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 180 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 180 0" gesture-controls></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 2: 3.png (Inferior View) -->
+    <!-- TARGET 2: Inferior View -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-2">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="90 0 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="90 0 0" gesture-controls></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 3: 4.png (Superior View) -->
+    <!-- TARGET 3: Superior View -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-3">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="-90 0 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="-90 0 0" gesture-controls></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 4: 5.png (Lateral View) -->
+    <!-- TARGET 4: Lateral View -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-4">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 -90 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 -90 0" gesture-controls></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 5: 6.png (Visceral Anatomy) -->
+    <!-- TARGET 5: Visceral Anatomy -->
     <a-entity mindar-image-target="targetIndex: 5" id="target-5">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="90 45 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="90 45 0" gesture-controls></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 6: 7.png (Diaphragmatic Surface) -->
+    <!-- TARGET 6: Diaphragmatic Surface -->
     <a-entity mindar-image-target="targetIndex: 6" id="target-6">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="-90 45 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="-90 45 0" gesture-controls></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 7: 8.png (Costal Profile) -->
+    <!-- TARGET 7: Costal Profile -->
     <a-entity mindar-image-target="targetIndex: 7" id="target-7">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 90 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 90 0" gesture-controls></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 8: 9.png (Hepatic Segments) -->
+    <!-- TARGET 8: Hepatic Segments -->
     <a-entity mindar-image-target="targetIndex: 8" id="target-8">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 45 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 45 0" gesture-controls></a-gltf-model>
     </a-entity>
 
   </a-scene>
@@ -242,6 +283,23 @@
       });
 
       setTimeout(dismissLoading, 4000);
+
+      // On-Screen Zoom Buttons Handler
+      document.getElementById("btn-zoom-in").addEventListener("click", () => {
+        document.querySelectorAll(".target-model").forEach((model) => {
+          if (model.components['gesture-controls']) {
+            model.components['gesture-controls'].zoomIn();
+          }
+        });
+      });
+
+      document.getElementById("btn-zoom-out").addEventListener("click", () => {
+        document.querySelectorAll(".target-model").forEach((model) => {
+          if (model.components['gesture-controls']) {
+            model.components['gesture-controls'].zoomOut();
+          }
+        });
+      });
 
       const cardDetails = {
         "target-0": { title: "Anterior View", desc: "Showcases the right and left lobes, falciform ligament, and gallbladder." },
