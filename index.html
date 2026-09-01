@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Hepatic Pathology Simulator & WebAR</title>
+  <title>Hepatic Pathology & Lifestyle Impact Simulator</title>
 
   <!-- Stable A-Frame & MindAR Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
-  <!-- Gesture Handling Component -->
+  <!-- Touch Gesture Handling Component -->
   <script>
     AFRAME.registerComponent('gesture-controls', {
       schema: {
@@ -103,14 +103,14 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Top Stage Bar */
+    /* Top Stage Selector */
     #stage-bar {
       position: fixed;
       top: 16px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 8px;
+      gap: 6px;
       background: rgba(15, 23, 42, 0.88);
       backdrop-filter: blur(8px);
       padding: 6px;
@@ -123,9 +123,9 @@
       background: transparent;
       border: none;
       color: #94a3b8;
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 20px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -136,11 +136,44 @@
       color: #0f172a;
     }
 
-    /* Right Control Cluster */
+    /* Duration Year Slider Card */
+    #timeline-panel {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 82%;
+      max-width: 360px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 8px 16px;
+      z-index: 2000;
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: #38bdf8;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    input[type=range] {
+      width: 100%;
+      accent-color: #38bdf8;
+      cursor: pointer;
+    }
+
+    /* Right Action Cluster */
     #right-controls {
       position: fixed;
       right: 16px;
-      top: 50%;
+      top: 52%;
       transform: translateY(-50%);
       display: flex;
       flex-direction: column;
@@ -171,7 +204,7 @@
       color: #ffffff;
     }
 
-    /* Bottom Info Banner */
+    /* Bottom Info Card */
     #info-card {
       position: fixed;
       bottom: 24px;
@@ -193,7 +226,26 @@
 
     #info-card h3 { margin: 0 0 4px 0; font-size: 1.05rem; color: #38bdf8; }
     #info-card p { margin: 0 0 6px 0; font-size: 0.82rem; color: #cbd5e1; line-height: 1.35; }
-    #impact-tag { font-size: 0.78rem; font-weight: 600; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 4px 10px; border-radius: 8px; display: inline-block; }
+    
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .stat-badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    .health-good { color: #10b981; background: rgba(16, 185, 129, 0.15); }
+    .health-warn { color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
+    .health-critical { color: #f43f5e; background: rgba(244, 63, 94, 0.15); }
   </style>
 </head>
 <body>
@@ -203,14 +255,23 @@
     <div id="loading-msg">Starting Camera & Pathology Simulator...</div>
   </div>
 
-  <!-- Top Stage Selector -->
+  <!-- Stage Selector -->
   <div id="stage-bar">
     <button class="stage-btn active" data-stage="healthy">Healthy</button>
     <button class="stage-btn" data-stage="fatty">Fatty Liver</button>
     <button class="stage-btn" data-stage="cirrhosis">Cirrhosis</button>
   </div>
 
-  <!-- Right Floating Action Buttons -->
+  <!-- Duration Timeline Slider -->
+  <div id="timeline-panel">
+    <div class="timeline-header">
+      <span>Habit Exposure Duration</span>
+      <span id="years-val">1 Year</span>
+    </div>
+    <input type="range" id="years-slider" min="1" max="20" value="1" step="1">
+  </div>
+
+  <!-- Right Floating Buttons -->
   <div id="right-controls">
     <button class="icon-btn" id="btn-alcohol" title="Toggle Alcohol Impact">🍺</button>
     <button class="icon-btn" id="btn-smoking" title="Toggle Smoking Impact">🚬</button>
@@ -223,7 +284,10 @@
   <div id="info-card">
     <h3 id="card-title">Liver Anatomy</h3>
     <p id="card-desc">Scan a flashcard to inspect structures.</p>
-    <div id="impact-tag" style="display: none;">Habit Impact Active</div>
+    <div class="stats-row">
+      <span id="health-pct" class="stat-badge health-good">Function: 100%</span>
+      <span id="risk-status" class="stat-badge health-good">Status: Normal</span>
+    </div>
   </div>
 
   <a-scene 
@@ -297,12 +361,16 @@
       const infoCard = document.getElementById("info-card");
       const cardTitle = document.getElementById("card-title");
       const cardDesc = document.getElementById("card-desc");
-      const impactTag = document.getElementById("impact-tag");
+      const healthPctEl = document.getElementById("health-pct");
+      const riskStatusEl = document.getElementById("risk-status");
+      const yearsSlider = document.getElementById("years-slider");
+      const yearsVal = document.getElementById("years-val");
 
       let activeTarget = null;
       let activeStage = "healthy";
       let alcoholActive = false;
       let smokingActive = false;
+      let yearsExposure = 1;
 
       const dismissLoading = () => {
         loadingScreen.style.opacity = "0";
@@ -323,34 +391,65 @@
         "target-8": { title: "Hepatic Segments", desc: "Vascular tree mapping 8 Couinaud functional segments." }
       };
 
-      // Real-time Material & Mesh Morphing Engine
+      // Calculate Functional Liver Percentage & Risk Category
+      const calculateHealthStats = () => {
+        let health = 100;
+
+        // Stage Impact
+        if (activeStage === "fatty") health -= 20;
+        if (activeStage === "cirrhosis") health -= 55;
+
+        // Active Habits x Duration Impact
+        let habitFactor = 0;
+        if (alcoholActive) habitFactor += 1.8;
+        if (smokingActive) habitFactor += 1.2;
+
+        health -= Math.round(yearsExposure * habitFactor);
+        health = Math.max(15, Math.min(100, health)); // Clamp between 15% and 100%
+
+        return health;
+      };
+
+      // Dynamic Material Morphing Engine
       const applyPathologyToMesh = () => {
+        const health = calculateHealthStats();
+        const durationFactor = yearsExposure / 20.0; // 0.05 to 1.0
+
         document.querySelectorAll(".target-model").forEach((modelEl) => {
           const mesh = modelEl.getObject3D('mesh');
           if (!mesh) return;
 
           mesh.traverse((node) => {
             if (node.isMesh && node.material) {
-              // Reset base color
               let targetColor = new THREE.Color(0xffffff);
               let targetRoughness = 0.5;
 
-              // Stage Morphing Logic
+              // Stage Morphing Base
               if (activeStage === "fatty") {
-                targetColor.setHex(0xd97706); // Fatty yellowish-brown hue
-                targetRoughness = 0.25;        // Greasy sheen
+                targetColor.setHex(0xd97706); // Fatty yellowish
+                targetRoughness = 0.3;
               } else if (activeStage === "cirrhosis") {
-                targetColor.setHex(0x7f1d1d); // Dark fibrotic purple-red
-                targetRoughness = 0.95;        // Rough, scarred surface
+                targetColor.setHex(0x7f1d1d); // Dark fibrotic purple
+                targetRoughness = 0.95;
               }
 
-              // Habit Impact Morphing
-              if (smokingActive && !alcoholActive) {
-                targetColor.multiplyScalar(0.65); // Hypoxia / toxic darkening
-              } else if (alcoholActive && !smokingActive) {
-                if (activeStage === "healthy") targetColor.setHex(0xb91c1c); // Inflammation / Acute Hepatitis
-              } else if (alcoholActive && smokingActive) {
-                targetColor.setHex(0x450a0a); // Severe combined necrotic tissue damage
+              // Progressive Year Duration Modifications
+              if (smokingActive || alcoholActive) {
+                // Shift tone towards dark brown/black based on years
+                const darkness = 1.0 - (durationFactor * 0.55);
+                targetColor.multiplyScalar(darkness);
+
+                if (smokingActive) {
+                  // Vasoconstriction / Hypoxia Graying
+                  targetColor.lerp(new THREE.Color(0x334155), durationFactor * 0.4);
+                }
+
+                if (alcoholActive) {
+                  // Fatty / Inflammatory Reddening
+                  targetColor.lerp(new THREE.Color(0x7c2d12), durationFactor * 0.5);
+                }
+
+                targetRoughness = Math.min(0.98, targetRoughness + (durationFactor * 0.3));
               }
 
               node.material.color = targetColor;
@@ -361,32 +460,51 @@
         });
       };
 
+      // Update Medical Text & Percentage UI
       const updateCardDisplay = () => {
         if (!activeTarget) return;
 
         let base = cardDetails[activeTarget] || { title: "Target Active", desc: "Hepatic structure detected." };
         cardTitle.innerText = `${base.title} (${activeStage.toUpperCase()})`;
 
-        let descriptionText = base.desc;
-        if (activeStage === "fatty") {
-          descriptionText = "Steatosis: Triglycerides accumulate in hepatocytes, enlarging the organ with a greasy yellowish tint.";
-        } else if (activeStage === "cirrhosis") {
-          descriptionText = "Cirrhosis: Fibrotic scarring destroys hepatic lobules, causing permanent vascular restriction.";
-        }
+        const health = calculateHealthStats();
+        healthPctEl.innerText = `Function: ${health}%`;
 
-        cardDesc.innerText = descriptionText;
-
-        let impacts = [];
-        if (alcoholActive) impacts.push("🍺 Acetaldehyde Toxicity & Lipid Accumulation");
-        if (smokingActive) impacts.push("🚬 Vasoconstriction & Hypoxic Stress");
-
-        if (impacts.length > 0) {
-          impactTag.innerText = impacts.join(" | ");
-          impactTag.style.display = "inline-block";
+        // Style Percentage Badge
+        if (health > 75) {
+          healthPctEl.className = "stat-badge health-good";
+          riskStatusEl.className = "stat-badge health-good";
+          riskStatusEl.innerText = "Status: Healthy";
+        } else if (health > 45) {
+          healthPctEl.className = "stat-badge health-warn";
+          riskStatusEl.className = "stat-badge health-warn";
+          riskStatusEl.innerText = "Status: Moderate Strain";
         } else {
-          impactTag.style.display = "none";
+          healthPctEl.className = "stat-badge health-critical";
+          riskStatusEl.className = "stat-badge health-critical";
+          riskStatusEl.innerText = "Status: Severe Necrosis";
         }
+
+        // Custom Educational Text based on Years
+        let descText = base.desc;
+        if (smokingActive || alcoholActive) {
+          descText = `Over ${yearsExposure} year(s) of exposure: Acetaldehyde and tobacco toxins cause progressive lipid peroxidation and vascular contraction.`;
+        } else if (activeStage === "fatty") {
+          descText = "Steatosis: Triglyceride accumulation expands hepatocytes and reduces metabolic efficiency.";
+        } else if (activeStage === "cirrhosis") {
+          descText = "Cirrhosis: Fibrotic tissue replaces healthy parenchyma, disrupting portal blood circulation.";
+        }
+
+        cardDesc.innerText = descText;
       };
+
+      // Year Slider Handler
+      yearsSlider.addEventListener("input", (e) => {
+        yearsExposure = parseInt(e.target.value);
+        yearsVal.innerText = `${yearsExposure} Year${yearsExposure > 1 ? 's' : ''}`;
+        applyPathologyToMesh();
+        updateCardDisplay();
+      });
 
       // Stage Selection Handler
       document.querySelectorAll(".stage-btn").forEach((btn) => {
@@ -417,7 +535,7 @@
         updateCardDisplay();
       });
 
-      // Zoom Button Handlers
+      // Zoom Controls
       document.getElementById("btn-zoom-in").addEventListener("click", () => {
         document.querySelectorAll(".target-model").forEach((model) => {
           if (model.components['gesture-controls']) model.components['gesture-controls'].zoomIn();
@@ -430,12 +548,11 @@
         });
       });
 
-      // Target Tracking Handler
+      // Target Tracking Events
       const targets = document.querySelectorAll("[mindar-image-target]");
       targets.forEach((target) => {
         target.addEventListener("targetFound", (event) => {
           activeTarget = event.target.id;
-          // Apply active pathology settings when model loads
           setTimeout(applyPathologyToMesh, 200);
           updateCardDisplay();
           infoCard.style.display = "block";
