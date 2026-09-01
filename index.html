@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Hepatic Pathology & Lifestyle Impact Simulator</title>
+  <title>OrganoAR — Multiorgan Substance Impact & Recovery Simulator</title>
 
   <!-- Stable A-Frame & MindAR Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
-  <!-- Touch Gesture Handling Component -->
+  <!-- Touch Gesture Component -->
   <script>
     AFRAME.registerComponent('gesture-controls', {
       schema: {
@@ -68,225 +68,310 @@
   </script>
 
   <style>
+    :root {
+      --bg-glass: rgba(15, 23, 42, 0.78);
+      --border-glass: rgba(255, 255, 255, 0.12);
+      --accent-cyan: #38bdf8;
+      --accent-rose: #f43f5e;
+      --accent-emerald: #10b981;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
     body {
       margin: 0;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
       touch-action: none;
+      background: #020617;
+      color: var(--text-main);
     }
 
+    /* Loading Screen */
     #loading-screen {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #0f172a;
-      color: #ffffff;
+      inset: 0;
+      background: #020617;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 9999;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .spinner {
-      width: 44px;
-      height: 44px;
-      border: 4px solid rgba(255, 255, 255, 0.15);
-      border-left-color: #38bdf8;
+    .pulse-ring {
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 16px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 2px solid var(--accent-cyan);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+      animation: pulse 1.6s ease-in-out infinite;
+      margin-bottom: 20px;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
 
-    /* Top Stage Selector */
-    #stage-bar {
+    #loading-msg {
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* Top Organ Navigation Bar */
+    #top-nav {
       position: fixed;
       top: 16px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
       gap: 6px;
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(8px);
-      padding: 6px;
-      border-radius: 30px;
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px) saturate(180%);
+      padding: 5px;
+      border-radius: 24px;
+      border: 1px solid var(--border-glass);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
       z-index: 2000;
     }
 
-    .stage-btn {
+    .nav-tab {
       background: transparent;
       border: none;
-      color: #94a3b8;
-      padding: 8px 12px;
-      border-radius: 20px;
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 18px;
       font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .stage-btn.active {
-      background: #38bdf8;
-      color: #0f172a;
+    .nav-tab.active {
+      background: var(--accent-cyan);
+      color: #020617;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
     }
 
-    /* Duration Year Slider Card */
-    #timeline-panel {
+    /* Duration & Mode Timeline Control */
+    #timeline-card {
       position: fixed;
       top: 72px;
       left: 50%;
       transform: translateX(-50%);
-      width: 82%;
-      max-width: 360px;
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      border-radius: 12px;
-      padding: 8px 16px;
+      width: 88%;
+      max-width: 380px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid var(--border-glass);
+      border-radius: 16px;
+      padding: 10px 16px;
       z-index: 2000;
-      color: #ffffff;
-      text-align: center;
     }
 
     .timeline-header {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-size: 0.78rem;
-      color: #38bdf8;
-      margin-bottom: 4px;
       font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .timeline-header span:last-child {
+      color: var(--accent-cyan);
+      font-weight: 700;
     }
 
     input[type=range] {
       width: 100%;
-      accent-color: #38bdf8;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+      accent-color: var(--accent-cyan);
       cursor: pointer;
     }
 
-    /* Right Action Cluster */
-    #right-controls {
+    /* Floating Action Buttons */
+    #right-actions {
       position: fixed;
       right: 16px;
-      top: 52%;
+      top: 50%;
       transform: translateY(-50%);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       z-index: 2000;
     }
 
-    .icon-btn {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid #38bdf8;
-      color: #38bdf8;
-      font-size: 1.2rem;
+    .fab {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      color: var(--text-main);
+      font-size: 1.1rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      outline: none;
-      user-select: none;
       cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     }
 
-    .icon-btn.active {
-      background: #ef4444;
-      border-color: #f87171;
-      color: #ffffff;
+    .fab.active {
+      background: var(--accent-rose);
+      border-color: rgba(244, 63, 94, 0.4);
+      box-shadow: 0 0 16px rgba(244, 63, 94, 0.4);
     }
 
-    /* Bottom Info Card */
-    #info-card {
+    /* Bottom Information Dashboard */
+    #dashboard-card {
       position: fixed;
-      bottom: 24px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 88%;
+      width: 90%;
       max-width: 420px;
-      background: rgba(15, 23, 42, 0.92);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      color: #ffffff;
-      padding: 16px 20px;
-      border-radius: 16px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border-glass);
+      padding: 18px 20px;
+      border-radius: 20px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
       z-index: 1000;
       display: none;
+    }
+
+    #card-title {
+      margin: 0 0 4px 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      letter-spacing: -0.01em;
+    }
+
+    #card-desc {
+      margin: 0 0 12px 0;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-glass);
+    }
+
+    .metric-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-glass);
+      padding: 6px 10px;
+      border-radius: 10px;
       text-align: center;
     }
 
-    #info-card h3 { margin: 0 0 4px 0; font-size: 1.05rem; color: #38bdf8; }
-    #info-card p { margin: 0 0 6px 0; font-size: 0.82rem; color: #cbd5e1; line-height: 1.35; }
-    
-    .stats-row {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(255,255,255,0.1);
+    .metric-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      display: block;
+      margin-bottom: 2px;
     }
 
-    .stat-badge {
-      font-size: 0.78rem;
+    .metric-value {
+      font-size: 0.88rem;
       font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 8px;
     }
 
-    .health-good { color: #10b981; background: rgba(16, 185, 129, 0.15); }
-    .health-warn { color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
-    .health-critical { color: #f43f5e; background: rgba(244, 63, 94, 0.15); }
+    .status-good { color: var(--accent-emerald); }
+    .status-warn { color: #f59e0b; }
+    .status-crit { color: var(--accent-rose); }
+
+    /* Help & De-addiction Hotline Button */
+    #help-btn {
+      position: fixed;
+      left: 16px;
+      top: 16px;
+      padding: 8px 12px;
+      border-radius: 20px;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      color: var(--accent-cyan);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 2000;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Loading State -->
   <div id="loading-screen">
-    <div class="spinner"></div>
-    <div id="loading-msg">Starting Camera & Pathology Simulator...</div>
+    <div class="pulse-ring"></div>
+    <div id="loading-msg">Initializing OrganoAR Engine...</div>
   </div>
 
-  <!-- Stage Selector -->
-  <div id="stage-bar">
-    <button class="stage-btn active" data-stage="healthy">Healthy</button>
-    <button class="stage-btn" data-stage="fatty">Fatty Liver</button>
-    <button class="stage-btn" data-stage="cirrhosis">Cirrhosis</button>
+  <!-- De-Addiction Support Hotline -->
+  <button id="help-btn" onclick="alert('National De-Addiction Toll-Free Helpline (India): 14446\nConfidential Support Available 24/7.')">🆘 Helpline</button>
+
+  <!-- Top Organ Selector -->
+  <div id="top-nav">
+    <button class="nav-tab active" data-organ="liver">Liver</button>
+    <button class="nav-tab" data-organ="brain">Brain Pathway</button>
+    <button class="nav-tab" data-organ="lungs">Lungs</button>
   </div>
 
-  <!-- Duration Timeline Slider -->
-  <div id="timeline-panel">
+  <!-- Exposure Timeline Slider -->
+  <div id="timeline-card">
     <div class="timeline-header">
-      <span>Habit Exposure Duration</span>
+      <span>Substance Exposure Timeline</span>
       <span id="years-val">1 Year</span>
     </div>
     <input type="range" id="years-slider" min="1" max="20" value="1" step="1">
   </div>
 
-  <!-- Right Floating Buttons -->
-  <div id="right-controls">
-    <button class="icon-btn" id="btn-alcohol" title="Toggle Alcohol Impact">🍺</button>
-    <button class="icon-btn" id="btn-smoking" title="Toggle Smoking Impact">🚬</button>
-    <div style="height: 1px; background: rgba(56, 189, 248, 0.3); margin: 4px 0;"></div>
-    <button class="icon-btn" id="btn-zoom-in">+</button>
-    <button class="icon-btn" id="btn-zoom-out">−</button>
+  <!-- Floating Action Buttons -->
+  <div id="right-actions">
+    <button class="fab" id="btn-alcohol" title="Toggle Alcohol Impact">🍺</button>
+    <button class="fab" id="btn-smoking" title="Toggle Tobacco Impact">🚬</button>
+    <button class="fab" id="btn-opioid" title="Toggle Opioid Impact">💊</button>
+    <div style="height: 1px; background: var(--border-glass); margin: 2px 0;"></div>
+    <button class="fab" id="btn-zoom-in">+</button>
+    <button class="fab" id="btn-zoom-out">−</button>
   </div>
 
-  <!-- Medical Info Card -->
-  <div id="info-card">
-    <h3 id="card-title">Liver Anatomy</h3>
+  <!-- Bottom Analytics Dashboard -->
+  <div id="dashboard-card">
+    <h3 id="card-title">Anterior View</h3>
     <p id="card-desc">Scan a flashcard to inspect structures.</p>
-    <div class="stats-row">
-      <span id="health-pct" class="stat-badge health-good">Function: 100%</span>
-      <span id="risk-status" class="stat-badge health-good">Status: Normal</span>
+    <div class="metrics-grid">
+      <div class="metric-pill">
+        <span class="metric-label">Organ Efficiency</span>
+        <span id="health-val" class="metric-value status-good">100%</span>
+      </div>
+      <div class="metric-pill">
+        <span class="metric-label">Pathology Index</span>
+        <span id="status-val" class="metric-value status-good">Normal</span>
+      </div>
     </div>
   </div>
 
@@ -303,7 +388,7 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- Scene Lighting -->
+    <!-- Professional Studio Lighting -->
     <a-light id="ambient-light" type="ambient" intensity="1.8"></a-light>
     <a-light id="dir-light" type="directional" position="1 2 3" intensity="2.5"></a-light>
 
@@ -358,23 +443,24 @@
     document.addEventListener("DOMContentLoaded", () => {
       const sceneEl = document.querySelector("a-scene");
       const loadingScreen = document.getElementById("loading-screen");
-      const infoCard = document.getElementById("info-card");
+      const dashboardCard = document.getElementById("dashboard-card");
       const cardTitle = document.getElementById("card-title");
       const cardDesc = document.getElementById("card-desc");
-      const healthPctEl = document.getElementById("health-pct");
-      const riskStatusEl = document.getElementById("risk-status");
+      const healthVal = document.getElementById("health-val");
+      const statusVal = document.getElementById("status-val");
       const yearsSlider = document.getElementById("years-slider");
       const yearsVal = document.getElementById("years-val");
 
       let activeTarget = null;
-      let activeStage = "healthy";
+      let activeOrgan = "liver";
       let alcoholActive = false;
       let smokingActive = false;
+      let opioidActive = false;
       let yearsExposure = 1;
 
       const dismissLoading = () => {
         loadingScreen.style.opacity = "0";
-        setTimeout(() => { loadingScreen.style.display = "none"; }, 400);
+        setTimeout(() => { loadingScreen.style.display = "none"; }, 500);
       };
       sceneEl.addEventListener("arReady", dismissLoading);
       setTimeout(dismissLoading, 4000);
@@ -391,29 +477,20 @@
         "target-8": { title: "Hepatic Segments", desc: "Vascular tree mapping 8 Couinaud functional segments." }
       };
 
-      // Calculate Functional Liver Percentage & Risk Category
-      const calculateHealthStats = () => {
+      const calculateHealth = () => {
         let health = 100;
+        let factor = 0;
+        if (alcoholActive) factor += 2.0;
+        if (smokingActive) factor += 1.5;
+        if (opioidActive) factor += 2.5;
 
-        // Stage Impact
-        if (activeStage === "fatty") health -= 20;
-        if (activeStage === "cirrhosis") health -= 55;
-
-        // Active Habits x Duration Impact
-        let habitFactor = 0;
-        if (alcoholActive) habitFactor += 1.8;
-        if (smokingActive) habitFactor += 1.2;
-
-        health -= Math.round(yearsExposure * habitFactor);
-        health = Math.max(15, Math.min(100, health)); // Clamp between 15% and 100%
-
-        return health;
+        health -= Math.round(yearsExposure * factor);
+        return Math.max(12, Math.min(100, health));
       };
 
-      // Dynamic Material Morphing Engine
       const applyPathologyToMesh = () => {
-        const health = calculateHealthStats();
-        const durationFactor = yearsExposure / 20.0; // 0.05 to 1.0
+        const health = calculateHealth();
+        const durationFactor = yearsExposure / 20.0;
 
         document.querySelectorAll(".target-model").forEach((modelEl) => {
           const mesh = modelEl.getObject3D('mesh');
@@ -424,32 +501,15 @@
               let targetColor = new THREE.Color(0xffffff);
               let targetRoughness = 0.5;
 
-              // Stage Morphing Base
-              if (activeStage === "fatty") {
-                targetColor.setHex(0xd97706); // Fatty yellowish
-                targetRoughness = 0.3;
-              } else if (activeStage === "cirrhosis") {
-                targetColor.setHex(0x7f1d1d); // Dark fibrotic purple
-                targetRoughness = 0.95;
-              }
-
-              // Progressive Year Duration Modifications
-              if (smokingActive || alcoholActive) {
-                // Shift tone towards dark brown/black based on years
-                const darkness = 1.0 - (durationFactor * 0.55);
+              if (smokingActive || alcoholActive || opioidActive) {
+                const darkness = 1.0 - (durationFactor * 0.6);
                 targetColor.multiplyScalar(darkness);
 
-                if (smokingActive) {
-                  // Vasoconstriction / Hypoxia Graying
-                  targetColor.lerp(new THREE.Color(0x334155), durationFactor * 0.4);
-                }
+                if (smokingActive) targetColor.lerp(new THREE.Color(0x334155), durationFactor * 0.5);
+                if (alcoholActive) targetColor.lerp(new THREE.Color(0x7c2d12), durationFactor * 0.5);
+                if (opioidActive) targetColor.lerp(new THREE.Color(0x4c1d95), durationFactor * 0.6);
 
-                if (alcoholActive) {
-                  // Fatty / Inflammatory Reddening
-                  targetColor.lerp(new THREE.Color(0x7c2d12), durationFactor * 0.5);
-                }
-
-                targetRoughness = Math.min(0.98, targetRoughness + (durationFactor * 0.3));
+                targetRoughness = Math.min(0.98, targetRoughness + (durationFactor * 0.4));
               }
 
               node.material.color = targetColor;
@@ -460,82 +520,67 @@
         });
       };
 
-      // Update Medical Text & Percentage UI
-      const updateCardDisplay = () => {
+      const updateDashboard = () => {
         if (!activeTarget) return;
 
-        let base = cardDetails[activeTarget] || { title: "Target Active", desc: "Hepatic structure detected." };
-        cardTitle.innerText = `${base.title} (${activeStage.toUpperCase()})`;
+        let base = cardDetails[activeTarget] || { title: "Target Detected", desc: "Organ structure active." };
+        cardTitle.innerText = `${base.title} [${activeOrgan.toUpperCase()}]`;
 
-        const health = calculateHealthStats();
-        healthPctEl.innerText = `Function: ${health}%`;
+        const health = calculateHealth();
+        healthVal.innerText = `${health}%`;
 
-        // Style Percentage Badge
         if (health > 75) {
-          healthPctEl.className = "stat-badge health-good";
-          riskStatusEl.className = "stat-badge health-good";
-          riskStatusEl.innerText = "Status: Healthy";
+          healthVal.className = "metric-value status-good";
+          statusVal.className = "metric-value status-good";
+          statusVal.innerText = "Normal";
         } else if (health > 45) {
-          healthPctEl.className = "stat-badge health-warn";
-          riskStatusEl.className = "stat-badge health-warn";
-          riskStatusEl.innerText = "Status: Moderate Strain";
+          healthVal.className = "metric-value status-warn";
+          statusVal.className = "metric-value status-warn";
+          statusVal.innerText = "Moderate Stress";
         } else {
-          healthPctEl.className = "stat-badge health-critical";
-          riskStatusEl.className = "stat-badge health-critical";
-          riskStatusEl.innerText = "Status: Severe Necrosis";
+          healthVal.className = "metric-value status-crit";
+          statusVal.className = "metric-value status-crit";
+          statusVal.innerText = "Severe Pathology";
         }
 
-        // Custom Educational Text based on Years
         let descText = base.desc;
-        if (smokingActive || alcoholActive) {
-          descText = `Over ${yearsExposure} year(s) of exposure: Acetaldehyde and tobacco toxins cause progressive lipid peroxidation and vascular contraction.`;
-        } else if (activeStage === "fatty") {
-          descText = "Steatosis: Triglyceride accumulation expands hepatocytes and reduces metabolic efficiency.";
-        } else if (activeStage === "cirrhosis") {
-          descText = "Cirrhosis: Fibrotic tissue replaces healthy parenchyma, disrupting portal blood circulation.";
+        if (smokingActive || alcoholActive || opioidActive) {
+          descText = `Impact over ${yearsExposure} year(s): Active chemical toxicity induces cellular inflammation, vascular hypoxia, and tissue necrosis.`;
         }
-
         cardDesc.innerText = descText;
       };
 
-      // Year Slider Handler
+      // Navigation & Controls Event Listeners
+      document.querySelectorAll(".nav-tab").forEach((tab) => {
+        tab.addEventListener("click", (e) => {
+          document.querySelectorAll(".nav-tab").forEach((t) => t.classList.remove("active"));
+          e.target.classList.add("active");
+          activeOrgan = e.target.dataset.organ;
+          updateDashboard();
+        });
+      });
+
       yearsSlider.addEventListener("input", (e) => {
         yearsExposure = parseInt(e.target.value);
         yearsVal.innerText = `${yearsExposure} Year${yearsExposure > 1 ? 's' : ''}`;
         applyPathologyToMesh();
-        updateCardDisplay();
+        updateDashboard();
       });
 
-      // Stage Selection Handler
-      document.querySelectorAll(".stage-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          document.querySelectorAll(".stage-btn").forEach((b) => b.classList.remove("active"));
-          e.target.classList.add("active");
-          activeStage = e.target.dataset.stage;
-
+      const setupToggle = (id, getter, setter) => {
+        const btn = document.getElementById(id);
+        btn.addEventListener("click", () => {
+          setter(!getter());
+          btn.classList.toggle("active", getter());
           applyPathologyToMesh();
-          updateCardDisplay();
+          updateDashboard();
         });
-      });
+      };
 
-      // Habit Toggle Handlers
-      const btnAlcohol = document.getElementById("btn-alcohol");
-      btnAlcohol.addEventListener("click", () => {
-        alcoholActive = !alcoholActive;
-        btnAlcohol.classList.toggle("active", alcoholActive);
-        applyPathologyToMesh();
-        updateCardDisplay();
-      });
+      setupToggle("btn-alcohol", () => alcoholActive, (val) => alcoholActive = val);
+      setupToggle("btn-smoking", () => smokingActive, (val) => smokingActive = val);
+      setupToggle("btn-opioid", () => opioidActive, (val) => opioidActive = val);
 
-      const btnSmoking = document.getElementById("btn-smoking");
-      btnSmoking.addEventListener("click", () => {
-        smokingActive = !smokingActive;
-        btnSmoking.classList.toggle("active", smokingActive);
-        applyPathologyToMesh();
-        updateCardDisplay();
-      });
-
-      // Zoom Controls
       document.getElementById("btn-zoom-in").addEventListener("click", () => {
         document.querySelectorAll(".target-model").forEach((model) => {
           if (model.components['gesture-controls']) model.components['gesture-controls'].zoomIn();
@@ -548,19 +593,18 @@
         });
       });
 
-      // Target Tracking Events
       const targets = document.querySelectorAll("[mindar-image-target]");
       targets.forEach((target) => {
         target.addEventListener("targetFound", (event) => {
           activeTarget = event.target.id;
           setTimeout(applyPathologyToMesh, 200);
-          updateCardDisplay();
-          infoCard.style.display = "block";
+          updateDashboard();
+          dashboardCard.style.display = "block";
         });
 
         target.addEventListener("targetLost", () => {
           activeTarget = null;
-          infoCard.style.display = "none";
+          dashboardCard.style.display = "none";
         });
       });
     });
