@@ -109,26 +109,9 @@
       text-align: center;
     }
 
-    #info-card h3 { 
-      margin: 0 0 6px 0; 
-      font-size: 1.1rem; 
-      color: #38bdf8; 
-    }
-
-    #info-card p { 
-      margin: 0; 
-      font-size: 0.88rem; 
-      color: #cbd5e1; 
-      line-height: 1.35; 
-    }
-
-    #touch-hint {
-      display: block;
-      margin-top: 8px;
-      font-size: 0.75rem;
-      color: #94a3b8;
-      font-style: italic;
-    }
+    #info-card h3 { margin: 0 0 6px 0; font-size: 1.1rem; color: #38bdf8; }
+    #info-card p { margin: 0; font-size: 0.88rem; color: #cbd5e1; line-height: 1.35; }
+    #touch-hint { display: block; margin-top: 8px; font-size: 0.75rem; color: #94a3b8; font-style: italic; }
   </style>
 </head>
 <body>
@@ -144,7 +127,6 @@
     <span id="touch-hint">👆 Drag finger across screen to rotate 3D model</span>
   </div>
 
-  <!-- Points directly to livertargets.mind -->
   <a-scene 
     mindar-image="imageTargetSrc: ./livertargets.mind; filterMinCF: 0.0001; filterBeta: 0.001;" 
     color-space="sRGB" 
@@ -156,51 +138,55 @@
       <a-asset-item id="liverModel" src="./liver.glb"></a-asset-item>
     </a-assets>
 
+    <!-- Explicit Scene Lighting to illuminate GLTF materials -->
+    <a-light type="ambient" intensity="1.5"></a-light>
+    <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
+
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- TARGET 0: 1.png (Anterior View) -->
+    <!-- TARGET 0: Anterior View -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 1: 2.png (Posterior View) -->
+    <!-- TARGET 1: Posterior View -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 2: 3.png (Inferior View) -->
+    <!-- TARGET 2: Inferior View -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-2">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 3: 4.png (Superior View) -->
+    <!-- TARGET 3: Superior View -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-3">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 4: 5.png (Lateral View) -->
+    <!-- TARGET 4: Lateral View -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-4">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 5: 6.png (Visceral Anatomy) -->
+    <!-- TARGET 5: Visceral Anatomy -->
     <a-entity mindar-image-target="targetIndex: 5" id="target-5">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 6: 7.png (Diaphragmatic Surface) -->
+    <!-- TARGET 6: Diaphragmatic Surface -->
     <a-entity mindar-image-target="targetIndex: 6" id="target-6">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 7: 8.png (Costal Profile) -->
+    <!-- TARGET 7: Costal Profile -->
     <a-entity mindar-image-target="targetIndex: 7" id="target-7">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 8: 9.png (Hepatic Segments) -->
+    <!-- TARGET 8: Hepatic Segments -->
     <a-entity mindar-image-target="targetIndex: 8" id="target-8">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
   </a-scene>
