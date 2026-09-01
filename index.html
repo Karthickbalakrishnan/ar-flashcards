@@ -134,52 +134,52 @@
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <!-- Scene Lighting -->
-    <a-light type="ambient" intensity="1.5"></a-light>
-    <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
+    <a-light type="ambient" intensity="1.8"></a-light>
+    <a-light type="directional" position="1 2 3" intensity="2.5"></a-light>
 
     <!-- TARGET 0: 1.png (Anterior View) -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 1: 2.png (Posterior View) -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 2: 3.png (Inferior View) -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-2">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 3: 4.png (Superior View) -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-3">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 4: 5.png (Lateral View) -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-4">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 5: 6.png (Visceral Anatomy) -->
     <a-entity mindar-image-target="targetIndex: 5" id="target-5">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 6: 7.png (Diaphragmatic Surface) -->
     <a-entity mindar-image-target="targetIndex: 6" id="target-6">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 7: 8.png (Costal Profile) -->
     <a-entity mindar-image-target="targetIndex: 7" id="target-7">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 8: 9.png (Hepatic Segments) -->
     <a-entity mindar-image-target="targetIndex: 8" id="target-8">
-      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.5 0.5 0.5" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
   </a-scene>
@@ -203,7 +203,6 @@
         loadingMsg.innerText = "Camera access error. Please refresh and allow permissions.";
       });
 
-      // Safety fallback: Dismiss loading screen after 4s max
       setTimeout(dismissLoading, 4000);
 
       const cardDetails = {
