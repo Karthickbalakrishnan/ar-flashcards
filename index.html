@@ -12,16 +12,12 @@
   <!-- Custom Touch Swipe Rotation Component -->
   <script>
     AFRAME.registerComponent('gesture-rotation', {
-      schema: {
-        factor: { type: 'number', default: 5 }
-      },
+      schema: { factor: { type: 'number', default: 5 } },
       init: function () {
         this.handleTouchStart = this.handleTouchStart.bind(this);
         this.handleTouchMove = this.handleTouchMove.bind(this);
-        
         this.touchX = 0;
         this.touchY = 0;
-        
         window.addEventListener('touchstart', this.handleTouchStart);
         window.addEventListener('touchmove', this.handleTouchMove);
       },
@@ -35,15 +31,12 @@
         if (evt.touches.length === 1) {
           const deltaX = evt.touches[0].clientX - this.touchX;
           const deltaY = evt.touches[0].clientY - this.touchY;
-
           const currentRotation = this.el.getAttribute('rotation');
-
           this.el.setAttribute('rotation', {
             x: currentRotation.x + deltaY * (this.data.factor * 0.1),
             y: currentRotation.y + deltaX * (this.data.factor * 0.1),
             z: currentRotation.z
           });
-
           this.touchX = evt.touches[0].clientX;
           this.touchY = evt.touches[0].clientY;
         }
@@ -118,7 +111,7 @@
 
   <div id="loading-screen">
     <div class="spinner"></div>
-    <div>Loading Hepatic Physiology AR...</div>
+    <div id="loading-text">Loading Hepatic Physiology AR...</div>
   </div>
 
   <div id="info-card">
@@ -138,7 +131,6 @@
       <a-asset-item id="liverModel" src="./liver.glb"></a-asset-item>
     </a-assets>
 
-    <!-- Explicit Scene Lighting to illuminate GLTF materials -->
     <a-light type="ambient" intensity="1.5"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
@@ -146,47 +138,47 @@
 
     <!-- TARGET 0: Anterior View -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.01 0.01 0.01" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 1: Posterior View -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.01 0.01 0.01" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 2: Inferior View -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-2">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.01 0.01 0.01" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 3: Superior View -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-3">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.01 0.01 0.01" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 4: Lateral View -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-4">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.01 0.01 0.01" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 5: Visceral Anatomy -->
     <a-entity mindar-image-target="targetIndex: 5" id="target-5">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.01 0.01 0.01" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 6: Diaphragmatic Surface -->
     <a-entity mindar-image-target="targetIndex: 6" id="target-6">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.01 0.01 0.01" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 7: Costal Profile -->
     <a-entity mindar-image-target="targetIndex: 7" id="target-7">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.01 0.01 0.01" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
     <!-- TARGET 8: Hepatic Segments -->
     <a-entity mindar-image-target="targetIndex: 8" id="target-8">
-      <a-gltf-model src="#liverModel" position="0 0 0.2" scale="0.1 0.1 0.1" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
+      <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.01 0.01 0.01" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
   </a-scene>
@@ -195,6 +187,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       const sceneEl = document.querySelector("a-scene");
       const loadingScreen = document.getElementById("loading-screen");
+      const loadingText = document.getElementById("loading-text");
       const infoCard = document.getElementById("info-card");
       const cardTitle = document.getElementById("card-title");
       const cardDesc = document.getElementById("card-desc");
@@ -202,6 +195,11 @@
       sceneEl.addEventListener("loaded", () => {
         loadingScreen.style.opacity = "0";
         setTimeout(() => { loadingScreen.style.display = "none"; }, 400);
+      });
+
+      const liverAsset = document.querySelector("#liverModel");
+      liverAsset.addEventListener("error", () => {
+        loadingText.innerText = "Error loading liver.glb file. Check file name and size.";
       });
 
       const cardDetails = {
