@@ -3,280 +3,330 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OrganoAR — Educational Medical Simulator</title>
+  <title>OrganoAR — Interactive Physiological Explorer</title>
 
-  <!-- A-Frame & MindAR Libraries -->
+  <!-- Core Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
-  <!-- Touch Controls -->
-  <script>
-    AFRAME.registerComponent('gesture-controls', {
-      schema: {
-        rotationFactor: { type: 'number', default: 5 },
-        zoomStep: { type: 'number', default: 0.5 },
-        minScale: { type: 'number', default: 0.5 },
-        maxScale: { type: 'number', default: 10.0 }
-      },
-      init: function () {
-        this.handleTouchStart = this.handleTouchStart.bind(this);
-        this.handleTouchMove = this.handleTouchMove.bind(this);
-        this.touchX = 0;
-        this.touchY = 0;
-        window.addEventListener('touchstart', this.handleTouchStart, { passive: false });
-        window.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-      },
-      handleTouchStart: function (evt) {
-        if (evt.touches.length === 1) {
-          this.touchX = evt.touches[0].clientX;
-          this.touchY = evt.touches[0].clientY;
-        }
-      },
-      handleTouchMove: function (evt) {
-        if (evt.touches.length === 1) {
-          const deltaX = evt.touches[0].clientX - this.touchX;
-          const deltaY = evt.touches[0].clientY - this.touchY;
-          const currentRotation = this.el.getAttribute('rotation');
-          this.el.setAttribute('rotation', {
-            x: currentRotation.x + deltaY * (this.data.rotationFactor * 0.1),
-            y: currentRotation.y + deltaX * (this.data.rotationFactor * 0.1),
-            z: currentRotation.z
-          });
-          this.touchX = evt.touches[0].clientX;
-          this.touchY = evt.touches[0].clientY;
-        }
-      },
-      zoomIn: function () {
-        const currentScale = this.el.getAttribute('scale');
-        let newScale = Math.min(currentScale.x + this.data.zoomStep, this.data.maxScale);
-        this.el.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
-      },
-      zoomOut: function () {
-        const currentScale = this.el.getAttribute('scale');
-        let newScale = Math.max(currentScale.x - this.data.zoomStep, this.data.minScale);
-        this.el.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
-      }
-    });
-  </script>
-
   <style>
+    /* Material Design 3 Expressive Tokens */
     :root {
-      --bg-glass: rgba(15, 23, 42, 0.85);
-      --border-glass: rgba(255, 255, 255, 0.12);
-      --accent: #38bdf8;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
+      --md-surface: #0f172a;
+      --md-surface-container: rgba(30, 41, 59, 0.82);
+      --md-outline: rgba(255, 255, 255, 0.08);
+      --md-primary: #38bdf8;
+      --md-primary-container: rgba(56, 189, 248, 0.12);
+      --md-error: #f43f5e;
+      --md-error-container: rgba(244, 63, 94, 0.12);
+      --md-text-primary: #f8fafc;
+      --md-text-secondary: #94a3b8;
+      --md-radius-full: 9999px;
+      --md-radius-lg: 16px;
+      --md-radius-md: 12px;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
 
     body {
       margin: 0;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      touch-action: none;
-      background: #020617;
-      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #020617;
+      color: var(--md-text-primary);
     }
 
-    /* Top Organ Selector */
-    #top-nav {
+    /* Top Navigation Segment */
+    .organ-bar-container {
       position: fixed;
       top: 16px;
       left: 50%;
       transform: translateX(-50%);
+      z-index: 100;
+      width: calc(100% - 32px);
+      max-width: 480px;
+    }
+
+    .organ-bar {
       display: flex;
-      background: var(--bg-glass);
-      backdrop-filter: blur(16px);
+      gap: 4px;
+      background: var(--md-surface-container);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--md-outline);
       padding: 4px;
-      border-radius: 20px;
-      border: 1px solid var(--border-glass);
-      z-index: 2000;
+      border-radius: var(--md-radius-full);
+      overflow-x: auto;
+      scrollbar-width: none;
     }
 
-    .nav-btn {
-      background: transparent;
+    .organ-bar::-webkit-scrollbar { display: none; }
+
+    .organ-chip {
+      flex: 1;
+      min-width: 72px;
+      padding: 8px 12px;
       border: none;
-      color: var(--text-muted);
-      padding: 8px 16px;
-      border-radius: 16px;
-      font-size: 0.8rem;
-      font-weight: 600;
+      background: transparent;
+      color: var(--md-text-secondary);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border-radius: var(--md-radius-full);
       cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+      white-space: nowrap;
+      text-align: center;
     }
 
-    .nav-btn.active {
-      background: var(--accent);
+    .organ-chip.is-active {
+      background: var(--md-primary);
       color: #020617;
+      font-weight: 600;
     }
 
-    /* Unified Bottom Dashboard */
-    #bottom-dashboard {
+    /* Bottom Control Surface */
+    .viewport-overlay {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 92%;
-      max-width: 420px;
-      background: var(--bg-glass);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border-glass);
-      border-radius: 20px;
-      padding: 16px;
-      z-index: 2000;
+      z-index: 100;
+      width: calc(100% - 32px);
+      max-width: 440px;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
-    /* Substance Selector Row */
-    .substance-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
+    .surface-card {
+      background: var(--md-surface-container);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--md-outline);
+      border-radius: var(--md-radius-lg);
+      padding: 16px;
     }
 
-    .substance-btn {
+    /* Factor Selection Group */
+    .factor-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .factor-chip {
       flex: 1;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-glass);
-      color: var(--text);
-      padding: 8px;
-      border-radius: 12px;
-      font-size: 0.78rem;
-      font-weight: 600;
+      padding: 10px 8px;
+      border: 1px solid var(--md-outline);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--md-text-primary);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border-radius: var(--md-radius-md);
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    .substance-btn.active {
-      background: rgba(244, 63, 94, 0.2);
-      border-color: #f43f5e;
-      color: #f43f5e;
+    .factor-chip.is-active {
+      background: var(--md-error-container);
+      border-color: var(--md-error);
+      color: var(--md-error);
     }
 
-    /* Slider & Zoom Controls */
-    .controls-row {
+    /* Slider Row */
+    .timeline-control {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .timeline-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--md-text-secondary);
+      font-weight: 500;
+    }
+
+    .timeline-slider-wrapper {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .slider-container {
-      flex: 1;
-    }
-
-    .slider-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-
     input[type=range] {
-      width: 100%;
-      accent-color: var(--accent);
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.12);
+      accent-color: var(--md-primary);
+      cursor: pointer;
     }
 
-    .zoom-group {
+    .zoom-btn-group {
       display: flex;
       gap: 4px;
     }
 
-    .zoom-btn {
+    .icon-button {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--border-glass);
-      color: var(--accent);
-      font-weight: bold;
+      border-radius: var(--md-radius-md);
+      border: 1px solid var(--md-outline);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--md-primary);
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
     }
 
-    /* Info Section */
-    .info-section {
-      border-top: 1px solid var(--border-glass);
-      padding-top: 10px;
-    }
-
+    /* Info Header */
     .info-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--md-outline);
     }
 
     .info-title {
-      font-weight: 700;
-      color: var(--accent);
-      font-size: 0.9rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--md-text-primary);
     }
 
-    .info-badge {
-      font-size: 0.72rem;
-      font-weight: 700;
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
       padding: 2px 8px;
-      border-radius: 6px;
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
+      border-radius: var(--md-radius-full);
+      background: var(--md-primary-container);
+      color: var(--md-primary);
     }
 
-    .info-desc {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin: 0;
-      line-height: 1.3;
+    .status-badge.is-warning {
+      background: var(--md-error-container);
+      color: var(--md-error);
+    }
+
+    .info-description {
+      font-size: 0.8125rem;
+      line-height: 1.4;
+      color: var(--md-text-secondary);
+      margin: 6px 0 0 0;
     }
   </style>
+
+  <script>
+    // Custom Gesture Component for Object Manipulation
+    AFRAME.registerComponent('viewport-gestures', {
+      schema: {
+        rotateSpeed: { type: 'number', default: 0.5 },
+        scaleStep: { type: 'number', default: 0.2 },
+        minScale: { type: 'number', default: 0.5 },
+        maxScale: { type: 'number', default: 8.0 }
+      },
+      init: function () {
+        this.lastTouchX = 0;
+        this.lastTouchY = 0;
+        this.bindEvents();
+      },
+      bindEvents: function () {
+        window.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            this.lastTouchX = e.touches[0].clientX;
+            this.lastTouchY = e.touches[0].clientY;
+          }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+          if (e.touches.length === 1) {
+            const deltaX = e.touches[0].clientX - this.lastTouchX;
+            const deltaY = e.touches[0].clientY - this.lastTouchY;
+            const rot = this.el.getAttribute('rotation');
+
+            this.el.setAttribute('rotation', {
+              x: rot.x + deltaY * this.data.rotateSpeed,
+              y: rot.y + deltaX * this.data.rotateSpeed,
+              z: rot.z
+            });
+
+            this.lastTouchX = e.touches[0].clientX;
+            this.lastTouchY = e.touches[0].clientY;
+          }
+        }, { passive: true });
+      },
+      adjustScale: function (direction) {
+        const currentScale = this.el.getAttribute('scale').x;
+        let newScale = currentScale + (direction * this.data.scaleStep);
+        newScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
+        this.el.setAttribute('scale', { x: newScale, y: newScale, z: newScale });
+      }
+    });
+  </script>
 </head>
 <body>
 
-  <!-- Top Organ Navigation -->
-  <div id="top-nav">
-    <button class="nav-btn active" data-organ="liver">Liver</button>
-    <button class="nav-btn" data-organ="brain">Brain</button>
-    <button class="nav-btn" data-organ="lungs">Lungs</button>
+  <!-- Top Segmented Organ Bar -->
+  <div class="organ-bar-container">
+    <nav class="organ-bar" id="organSelector">
+      <button class="organ-chip is-active" data-organ="liver" data-asset="#liverModel">Liver</button>
+      <button class="organ-chip" data-organ="heart" data-asset="#heartModel">Heart</button>
+      <button class="organ-chip" data-organ="kidney" data-asset="#kidneyModel">Kidneys</button>
+      <button class="organ-chip" data-organ="lungs" data-asset="#lungModel">Lungs</button>
+      <button class="organ-chip" data-organ="stomach" data-asset="#stomachModel">Stomach</button>
+    </nav>
   </div>
 
-  <!-- Unified Bottom Control Dashboard -->
-  <div id="bottom-dashboard">
-    <!-- Substance Toggles -->
-    <div class="substance-row">
-      <button class="substance-btn" id="btn-alcohol">🍺 Alcohol</button>
-      <button class="substance-btn" id="btn-tobacco">🚬 Tobacco</button>
-      <button class="substance-btn" id="btn-opioid">💊 Opioids</button>
-    </div>
+  <!-- Bottom Floating Control Surface -->
+  <main class="viewport-overlay">
+    <section class="surface-card">
+      
+      <!-- Lifestyle Toggles -->
+      <div class="factor-group" id="factorGroup">
+        <button class="factor-chip" data-factor="alcohol">🍺 Alcohol</button>
+        <button class="factor-chip" data-factor="tobacco">🚬 Tobacco</button>
+        <button class="factor-chip" data-factor="substance">💊 Opioids</button>
+      </div>
 
-    <!-- Timeline Slider & Inline Zoom -->
-    <div class="controls-row">
-      <div class="slider-container">
-        <div class="slider-header">
-          <span>Exposure Duration</span>
-          <span id="years-val">1 Year</span>
+      <!-- Timeline & Zoom Controls -->
+      <div class="timeline-control">
+        <div class="timeline-label-row">
+          <span>Exposure Timeline</span>
+          <span id="yearDisplay">1 Year</span>
         </div>
-        <input type="range" id="years-slider" min="1" max="20" value="1" step="1">
+        <div class="timeline-slider-wrapper">
+          <input type="range" id="exposureSlider" min="1" max="20" value="1">
+          <div class="zoom-btn-group">
+            <button class="icon-button" id="zoomOutBtn" aria-label="Zoom Out">−</button>
+            <button class="icon-button" id="zoomInBtn" aria-label="Zoom In">+</button>
+          </div>
+        </div>
       </div>
-      <div class="zoom-group">
-        <button class="zoom-btn" id="btn-zoom-out">−</button>
-        <button class="zoom-btn" id="btn-zoom-in">+</button>
-      </div>
-    </div>
 
-    <!-- Dynamic Medical Information -->
-    <div class="info-section">
+      <!-- Organ Status Info -->
       <div class="info-header">
-        <span class="info-title" id="card-title">Anterior View [LIVER]</span>
-        <span class="info-badge" id="health-badge">Efficiency: 100%</span>
+        <span class="info-title" id="organTitle">Liver View</span>
+        <span class="status-badge" id="efficiencyBadge">Efficiency 100%</span>
       </div>
-      <p class="info-desc" id="card-desc">Scan a flashcard to inspect structures.</p>
-    </div>
-  </div>
+      <p class="info-description" id="organDescription">
+        Select lifestyle factors to simulate structural changes over time.
+      </p>
 
+    </section>
+  </main>
+
+  <!-- AR Canvas Scene -->
   <a-scene 
     mindar-image="imageTargetSrc: ./livertargets.mind; autoStart: true;" 
     color-space="sRGB" 
@@ -286,108 +336,153 @@
     
     <a-assets>
       <a-asset-item id="liverModel" src="./liver.glb"></a-asset-item>
+      <a-asset-item id="heartModel" src="./heart.glb"></a-asset-item>
+      <a-asset-item id="kidneyModel" src="./kidney.glb"></a-asset-item>
+      <a-asset-item id="lungModel" src="./lung.glb"></a-asset-item>
+      <a-asset-item id="stomachModel" src="./stomach.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-light type="ambient" intensity="1.8"></a-light>
-    <a-light type="directional" position="1 2 3" intensity="2.5"></a-light>
+    <!-- Studio Lighting -->
+    <a-light type="ambient" intensity="1.6"></a-light>
+    <a-light type="directional" position="1 2 3" intensity="2.2"></a-light>
 
-    <!-- TARGET 0: Anterior View -->
+    <!-- Target Entities -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="ar-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" viewport-gestures></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 1: Posterior View -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-gltf-model class="target-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 180 0" gesture-controls></a-gltf-model>
+      <a-gltf-model class="ar-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 180 0" viewport-gestures></a-gltf-model>
     </a-entity>
-
   </a-scene>
 
+  <!-- Application Logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      let activeTarget = "target-0";
-      let alcoholActive = false;
-      let tobaccoActive = false;
-      let opioidActive = false;
-      let yearsExposure = 1;
+      // Centralized State
+      const AppState = {
+        selectedOrgan: "liver",
+        selectedAsset: "#liverModel",
+        years: 1,
+        factors: {
+          alcohol: false,
+          tobacco: false,
+          substance: false
+        }
+      };
 
-      const healthBadge = document.getElementById("health-badge");
-      const cardDesc = document.getElementById("card-desc");
+      const OrganDescriptions = {
+        liver: "Filters toxins and aids digestion. Prolonged exposure causes tissue inflammation and fibrotic scarring.",
+        heart: "Pumps blood throughout the body. Substance strain increases blood pressure and weakens heart muscle.",
+        kidney: "Filters waste from the blood. Chronic exposure leads to renal strain and reduced filtration efficiency.",
+        lungs: "Facilitates oxygen exchange. Toxic smoke reduces alveolar elasticity and lung capacity.",
+        stomach: "Processes nutrients. High alcohol and substance intake irritates the mucosal lining, causing ulcers."
+      };
 
-      const updateUI = () => {
-        let health = 100;
-        let factor = (alcoholActive ? 2 : 0) + (tobaccoActive ? 1.5 : 0) + (opioidActive ? 2.5 : 0);
-        health = Math.max(12, 100 - Math.round(yearsExposure * factor));
+      // UI Element References
+      const organTitle = document.getElementById("organTitle");
+      const organDescription = document.getElementById("organDescription");
+      const efficiencyBadge = document.getElementById("efficiencyBadge");
+      const yearDisplay = document.getElementById("yearDisplay");
+      const exposureSlider = document.getElementById("exposureSlider");
 
-        healthBadge.innerText = `Efficiency: ${health}%`;
-        if (health > 70) {
-          healthBadge.style.background = "rgba(16, 185, 129, 0.15)";
-          healthBadge.style.color = "#10b981";
+      // Update Render & Shader
+      const render = () => {
+        let activeFactorCount = Object.values(AppState.factors).filter(Boolean).length;
+        let healthValue = Math.max(15, 100 - (AppState.years * activeFactorCount * 2.2));
+
+        // UI Updates
+        organTitle.innerText = `${AppState.selectedOrgan.toUpperCase()} — Anatomy View`;
+        yearDisplay.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
+        efficiencyBadge.innerText = `Efficiency ${Math.round(healthValue)}%`;
+
+        if (healthValue < 65) {
+          efficiencyBadge.classList.add("is-warning");
         } else {
-          healthBadge.style.background = "rgba(244, 63, 94, 0.15)";
-          healthBadge.style.color = "#f43f5e";
+          efficiencyBadge.classList.remove("is-warning");
         }
 
-        if (alcoholActive || tobaccoActive || opioidActive) {
-          cardDesc.innerText = `Impact over ${yearsExposure} year(s): Active chemical toxicity induces cellular inflammation, vascular hypoxia, and tissue degradation.`;
+        if (activeFactorCount > 0) {
+          organDescription.innerText = `Impact after ${AppState.years} year(s): ${OrganDescriptions[AppState.selectedOrgan]}`;
         } else {
-          cardDesc.innerText = "Scan a flashcard to inspect structures.";
+          organDescription.innerText = "Select lifestyle factors above to simulate structural changes over time.";
         }
 
-        // Apply Material Color Changes
-        document.querySelectorAll(".target-model").forEach((modelEl) => {
+        // Material Color Modulation in Three.js
+        document.querySelectorAll(".ar-model").forEach((modelEl) => {
           const mesh = modelEl.getObject3D('mesh');
           if (!mesh) return;
+
           mesh.traverse((node) => {
             if (node.isMesh && node.material) {
-              let targetColor = new THREE.Color(0xffffff);
-              if (alcoholActive || tobaccoActive || opioidActive) {
-                const dark = 1.0 - ((yearsExposure / 20) * 0.5);
-                targetColor.multiplyScalar(dark);
+              let color = new THREE.Color(0xffffff);
+              if (activeFactorCount > 0) {
+                const darkFactor = 1.0 - ((AppState.years / 20) * 0.5);
+                color.multiplyScalar(darkFactor);
+
+                if (AppState.factors.tobacco) color.lerp(new THREE.Color(0x334155), (AppState.years / 20) * 0.35);
+                if (AppState.factors.alcohol) color.lerp(new THREE.Color(0x7c2d12), (AppState.years / 20) * 0.35);
+                if (AppState.factors.substance) color.lerp(new THREE.Color(0x4c1d95), (AppState.years / 20) * 0.4);
               }
-              node.material.color = targetColor;
+              node.material.color = color;
               node.material.needsUpdate = true;
             }
           });
         });
       };
 
-      // Toggle Handlers
-      document.getElementById("btn-alcohol").addEventListener("click", (e) => {
-        alcoholActive = !alcoholActive;
-        e.target.classList.toggle("active", alcoholActive);
-        updateUI();
+      // Event Delegation: Organ Switcher
+      document.getElementById("organSelector").addEventListener("click", (e) => {
+        const chip = e.target.closest(".organ-chip");
+        if (!chip) return;
+
+        document.querySelectorAll(".organ-chip").forEach(c => c.classList.remove("is-active"));
+        chip.classList.add("is-active");
+
+        AppState.selectedOrgan = chip.dataset.organ;
+        AppState.selectedAsset = chip.dataset.asset;
+
+        document.querySelectorAll(".ar-model").forEach(model => {
+          model.setAttribute("gltf-model", AppState.selectedAsset);
+        });
+
+        render();
       });
 
-      document.getElementById("btn-tobacco").addEventListener("click", (e) => {
-        tobaccoActive = !tobaccoActive;
-        e.target.classList.toggle("active", tobaccoActive);
-        updateUI();
+      // Event Delegation: Factor Toggles
+      document.getElementById("factorGroup").addEventListener("click", (e) => {
+        const chip = e.target.closest(".factor-chip");
+        if (!chip) return;
+
+        const factor = chip.dataset.factor;
+        AppState.factors[factor] = !AppState.factors[factor];
+        chip.classList.toggle("active", AppState.factors[factor]);
+        chip.classList.toggle("is-active", AppState.factors[factor]);
+
+        render();
       });
 
-      document.getElementById("btn-opioid").addEventListener("click", (e) => {
-        opioidActive = !opioidActive;
-        e.target.classList.toggle("active", opioidActive);
-        updateUI();
+      // Timeline Slider
+      exposureSlider.addEventListener("input", (e) => {
+        AppState.years = parseInt(e.target.value, 10);
+        render();
       });
 
-      document.getElementById("years-slider").addEventListener("input", (e) => {
-        yearsExposure = parseInt(e.target.value);
-        document.getElementById("years-val").innerText = `${yearsExposure} Year${yearsExposure > 1 ? 's' : ''}`;
-        updateUI();
+      // Zoom Controls
+      document.getElementById("zoomInBtn").addEventListener("click", () => {
+        document.querySelectorAll(".ar-model").forEach(el => {
+          el.components['viewport-gestures']?.adjustScale(1);
+        });
       });
 
-      document.getElementById("btn-zoom-in").addEventListener("click", () => {
-        document.querySelectorAll(".target-model").forEach(m => m.components['gesture-controls']?.zoomIn());
-      });
-
-      document.getElementById("btn-zoom-out").addEventListener("click", () => {
-        document.querySelectorAll(".target-model").forEach(m => m.components['gesture-controls']?.zoomOut());
+      document.getElementById("zoomOutBtn").addEventListener("click", () => {
+        document.querySelectorAll(".ar-model").forEach(el => {
+          el.components['viewport-gestures']?.adjustScale(-1);
+        });
       });
     });
   </script>
-
 </body>
 </html>
