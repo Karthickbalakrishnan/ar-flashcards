@@ -9,7 +9,7 @@
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-  <!-- Custom A-Frame Component for Touch Swipe Rotation -->
+  <!-- Custom Touch Swipe Rotation Component -->
   <script>
     AFRAME.registerComponent('gesture-rotation', {
       schema: {
@@ -62,7 +62,6 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Fullscreen Loading Overlay */
     #loading-screen {
       position: fixed;
       top: 0;
@@ -91,7 +90,6 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Floating Medical Information Card */
     #info-card {
       position: fixed;
       bottom: 24px;
@@ -135,81 +133,79 @@
 </head>
 <body>
 
-  <!-- Loading Screen -->
   <div id="loading-screen">
     <div class="spinner"></div>
     <div>Loading Hepatic Physiology AR...</div>
   </div>
 
-  <!-- Medical UI Information Overlay -->
   <div id="info-card">
     <h3 id="card-title">Liver Anatomy</h3>
     <p id="card-desc">Scan a flashcard to inspect structures.</p>
     <span id="touch-hint">👆 Drag finger across screen to rotate 3D model</span>
   </div>
 
-  <!-- WebAR Scene with MindAR Integration -->
+  <!-- Note the added cache-busting string '?v=liver2' -->
   <a-scene 
-    mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.0001; filterBeta: 0.001;" 
+    mindar-image="imageTargetSrc: ./targets.mind?v=liver2; filterMinCF: 0.0001; filterBeta: 0.001;" 
     color-space="sRGB" 
     renderer="colorManagement: true, physicallyCorrectLights: true" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
     
     <a-assets>
-      <a-asset-item id="liverModel" src="./liver.glb"></a-asset-item>
+      <!-- Note the added cache-busting string '?v=liver2' -->
+      <a-asset-item id="liverModel" src="./liver.glb?v=liver2"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <!-- TARGET 0: Card 1 (Anterior View) -->
+    <!-- TARGET 0: 1.png (Anterior View) -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-0">
       <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 1: Card 2 (Posterior View) -->
+    <!-- TARGET 1: 2.png (Posterior View) -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-1">
       <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 180 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 2: Card 3 (Inferior View) -->
+    <!-- TARGET 2: 3.png (Inferior View) -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-2">
       <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 3: Card 4 (Superior View) -->
+    <!-- TARGET 3: 4.png (Superior View) -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-3">
       <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 0 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 4: Card 5 (Lateral View) -->
+    <!-- TARGET 4: 5.png (Lateral View) -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-4">
       <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 -90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 5: Card 6 (Visceral Anatomy) -->
+    <!-- TARGET 5: 6.png (Visceral Anatomy) -->
     <a-entity mindar-image-target="targetIndex: 5" id="target-5">
       <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 6: Card 7 (Diaphragmatic Surface) -->
+    <!-- TARGET 6: 7.png (Diaphragmatic Surface) -->
     <a-entity mindar-image-target="targetIndex: 6" id="target-6">
       <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="-90 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 7: Card 8 (Costal Profile) -->
+    <!-- TARGET 7: 8.png (Costal Profile) -->
     <a-entity mindar-image-target="targetIndex: 7" id="target-7">
       <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 90 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
-    <!-- TARGET 8: Card 9 (Hepatic Segments) -->
+    <!-- TARGET 8: 9.png (Hepatic Segments) -->
     <a-entity mindar-image-target="targetIndex: 8" id="target-8">
       <a-gltf-model src="#liverModel" position="0 0 0.1" scale="0.04 0.04 0.04" rotation="0 45 0" gesture-rotation="factor: 5"></a-gltf-model>
     </a-entity>
 
   </a-scene>
 
-  <!-- Interactive Logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const sceneEl = document.querySelector("a-scene");
