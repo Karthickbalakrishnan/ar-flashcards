@@ -3,24 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OrganoAR — High-Fidelity Pathology Suite</title>
+  <title>OrganoAR — Camera-First Pathology Engine</title>
 
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     :root {
-      --md-surface: #0f172a;
-      --md-surface-container: rgba(15, 23, 42, 0.88);
-      --md-outline: rgba(255, 255, 255, 0.12);
-      --md-primary: #38bdf8;
-      --md-error: #f43f5e;
-      --md-error-container: rgba(244, 63, 94, 0.15);
-      --md-text-primary: #f8fafc;
-      --md-text-secondary: #94a3b8;
-      --md-radius-full: 9999px;
-      --md-radius-lg: 16px;
-      --md-radius-md: 12px;
+      --bg-glass: rgba(15, 23, 42, 0.85);
+      --border-glass: rgba(255, 255, 255, 0.12);
+      --accent: #38bdf8;
+      --danger: #f43f5e;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -30,54 +25,10 @@
       overflow: hidden;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background-color: #020617;
-      color: var(--md-text-primary);
+      color: var(--text);
     }
 
-    /* Top Navigation */
-    .organ-bar-container {
-      position: fixed;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-      width: calc(100% - 32px);
-      max-width: 480px;
-    }
-
-    .organ-bar {
-      display: flex;
-      gap: 4px;
-      background: var(--md-surface-container);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--md-outline);
-      padding: 4px;
-      border-radius: var(--md-radius-full);
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    .organ-chip {
-      flex: 1;
-      min-width: 72px;
-      padding: 8px 12px;
-      border: none;
-      background: transparent;
-      color: var(--md-text-secondary);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      border-radius: var(--md-radius-full);
-      cursor: pointer;
-      white-space: nowrap;
-      text-align: center;
-    }
-
-    .organ-chip.is-active {
-      background: var(--md-primary);
-      color: #020617;
-      font-weight: 600;
-    }
-
-    /* Bottom Control Dashboard */
+    /* Minimalist HUD Overlay */
     .viewport-overlay {
       position: fixed;
       bottom: 20px;
@@ -85,140 +36,116 @@
       transform: translateX(-50%);
       z-index: 100;
       width: calc(100% - 32px);
-      max-width: 440px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      max-width: 400px;
     }
 
     .surface-card {
-      background: var(--md-surface-container);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--md-outline);
-      border-radius: var(--md-radius-lg);
-      padding: 16px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      border-radius: 20px;
+      padding: 14px 16px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .factor-group { display: flex; gap: 8px; margin-bottom: 12px; }
+    .organ-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .organ-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+    }
+
+    .status-badge.is-warning {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--danger);
+    }
+
+    /* Factor Toggles */
+    .factor-group { display: flex; gap: 6px; }
 
     .factor-chip {
       flex: 1;
-      padding: 10px 8px;
-      border: 1px solid var(--md-outline);
-      background: rgba(255, 255, 255, 0.03);
-      color: var(--md-text-primary);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      border-radius: var(--md-radius-md);
+      padding: 8px 6px;
+      border: 1px solid var(--border-glass);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 12px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      text-align: center;
+      transition: all 0.2s ease;
     }
 
     .factor-chip.is-active {
-      background: var(--md-error-container);
-      border-color: var(--md-error);
-      color: var(--md-error);
+      background: rgba(244, 63, 94, 0.2);
+      border-color: var(--danger);
+      color: var(--danger);
     }
 
-    .timeline-control { display: flex; flex-direction: column; gap: 6px; }
+    /* Timeline Slider */
+    .timeline-control { display: flex; flex-direction: column; gap: 4px; }
 
     .timeline-label-row {
       display: flex;
       justify-content: space-between;
-      font-size: 0.75rem;
-      color: var(--md-text-secondary);
-      font-weight: 500;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
     }
-
-    .timeline-slider-wrapper { display: flex; align-items: center; gap: 12px; }
 
     input[type=range] {
-      flex: 1;
+      width: 100%;
       height: 4px;
       border-radius: 2px;
-      background: rgba(255, 255, 255, 0.12);
-      accent-color: var(--md-primary);
+      background: rgba(255, 255, 255, 0.15);
+      accent-color: var(--accent);
       cursor: pointer;
     }
 
-    .zoom-btn-group { display: flex; gap: 4px; }
-
-    .icon-button {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--md-radius-md);
-      border: 1px solid var(--md-outline);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--md-primary);
-      font-size: 1rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .info-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--md-outline);
-    }
-
-    .info-title { font-size: 0.875rem; font-weight: 600; color: var(--md-text-primary); }
-
-    .status-badge {
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: var(--md-radius-full);
-      background: rgba(56, 189, 248, 0.12);
-      color: var(--md-primary);
-    }
-
-    .status-badge.is-warning { background: var(--md-error-container); color: var(--md-error); }
-
-    .info-description { font-size: 0.8125rem; line-height: 1.4; color: var(--md-text-secondary); margin: 6px 0 0 0; }
-
-    /* Interactive Hotspot Modal Card */
-    .part-detail-card {
+    /* Scan Prompt */
+    #scanPrompt {
       position: fixed;
-      top: 80px;
+      top: 24px;
       left: 50%;
       transform: translateX(-50%);
-      width: calc(100% - 32px);
-      max-width: 400px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid var(--md-primary);
-      border-radius: var(--md-radius-lg);
-      padding: 14px 16px;
-      z-index: 200;
-      display: none;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-glass);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      z-index: 100;
+      pointer-events: none;
     }
-
-    .part-detail-header { display: flex; justify-content: space-between; align-items: center; }
-    .part-detail-title { font-size: 0.875rem; font-weight: 700; color: var(--md-primary); }
-    .close-btn { background: none; border: none; color: var(--md-text-secondary); font-size: 1.2rem; cursor: pointer; }
-    .part-detail-text { font-size: 0.8125rem; color: var(--md-text-secondary); margin-top: 6px; line-height: 1.35; }
   </style>
 
   <script>
-    // Advanced Touch Gestures & Raycasting Component
+    // Touch Rotation & Zoom Component
     AFRAME.registerComponent('viewport-gestures', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
         this.lastTouchX = 0;
         this.lastTouchY = 0;
-        this.bindEvents();
-      },
-      bindEvents: function () {
         window.addEventListener('touchstart', (e) => {
           if (e.touches.length === 1) {
             this.lastTouchX = e.touches[0].clientX;
@@ -244,47 +171,19 @@
         }, { passive: true });
       }
     });
-
-    // Clickable Anatomical Hotspot Component
-    AFRAME.registerComponent('anatomical-hotspot', {
-      schema: {
-        partName: { type: 'string', default: 'Anatomical Structure' },
-        infoText: { type: 'string', default: 'Tap factors to view pathology impact.' }
-      },
-      init: function () {
-        this.el.addEventListener('click', () => {
-          const card = document.getElementById("partDetailCard");
-          document.getElementById("partTitle").innerText = this.data.partName;
-          document.getElementById("partText").innerText = this.data.infoText;
-          card.style.display = "block";
-        });
-      }
-    });
   </script>
 </head>
 <body>
 
-  <div class="organ-bar-container">
-    <nav class="organ-bar" id="organSelector">
-      <button class="organ-chip is-active" data-organ="liver" data-asset="#liverModel" data-mind="./assets/targets/liver.mind">Liver</button>
-      <button class="organ-chip" data-organ="heart" data-asset="#heartModel" data-mind="./assets/targets/heart.mind">Heart</button>
-      <button class="organ-chip" data-organ="lungs" data-asset="#lungModel" data-mind="./assets/targets/lung.mind">Lungs</button>
-      <button class="organ-chip" data-organ="kidneys" data-asset="#kidneyModel" data-mind="./assets/targets/kidney.mind">Kidneys</button>
-      <button class="organ-chip" data-organ="stomach" data-asset="#stomachModel" data-mind="./assets/targets/stomach.mind">Stomach</button>
-    </nav>
-  </div>
-
-  <div class="part-detail-card" id="partDetailCard">
-    <div class="part-detail-header">
-      <span class="part-detail-title" id="partTitle">Hepatic Lobule</span>
-      <button class="close-btn" onclick="document.getElementById('partDetailCard').style.display='none'">×</button>
-    </div>
-    <p class="part-detail-text" id="partText">Select factors to inspect functional degradation.</p>
-  </div>
+  <div id="scanPrompt">📷 Point camera at any organ card</div>
 
   <main class="viewport-overlay">
     <section class="surface-card">
-      
+      <div class="organ-header">
+        <span class="organ-title" id="organTitle">SCANNING...</span>
+        <span class="status-badge" id="efficiencyBadge">Efficiency 100%</span>
+      </div>
+
       <div class="factor-group" id="factorGroup">
         <button class="factor-chip" data-factor="alcohol">🍺 Alcohol</button>
         <button class="factor-chip" data-factor="tobacco">🚬 Tobacco</button>
@@ -293,44 +192,23 @@
 
       <div class="timeline-control">
         <div class="timeline-label-row">
-          <span>Exposure Timeline</span>
+          <span>Exposure Duration</span>
           <span id="yearDisplay">1 Year</span>
         </div>
-        <div class="timeline-slider-wrapper">
-          <input type="range" id="exposureSlider" min="1" max="20" value="1">
-          <div class="zoom-btn-group">
-            <button class="icon-button" id="zoomOutBtn">−</button>
-            <button class="icon-button" id="zoomInBtn">+</button>
-          </div>
-        </div>
+        <input type="range" id="exposureSlider" min="1" max="20" value="1">
       </div>
-
-      <div class="info-header">
-        <span class="info-title" id="organTitle">LIVER — Anatomy View</span>
-        <span class="status-badge" id="efficiencyBadge">Efficiency 100%</span>
-      </div>
-      <p class="info-description" id="organDescription">
-        Tap anatomical hotspots on the 3D organ or toggle factors to view structural damage.
-      </p>
-
     </section>
   </main>
 
   <a-scene 
-    mindar-image="imageTargetSrc: ./assets/targets/liver.mind; autoStart: true;" 
+    mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: true;" 
     color-space="sRGB" 
     renderer="colorManagement: true, physicallyCorrectLights: true" 
     vr-mode-ui="enabled: false" 
-    device-orientation-permission-ui="enabled: false"
-    cursor="rayOrigin: mouse"
-    raycaster="objects: .raycastable">
+    device-orientation-permission-ui="enabled: false">
     
     <a-assets>
       <a-asset-item id="liverModel" src="./assets/models/liver.glb"></a-asset-item>
-      <a-asset-item id="heartModel" src="./assets/models/heart.glb"></a-asset-item>
-      <a-asset-item id="lungModel" src="./assets/models/lung.glb"></a-asset-item>
-      <a-asset-item id="kidneyModel" src="./assets/models/kidney.glb"></a-asset-item>
-      <a-asset-item id="stomachModel" src="./assets/models/stomach.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -338,11 +216,24 @@
     <a-light type="ambient" intensity="1.6"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.2"></a-light>
 
-    <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model class="ar-model" id="activeModel" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
-      
-      <a-entity id="hotspotGroup" position="0 0 0.2">
-        </a-entity>
+    <a-entity mindar-image-target="targetIndex: 0" id="target-liver">
+      <a-gltf-model class="ar-model" data-organ="LIVER" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 9" id="target-heart">
+      <a-gltf-model class="ar-model" data-organ="HEART" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 18" id="target-lungs">
+      <a-gltf-model class="ar-model" data-organ="LUNGS" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 27" id="target-kidneys">
+      <a-gltf-model class="ar-model" data-organ="KIDNEYS" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 36" id="target-stomach">
+      <a-gltf-model class="ar-model" data-organ="STOMACH" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
     </a-entity>
 
   </a-scene>
@@ -350,90 +241,37 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const AppState = {
-        selectedOrgan: "liver",
-        selectedAsset: "#liverModel",
+        activeOrgan: "LIVER",
         years: 1,
         factors: { alcohol: false, tobacco: false, substance: false }
       };
 
-      const OrganData = {
-        liver: {
-          desc: "Filters toxins and aids metabolism. Chronic exposure triggers liver steatosis, nodular cirrhosis, and severe atrophy.",
-          hotspots: [
-            { pos: "0.3 0.4 0.2", label: "Hepatic Portal Vein", text: "Chronic toxin buildup increases portal vein blood pressure, leading to systemic hypertension." },
-            { pos: "-0.4 0.1 0.2", label: "Right Lobe Lobules", text: "Fatty infiltration destroys healthy hepatocytes, causing scarring and surface nodularity." }
-          ]
-        },
-        heart: {
-          desc: "Cardiovascular center. Long-term exposure increases arterial stiffness, myocardial hypertrophy, and ischemia.",
-          hotspots: [
-            { pos: "0 0.5 0.2", label: "Aortic Arch", text: "Nicotine and arterial stiffness narrow the aorta, forcing the left ventricle to overexert." },
-            { pos: "0.2 -0.2 0.3", label: "Coronary Arteries", text: "Toxic lipid deposits block blood flow to the heart muscle, risking myocardial infarction." }
-          ]
-        },
-        lungs: {
-          desc: "Facilitates gas exchange. Smoke particulates destroy pulmonary alveoli, reducing lung elasticity.",
-          hotspots: [
-            { pos: "0.4 0.2 0.2", label: "Bronchial Tree", text: "Chronic smoke inhalation paralyzes cilia and damages bronchial mucosa, leading to COPD." },
-            { pos: "-0.3 -0.3 0.2", label: "Alveolar Sacs", text: "Alveoli walls rupture under tar deposition, permanently reducing oxygen absorption." }
-          ]
-        },
-        kidneys: {
-          desc: "Renal filtration system. Toxins induce glomerulosclerosis, vascular scarring, and loss of filtration efficiency.",
-          hotspots: [
-            { pos: "0 0.3 0.2", label: "Renal Cortex", text: "Glomerular capillaries lose structural integrity under prolonged chemical toxicity." },
-            { pos: "0.2 -0.2 0.2", label: "Renal Pelvis", text: "Accumulated metabolic waste damages renal papillae, risking kidney failure." }
-          ]
-        },
-        stomach: {
-          desc: "Processes food and nutrients. Alcohol and opioids erode the gastric mucosa, causing peptic ulcers.",
-          hotspots: [
-            { pos: "0.1 0.3 0.2", label: "Gastric Mucosa", text: "Ethanol dissolves the protective mucus layer, allowing stomach acid to burn tissue." },
-            { pos: "-0.2 -0.2 0.2", label: "Pyloric Sphincter", text: "Opioid usage severely reduces motility, causing painful spasms and gastric retention." }
-          ]
-        }
+      const ModelPaths = {
+        HEART: "./assets/models/heart.glb",
+        LUNGS: "./assets/models/lung.glb",
+        KIDNEYS: "./assets/models/kidney.glb",
+        STOMACH: "./assets/models/stomach.glb"
       };
 
       const organTitle = document.getElementById("organTitle");
-      const organDescription = document.getElementById("organDescription");
       const efficiencyBadge = document.getElementById("efficiencyBadge");
       const yearDisplay = document.getElementById("yearDisplay");
       const exposureSlider = document.getElementById("exposureSlider");
-      const hotspotGroup = document.getElementById("hotspotGroup");
+      const scanPrompt = document.getElementById("scanPrompt");
 
-      // Render 3D Interactive Hotspot Markers
-      const buildHotspots = () => {
-        hotspotGroup.innerHTML = "";
-        const data = OrganData[AppState.selectedOrgan];
-        if (!data || !data.hotspots) return;
-
-        data.hotspots.forEach((hs, idx) => {
-          const sphere = document.createElement("a-sphere");
-          sphere.setAttribute("position", hs.pos);
-          sphere.setAttribute("radius", "0.08");
-          sphere.setAttribute("color", "#38bdf8");
-          sphere.setAttribute("class", "raycastable");
-          sphere.setAttribute("anatomical-hotspot", `partName: ${hs.label}; infoText: ${hs.text}`);
-          
-          // Outer Pulse Ring
-          const ring = document.createElement("a-ring");
-          ring.setAttribute("position", hs.pos);
-          ring.setAttribute("radius-inner", "0.09");
-          ring.setAttribute("radius-outer", "0.12");
-          ring.setAttribute("color", "#f8fafc");
-          ring.setAttribute("rotation", "0 0 0");
-
-          hotspotGroup.appendChild(sphere);
-          hotspotGroup.appendChild(ring);
-        });
+      // Lazy model loader on target detection
+      const ensureModelLoaded = (targetEntity, organName) => {
+        const modelEl = targetEntity.querySelector(".ar-model");
+        if (modelEl && !modelEl.getAttribute("src") && ModelPaths[organName]) {
+          modelEl.setAttribute("src", ModelPaths[organName]);
+        }
       };
 
-      // Advanced Deformation & Shader Transformation Logic
       const render = () => {
         let activeFactorCount = Object.values(AppState.factors).filter(Boolean).length;
         let healthValue = Math.max(12, 100 - (AppState.years * activeFactorCount * 2.2));
 
-        organTitle.innerText = `${AppState.selectedOrgan.toUpperCase()} — Pathology View`;
+        organTitle.innerText = `${AppState.activeOrgan} PATHOLOGY`;
         yearDisplay.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
         efficiencyBadge.innerText = `Efficiency ${Math.round(healthValue)}%`;
 
@@ -443,74 +281,34 @@
           efficiencyBadge.classList.remove("is-warning");
         }
 
-        if (activeFactorCount > 0) {
-          organDescription.innerText = `Impact after ${AppState.years} year(s): ${OrganData[AppState.selectedOrgan].desc}`;
-        } else {
-          organDescription.innerText = "Tap floating 3D markers on the organ to inspect major anatomical structures.";
-        }
-
-        // Apply Real-Time 3D Structural Deformation & Material Morphing
+        // Material & Mesh Distortion
         document.querySelectorAll(".ar-model").forEach((modelEl) => {
           const mesh = modelEl.getObject3D('mesh');
           if (!mesh) return;
 
-          const yearRatio = AppState.years / 20.0; // Scale 0.05 - 1.0
-
-          // Structural Atrophy & Shrinkage Scale Calculation
-          let shrinkScale = 2.5;
-          if (activeFactorCount > 0) {
-            shrinkScale = 2.5 - (yearRatio * 0.45 * activeFactorCount); // Shrinks mesh size as damage increases
-          }
+          const yearRatio = AppState.years / 20.0;
+          let shrinkScale = 2.5 - (yearRatio * 0.4 * activeFactorCount);
           modelEl.setAttribute("scale", `${shrinkScale} ${shrinkScale} ${shrinkScale}`);
 
           mesh.traverse((node) => {
-            if (node.isMesh && node.geometry && node.material) {
-
-              // Procedural Vertex Distortion (Nodular Roughness & Bumpy Tissue)
-              if (activeFactorCount > 0 && !node.geometry.userData.originalPositions) {
-                // Save base geometry position array once
-                node.geometry.userData.originalPositions = node.geometry.attributes.position.clone();
-              }
-
-              if (node.geometry.userData.originalPositions) {
-                const positions = node.geometry.attributes.position;
-                const orig = node.geometry.userData.originalPositions;
-
-                for (let i = 0; i < positions.count; i++) {
-                  let vx = orig.getX(i);
-                  let vy = orig.getY(i);
-                  let vz = orig.getZ(i);
-
-                  if (activeFactorCount > 0) {
-                    // Apply sinusoidal surface noise to simulate nodular scarring / tumors
-                    const noise = Math.sin(vx * 10) * Math.cos(vy * 10) * (yearRatio * 0.08 * activeFactorCount);
-                    positions.setXYZ(i, vx + noise, vy + noise, vz + noise);
-                  } else {
-                    positions.setXYZ(i, vx, vy, vz);
-                  }
-                }
-                positions.needsUpdate = true;
-              }
-
-              // Color & Surface Roughness Shifts
+            if (node.isMesh && node.material) {
               let color = new THREE.Color(0xffffff);
               let roughness = 0.4;
 
               if (activeFactorCount > 0) {
                 if (AppState.factors.alcohol && !AppState.factors.tobacco && !AppState.factors.substance) {
-                  color.lerp(new THREE.Color(0xd97706), yearRatio * 0.85); // Steatosis Yellow
+                  color.lerp(new THREE.Color(0xd97706), yearRatio * 0.85); // Fatty Liver Yellow
                   roughness = 0.2;
                 } else if (AppState.factors.tobacco && !AppState.factors.alcohol && !AppState.factors.substance) {
                   color.lerp(new THREE.Color(0x1e293b), yearRatio * 0.90); // Charcoal Black
                   roughness = 0.85;
                 } else if (AppState.factors.substance && !AppState.factors.alcohol && !AppState.factors.tobacco) {
-                  color.lerp(new THREE.Color(0x581c87), yearRatio * 0.88); // Ischemic Purple
+                  color.lerp(new THREE.Color(0x581c87), yearRatio * 0.88); // Purple Ischemia
                   roughness = 0.6;
                 } else {
-                  color.lerp(new THREE.Color(0x270707), yearRatio * 0.95); // Severe Necrosis
+                  color.lerp(new THREE.Color(0x270707), yearRatio * 0.95); // Necrosis
                   roughness = 0.95;
                 }
-
                 color.multiplyScalar(1.0 - (yearRatio * 0.45));
               }
 
@@ -522,37 +320,21 @@
         });
       };
 
-      // Target Switcher
-      const switchOrganSystem = (organKey, assetId, mindFilePath) => {
-        const sceneEl = document.querySelector("a-scene");
-        const arSystem = sceneEl.systems["mindar-image-system"];
-
-        if (arSystem) arSystem.stop();
-
-        document.querySelectorAll(".ar-model").forEach(model => {
-          model.setAttribute("gltf-model", assetId);
+      // Automatic Camera Detection Handlers
+      document.querySelectorAll("[mindar-image-target]").forEach((targetEl) => {
+        targetEl.addEventListener("targetFound", () => {
+          const modelEl = targetEl.querySelector(".ar-model");
+          if (modelEl) {
+            AppState.activeOrgan = modelEl.dataset.organ;
+            ensureModelLoaded(targetEl, AppState.activeOrgan);
+            scanPrompt.style.display = "none";
+            render();
+          }
         });
 
-        sceneEl.setAttribute("mindar-image", `imageTargetSrc: ${mindFilePath}; autoStart: true;`);
-        buildHotspots();
-
-        if (arSystem) arSystem.start();
-      };
-
-      // Navbar Listener
-      document.getElementById("organSelector").addEventListener("click", (e) => {
-        const chip = e.target.closest(".organ-chip");
-        if (!chip) return;
-
-        document.querySelectorAll(".organ-chip").forEach(c => c.classList.remove("is-active"));
-        chip.classList.add("is-active");
-
-        AppState.selectedOrgan = chip.dataset.organ;
-        AppState.selectedAsset = chip.dataset.asset;
-
-        document.getElementById("partDetailCard").style.display = "none";
-        switchOrganSystem(AppState.selectedOrgan, AppState.selectedAsset, chip.dataset.mind);
-        render();
+        targetEl.addEventListener("targetLost", () => {
+          scanPrompt.style.display = "block";
+        });
       });
 
       // Factor Toggles
@@ -563,35 +345,14 @@
         const factor = chip.dataset.factor;
         AppState.factors[factor] = !AppState.factors[factor];
         chip.classList.toggle("is-active", AppState.factors[factor]);
-
         render();
       });
 
-      // Exposure Slider
+      // Slider
       exposureSlider.addEventListener("input", (e) => {
         AppState.years = parseInt(e.target.value, 10);
         render();
       });
-
-      // Zoom Controls
-      document.getElementById("zoomInBtn").addEventListener("click", () => {
-        document.querySelectorAll(".ar-model").forEach(el => {
-          const currentScale = el.getAttribute('scale').x;
-          el.setAttribute('scale', `${currentScale + 0.3} ${currentScale + 0.3} ${currentScale + 0.3}`);
-        });
-      });
-
-      document.getElementById("zoomOutBtn").addEventListener("click", () => {
-        document.querySelectorAll(".ar-model").forEach(el => {
-          const currentScale = el.getAttribute('scale').x;
-          if (currentScale > 0.8) {
-            el.setAttribute('scale', `${currentScale - 0.3} ${currentScale - 0.3} ${currentScale - 0.3}`);
-          }
-        });
-      });
-
-      // Initial Build
-      buildHotspots();
     });
   </script>
 </body>
