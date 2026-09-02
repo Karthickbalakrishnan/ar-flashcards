@@ -10,12 +10,13 @@
 
   <style>
     :root {
-      --bg-glass: rgba(15, 23, 42, 0.85);
+      --bg-glass: rgba(15, 23, 42, 0.88);
       --border-glass: rgba(255, 255, 255, 0.12);
       --accent: #38bdf8;
       --danger: #f43f5e;
       --text: #f8fafc;
       --text-muted: #94a3b8;
+      --radius-lg: 20px;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -28,7 +29,25 @@
       color: var(--text);
     }
 
-    /* Minimalist HUD Overlay */
+    /* Floating Status Indicator */
+    #scanPrompt {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-glass);
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent);
+      z-index: 200;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Camera-First Control Surface */
     .viewport-overlay {
       position: fixed;
       bottom: 20px;
@@ -43,7 +62,7 @@
       background: var(--bg-glass);
       backdrop-filter: blur(16px);
       border: 1px solid var(--border-glass);
-      border-radius: 20px;
+      border-radius: var(--radius-lg);
       padding: 14px 16px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
       display: flex;
@@ -51,18 +70,8 @@
       gap: 10px;
     }
 
-    .organ-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .organ-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--accent);
-      letter-spacing: 0.5px;
-    }
+    .organ-header { display: flex; justify-content: space-between; align-items: center; }
+    .organ-title { font-size: 0.9rem; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
 
     .status-badge {
       font-size: 0.72rem;
@@ -73,12 +82,9 @@
       color: var(--accent);
     }
 
-    .status-badge.is-warning {
-      background: rgba(244, 63, 94, 0.15);
-      color: var(--danger);
-    }
+    .status-badge.is-warning { background: rgba(244, 63, 94, 0.15); color: var(--danger); }
 
-    /* Factor Toggles */
+    /* Substance Factor Toggles */
     .factor-group { display: flex; gap: 6px; }
 
     .factor-chip {
@@ -101,16 +107,9 @@
       color: var(--danger);
     }
 
-    /* Timeline Slider */
+    /* Exposure Timeline Slider */
     .timeline-control { display: flex; flex-direction: column; gap: 4px; }
-
-    .timeline-label-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
+    .timeline-label-row { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
 
     input[type=range] {
       width: 100%;
@@ -120,27 +119,10 @@
       accent-color: var(--accent);
       cursor: pointer;
     }
-
-    /* Scan Prompt */
-    #scanPrompt {
-      position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border-glass);
-      padding: 8px 16px;
-      border-radius: 9999px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      z-index: 100;
-      pointer-events: none;
-    }
   </style>
 
   <script>
-    // Touch Rotation & Zoom Component
+    // Touch Gestures Component for 3D Model Rotation
     AFRAME.registerComponent('viewport-gestures', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
@@ -175,12 +157,12 @@
 </head>
 <body>
 
-  <div id="scanPrompt">📷 Point camera at any organ card</div>
+  <div id="scanPrompt">📷 Point camera at any organ flashcard</div>
 
   <main class="viewport-overlay">
     <section class="surface-card">
       <div class="organ-header">
-        <span class="organ-title" id="organTitle">SCANNING...</span>
+        <span class="organ-title" id="organTitle">READY TO SCAN</span>
         <span class="status-badge" id="efficiencyBadge">Efficiency 100%</span>
       </div>
 
@@ -192,7 +174,7 @@
 
       <div class="timeline-control">
         <div class="timeline-label-row">
-          <span>Exposure Duration</span>
+          <span>Exposure Timeline</span>
           <span id="yearDisplay">1 Year</span>
         </div>
         <input type="range" id="exposureSlider" min="1" max="20" value="1">
@@ -201,7 +183,7 @@
   </main>
 
   <a-scene 
-    mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: true;" 
+    mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: true; uiScanning: #scanPrompt;" 
     color-space="sRGB" 
     renderer="colorManagement: true, physicallyCorrectLights: true" 
     vr-mode-ui="enabled: false" 
@@ -209,6 +191,10 @@
     
     <a-assets>
       <a-asset-item id="liverModel" src="./assets/models/liver.glb"></a-asset-item>
+      <a-asset-item id="heartModel" src="./assets/models/heart.glb"></a-asset-item>
+      <a-asset-item id="lungModel" src="./assets/models/lung.glb"></a-asset-item>
+      <a-asset-item id="kidneyModel" src="./assets/models/kidney.glb"></a-asset-item>
+      <a-asset-item id="stomachModel" src="./assets/models/stomach.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -216,24 +202,24 @@
     <a-light type="ambient" intensity="1.6"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.2"></a-light>
 
-    <a-entity mindar-image-target="targetIndex: 0" id="target-liver">
+    <a-entity mindar-image-target="targetIndex: 0" id="target-0">
       <a-gltf-model class="ar-model" data-organ="LIVER" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
     </a-entity>
 
-    <a-entity mindar-image-target="targetIndex: 9" id="target-heart">
-      <a-gltf-model class="ar-model" data-organ="HEART" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
+    <a-entity mindar-image-target="targetIndex: 1" id="target-1">
+      <a-gltf-model class="ar-model" data-organ="HEART" src="#heartModel" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
     </a-entity>
 
-    <a-entity mindar-image-target="targetIndex: 18" id="target-lungs">
-      <a-gltf-model class="ar-model" data-organ="LUNGS" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
+    <a-entity mindar-image-target="targetIndex: 2" id="target-2">
+      <a-gltf-model class="ar-model" data-organ="LUNGS" src="#lungModel" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
     </a-entity>
 
-    <a-entity mindar-image-target="targetIndex: 27" id="target-kidneys">
-      <a-gltf-model class="ar-model" data-organ="KIDNEYS" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
+    <a-entity mindar-image-target="targetIndex: 3" id="target-3">
+      <a-gltf-model class="ar-model" data-organ="KIDNEYS" src="#kidneyModel" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
     </a-entity>
 
-    <a-entity mindar-image-target="targetIndex: 36" id="target-stomach">
-      <a-gltf-model class="ar-model" data-organ="STOMACH" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
+    <a-entity mindar-image-target="targetIndex: 4" id="target-4">
+      <a-gltf-model class="ar-model" data-organ="STOMACH" src="#stomachModel" position="0 0 0.2" scale="2.5 2.5 2.5" viewport-gestures></a-gltf-model>
     </a-entity>
 
   </a-scene>
@@ -246,27 +232,13 @@
         factors: { alcohol: false, tobacco: false, substance: false }
       };
 
-      const ModelPaths = {
-        HEART: "./assets/models/heart.glb",
-        LUNGS: "./assets/models/lung.glb",
-        KIDNEYS: "./assets/models/kidney.glb",
-        STOMACH: "./assets/models/stomach.glb"
-      };
-
       const organTitle = document.getElementById("organTitle");
       const efficiencyBadge = document.getElementById("efficiencyBadge");
       const yearDisplay = document.getElementById("yearDisplay");
       const exposureSlider = document.getElementById("exposureSlider");
       const scanPrompt = document.getElementById("scanPrompt");
 
-      // Lazy model loader on target detection
-      const ensureModelLoaded = (targetEntity, organName) => {
-        const modelEl = targetEntity.querySelector(".ar-model");
-        if (modelEl && !modelEl.getAttribute("src") && ModelPaths[organName]) {
-          modelEl.setAttribute("src", ModelPaths[organName]);
-        }
-      };
-
+      // Deform Mesh & Adjust Shader Profile
       const render = () => {
         let activeFactorCount = Object.values(AppState.factors).filter(Boolean).length;
         let healthValue = Math.max(12, 100 - (AppState.years * activeFactorCount * 2.2));
@@ -281,13 +253,14 @@
           efficiencyBadge.classList.remove("is-warning");
         }
 
-        // Material & Mesh Distortion
         document.querySelectorAll(".ar-model").forEach((modelEl) => {
           const mesh = modelEl.getObject3D('mesh');
           if (!mesh) return;
 
           const yearRatio = AppState.years / 20.0;
-          let shrinkScale = 2.5 - (yearRatio * 0.4 * activeFactorCount);
+          
+          // Structural Atrophy (Physical scale shrinkage)
+          let shrinkScale = 2.5 - (yearRatio * 0.45 * activeFactorCount);
           modelEl.setAttribute("scale", `${shrinkScale} ${shrinkScale} ${shrinkScale}`);
 
           mesh.traverse((node) => {
@@ -296,19 +269,21 @@
               let roughness = 0.4;
 
               if (activeFactorCount > 0) {
+                // Color Profiles: Alcohol = Fatty Yellow, Tobacco = Slate Black, Opioid = Purple
                 if (AppState.factors.alcohol && !AppState.factors.tobacco && !AppState.factors.substance) {
-                  color.lerp(new THREE.Color(0xd97706), yearRatio * 0.85); // Fatty Liver Yellow
+                  color.lerp(new THREE.Color(0xd97706), yearRatio * 0.85);
                   roughness = 0.2;
                 } else if (AppState.factors.tobacco && !AppState.factors.alcohol && !AppState.factors.substance) {
-                  color.lerp(new THREE.Color(0x1e293b), yearRatio * 0.90); // Charcoal Black
+                  color.lerp(new THREE.Color(0x1e293b), yearRatio * 0.90);
                   roughness = 0.85;
                 } else if (AppState.factors.substance && !AppState.factors.alcohol && !AppState.factors.tobacco) {
-                  color.lerp(new THREE.Color(0x581c87), yearRatio * 0.88); // Purple Ischemia
+                  color.lerp(new THREE.Color(0x581c87), yearRatio * 0.88);
                   roughness = 0.6;
                 } else {
                   color.lerp(new THREE.Color(0x270707), yearRatio * 0.95); // Necrosis
                   roughness = 0.95;
                 }
+
                 color.multiplyScalar(1.0 - (yearRatio * 0.45));
               }
 
@@ -320,24 +295,25 @@
         });
       };
 
-      // Automatic Camera Detection Handlers
+      // Automatic Detection Event Listeners
       document.querySelectorAll("[mindar-image-target]").forEach((targetEl) => {
         targetEl.addEventListener("targetFound", () => {
           const modelEl = targetEl.querySelector(".ar-model");
           if (modelEl) {
             AppState.activeOrgan = modelEl.dataset.organ;
-            ensureModelLoaded(targetEl, AppState.activeOrgan);
-            scanPrompt.style.display = "none";
+            scanPrompt.innerText = `✅ DETECTED: ${AppState.activeOrgan}`;
+            scanPrompt.style.borderColor = "#38bdf8";
             render();
           }
         });
 
         targetEl.addEventListener("targetLost", () => {
-          scanPrompt.style.display = "block";
+          scanPrompt.innerText = "📷 Point camera at any organ flashcard";
+          scanPrompt.style.borderColor = "rgba(255, 255, 255, 0.12)";
         });
       });
 
-      // Factor Toggles
+      // Factor Buttons
       document.getElementById("factorGroup").addEventListener("click", (e) => {
         const chip = e.target.closest(".factor-chip");
         if (!chip) return;
@@ -348,7 +324,7 @@
         render();
       });
 
-      // Slider
+      // Year Slider
       exposureSlider.addEventListener("input", (e) => {
         AppState.years = parseInt(e.target.value, 10);
         render();
