@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>OrganoAR — Spatial Pathology Suite</title>
+  <title>OrganoAR — Clinical Spatial Suite</title>
 
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
@@ -25,21 +25,27 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #020617;
+      background: transparent !important;
       color: var(--text-main);
     }
 
+    /* Force A-Frame WebGL canvas to remain transparent above camera video stream */
     a-scene {
       position: absolute;
       inset: 0;
       z-index: 1;
+      background: transparent !important;
     }
 
-    /* 1. SSO Auth Modal Overlay */
+    .a-canvas {
+      background: transparent !important;
+    }
+
+    /* SSO Auth Overlay */
     #authOverlay {
       position: fixed;
       inset: 0;
@@ -89,8 +95,8 @@
       justify-content: center;
       gap: 12px;
       width: 100%;
-      padding: 12px 16px;
-      background: rgba(255, 255, 255, 0.05);
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.08);
       border: 1px solid var(--border-light);
       border-radius: 12px;
       color: var(--text-main);
@@ -100,9 +106,9 @@
       transition: all 0.2s ease;
     }
 
-    .sso-button:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.1); }
+    .sso-button:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
 
-    /* 2. Top Scan Status Banner */
+    /* Scan Banner */
     #scanBanner {
       position: fixed;
       top: 24px;
@@ -118,11 +124,11 @@
       font-weight: 600;
       color: var(--brand-primary);
       z-index: 100;
-      display: none; /* Shown after Login */
+      display: none;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
     }
 
-    /* 3. Bottom Controls HUD (Hidden until Organ Detected) */
+    /* Bottom HUD Controls */
     .hud-overlay {
       position: fixed;
       bottom: 24px;
@@ -131,13 +137,7 @@
       z-index: 100;
       width: calc(100% - 32px);
       max-width: 420px;
-      display: none; /* Strictly hidden until targetFound */
-      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes slideUp {
-      from { transform: translate(-50%, 40px); opacity: 0; }
-      to { transform: translate(-50%, 0); opacity: 1; }
+      display: none;
     }
 
     .hud-card {
@@ -217,7 +217,7 @@
       cursor: pointer;
     }
 
-    /* 4. Interactive Info Card */
+    /* Modal Info Card */
     #infoModal {
       position: fixed;
       top: 80px;
@@ -358,8 +358,9 @@
 
   <a-scene 
     mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: false; uiScanning: no;" 
+    embedded
     color-space="sRGB" 
-    renderer="colorManagement: true, physicallyCorrectLights: true, alpha: true" 
+    renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true; antialias: true;" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false"
     cursor="rayOrigin: mouse"
@@ -422,15 +423,25 @@
       factors: { alcohol: false, tobacco: false, substance: false }
     };
 
-    // 1. SSO Login Handler
-    function loginAndStartAR(provider) {
+    // Explicit Gesture Handler Triggering Native Camera Permissions
+    async function loginAndStartAR(provider) {
       document.getElementById("authOverlay").style.display = "none";
-      document.getElementById("scanBanner").style.display = "block"; // Show "Point Camera" banner
+      document.getElementById("scanBanner").style.display = "block";
 
-      // Start AR tracking engine strictly AFTER authentication
-      const sceneEl = document.querySelector("a-scene");
-      const arSystem = sceneEl.systems["mindar-image-system"];
-      if (arSystem) arSystem.start();
+      try {
+        // Explicit MediaStream Request triggers native iOS/Android camera permission dialog
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        
+        // Stop temporary stream so MindAR takes control cleanly
+        stream.getTracks().forEach(track => track.stop());
+
+        // Start MindAR Engine
+        const sceneEl = document.querySelector("a-scene");
+        const arSystem = sceneEl.systems["mindar-image-system"];
+        if (arSystem) arSystem.start();
+      } catch (err) {
+        alert("Camera Access Denied or Unavailable: Please allow camera permissions in your browser settings.");
+      }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -494,14 +505,13 @@
         });
       };
 
-      // 2. Target Detection Handlers (Controls display ONLY when organ detected)
+      // Target Detection Event Handlers
       document.querySelectorAll("[mindar-image-target]").forEach((targetEl) => {
         targetEl.addEventListener("targetFound", () => {
           const modelEl = targetEl.querySelector(".ar-model");
           if (modelEl) {
             AppState.activeOrgan = modelEl.dataset.organ;
             
-            // Update UI & Reveal Controls HUD
             scanBanner.innerText = `✅ DETECTED: ${AppState.activeOrgan}`;
             scanBanner.style.borderColor = "#38bdf8";
             hudControls.style.display = "block"; 
@@ -514,7 +524,6 @@
           scanBanner.innerText = "📷 Point camera at any flashcard";
           scanBanner.style.borderColor = "rgba(255, 255, 255, 0.12)";
           
-          // Hide Controls HUD & Modal when target is lost
           hudControls.style.display = "none"; 
           document.getElementById("infoModal").style.display = "none";
         });
@@ -537,7 +546,7 @@
         render();
       });
 
-      // Bounded Zoom In/Out
+      // Zoom Controls
       document.getElementById("zoomInBtn").addEventListener("click", () => {
         document.querySelectorAll(".ar-model").forEach(el => {
           el.components['viewport-controls']?.adjustScale(1);
