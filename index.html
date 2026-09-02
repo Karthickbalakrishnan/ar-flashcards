@@ -33,7 +33,7 @@
       color: var(--sys-text);
     }
 
-    /* Transparent Scene Canvas Layer */
+    /* Force WebGL Canvas Transparency Over Native Camera Feed */
     a-scene, .a-canvas {
       position: absolute !important;
       inset: 0 !important;
@@ -51,7 +51,7 @@
       z-index: 0 !important;
     }
 
-    /* Onboarding & Academic Scholar Header */
+    /* Personalized Academic Header & Onboarding Gate */
     #welcomeGate {
       position: fixed;
       inset: 0;
@@ -129,7 +129,7 @@
 
     .btn-sso:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
 
-    /* HUD Guidance Banner */
+    /* Top HUD Banner */
     #guideBanner {
       position: fixed;
       top: 24px;
@@ -224,6 +224,7 @@
   </style>
 
   <script>
+    // Smooth Spatial Gestures: 1-Finger Orbit Rotation & 2-Finger Pinch Scale
     AFRAME.registerComponent('spatial-gestures', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
@@ -283,11 +284,7 @@
 
   <div id="welcomeGate">
     <div class="welcome-card">
-      <div class="scholar-meta">
-        <span class="scholar-name">Karthick Balakrishnan</span>
-        <span class="scholar-title">UX / HCI Research Scholar</span>
-        <span class="scholar-org">NITTTR Chennai</span>
-      </div>
+      
 
       <h1 class="welcome-title">OrganoAR Spatial Suite</h1>
       <p class="welcome-desc">Authenticate to initialize real-time spatial target recognition and interactive pathology models.</p>
@@ -304,6 +301,11 @@
         </button>
       </div>
     </div>
+    <div class="scholar-meta">
+        <span class="scholar-name">Karthick Balakrishnan</span>
+        <span class="scholar-title">UX / HCI Research Scholar</span>
+        <span class="scholar-org">NITTTR Chennai</span>
+      </div>
   </div>
 
   <div id="guideBanner">Point camera at an organ card</div>
@@ -386,8 +388,12 @@
       document.getElementById("guideBanner").style.display = "block";
 
       const sceneEl = document.querySelector("a-scene");
+      
+      // Ensure WebGL renderer clears background completely
       sceneEl.addEventListener("render-target-loaded", () => {
-        sceneEl.renderer.setClearColor(0x000000, 0);
+        if (sceneEl.renderer) {
+          sceneEl.renderer.setClearColor(0x000000, 0);
+        }
       });
 
       const arSystem = sceneEl.systems["mindar-image-system"];
