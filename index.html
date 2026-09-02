@@ -33,7 +33,7 @@
       color: var(--text-main);
     }
 
-    /* Keep WebGL canvas transparent above native camera feed */
+    /* Transparent WebGL Overlay */
     a-scene {
       position: absolute;
       inset: 0;
@@ -41,7 +41,7 @@
       background: transparent !important;
     }
 
-    /* SSO Landing & Camera Authorization Gate */
+    /* Landing Auth Modal */
     #authOverlay {
       position: fixed;
       inset: 0;
@@ -104,7 +104,7 @@
 
     .sso-button:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
 
-    /* Scan Status Banner */
+    /* Top Detection Status Bar */
     #scanBanner {
       position: fixed;
       top: 24px;
@@ -124,7 +124,7 @@
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
     }
 
-    /* Bottom Control Dashboard */
+    /* Cleaned Up Floating HUD Controls (No Zoom Buttons) */
     .hud-overlay {
       position: fixed;
       bottom: 24px;
@@ -167,7 +167,7 @@
 
     .substance-chip {
       flex: 1;
-      padding: 8px 4px;
+      padding: 10px 4px;
       border: 1px solid var(--border-light);
       background: rgba(255, 255, 255, 0.04);
       color: var(--text-main);
@@ -186,34 +186,16 @@
 
     .slider-row { display: flex; flex-direction: column; gap: 6px; }
     .slider-header { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-sub); font-weight: 600; }
-    .controls-wrapper { display: flex; align-items: center; gap: 12px; }
 
     input[type=range] {
-      flex: 1;
+      width: 100%;
       height: 4px;
       border-radius: 2px;
       background: rgba(255, 255, 255, 0.15);
       accent-color: var(--brand-primary);
     }
 
-    .zoom-group { display: flex; gap: 4px; }
-
-    .zoom-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      border: 1px solid var(--border-light);
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--brand-primary);
-      font-size: 1rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    /* Structure Info Card */
+    /* Anatomical Structure Modal Card */
     #infoModal {
       position: fixed;
       top: 80px;
@@ -239,19 +221,25 @@
   </style>
 
   <script>
-    AFRAME.registerComponent('viewport-controls', {
-      schema: { rotateSpeed: { type: 'number', default: 0.5 }, scaleStep: { type: 'number', default: 0.15 } },
+    // Advanced Touch Gestures: 1-Finger Rotation + 2-Finger Pinch-to-Zoom
+    AFRAME.registerComponent('pinch-rotate-gestures', {
+      schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
         this.lastX = 0;
         this.lastY = 0;
+        this.initialPinchDistance = null;
+
         window.addEventListener('touchstart', (e) => {
           if (e.touches.length === 1) {
             this.lastX = e.touches[0].clientX;
             this.lastY = e.touches[0].clientY;
+          } else if (e.touches.length === 2) {
+            this.initialPinchDistance = this.getDistance(e.touches);
           }
         }, { passive: true });
 
         window.addEventListener('touchmove', (e) => {
+          // 1-Finger Orbit Rotation
           if (e.touches.length === 1) {
             const deltaX = e.touches[0].clientX - this.lastX;
             const deltaY = e.touches[0].clientY - this.lastY;
@@ -265,17 +253,33 @@
 
             this.lastX = e.touches[0].clientX;
             this.lastY = e.touches[0].clientY;
+          } 
+          // 2-Finger Pinch-to-Zoom
+          else if (e.touches.length === 2 && this.initialPinchDistance) {
+            const currentDistance = this.getDistance(e.touches);
+            const factor = currentDistance / this.initialPinchDistance;
+            const currentScale = this.el.getAttribute('scale').x;
+            
+            let newScale = currentScale * factor;
+            newScale = Math.min(Math.max(newScale, 0.2), 2.5); // Bounded Scale
+
+            this.el.setAttribute('scale', `${newScale} ${newScale} ${newScale}`);
+            this.initialPinchDistance = currentDistance;
           }
         }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+          this.initialPinchDistance = null;
+        });
       },
-      adjustScale: function (dir) {
-        const currentScale = this.el.getAttribute('scale').x;
-        let newScale = currentScale + (dir * this.data.scaleStep);
-        newScale = Math.min(Math.max(newScale, 0.3), 2.2);
-        this.el.setAttribute('scale', `${newScale} ${newScale} ${newScale}`);
+      getDistance: function (touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
       }
     });
 
+    // Interactive Hotspot Component
     AFRAME.registerComponent('anatomical-hotspot', {
       schema: {
         title: { type: 'string', default: 'Structure' },
@@ -297,7 +301,7 @@
     <div class="auth-card">
       <div class="brand-pill">✨ OrganoAR Enterprise</div>
       <h1 class="auth-title">Clinical Spatial Suite</h1>
-      <p class="auth-desc">Tap below to grant camera access and initialize target recognition.</p>
+      <p class="auth-desc">Tap below to authorize camera access and launch real-time 3D flashcard recognition.</p>
 
       <div class="sso-group">
         <button class="sso-button" onclick="initializeCamera('Google')">
@@ -306,7 +310,7 @@
         </button>
 
         <button class="sso-button" onclick="initializeCamera('Microsoft')">
-          <svg width="18" height="18" viewBox="0 0 23 23"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 23 23"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H1z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/></svg>
           Continue with Microsoft
         </button>
       </div>
@@ -341,13 +345,7 @@
           <span>Exposure Timeline</span>
           <span id="yearLabel">1 Year</span>
         </div>
-        <div class="controls-wrapper">
-          <input type="range" id="yearSlider" min="1" max="20" value="1">
-          <div class="zoom-group">
-            <button class="zoom-btn" id="zoomOutBtn">−</button>
-            <button class="zoom-btn" id="zoomInBtn">+</button>
-          </div>
-        </div>
+        <input type="range" id="yearSlider" min="1" max="20" value="1">
       </div>
     </section>
   </main>
@@ -375,37 +373,51 @@
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
     <a-entity mindar-image-target="targetIndex: 0" id="target-liver">
-      <a-gltf-model class="ar-model" data-organ="LIVER" src="#liverModel" position="0 0 0" scale="0.8 0.8 0.8" viewport-controls></a-gltf-model>
-      <a-entity position="0 0 0">
-        <a-sphere class="raycastable" position="0.15 0.15 0.1" radius="0.04" color="#38bdf8" anatomical-hotspot="title: Hepatic Portal Vein; details: Supplies 75% of liver blood flow. Chronic toxicity causes portal hypertension."></a-sphere>
+      <a-gltf-model class="ar-model" data-organ="LIVER" src="#liverModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-entity position="0 0 0.1">
+        <a-sphere class="raycastable" position="0.2 0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Hepatic Portal Vein; details: Supplies 75% of liver blood flow. Chronic toxicity causes severe portal hypertension."></a-sphere>
+        <a-text value="Hepatic Vein" position="0.28 0.2 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
+
+        <a-sphere class="raycastable" position="-0.2 -0.1 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Right Lobe Lobules; details: Detoxification zone. Fatty infiltration damages hepatocytes leading to nodular cirrhosis."></a-sphere>
+        <a-text value="Right Lobe" position="-0.45 -0.1 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 1" id="target-heart">
-      <a-gltf-model class="ar-model" data-organ="HEART" src="#heartModel" position="0 0 0" scale="0.8 0.8 0.8" viewport-controls></a-gltf-model>
-      <a-entity position="0 0 0">
-        <a-sphere class="raycastable" position="0 0.2 0.1" radius="0.04" color="#38bdf8" anatomical-hotspot="title: Aortic Arch; details: Main arterial trunk. Nicotine exposure increases arterial wall stiffness."></a-sphere>
+      <a-gltf-model class="ar-model" data-organ="HEART" src="#heartModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-entity position="0 0 0.1">
+        <a-sphere class="raycastable" position="0 0.3 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Aortic Arch; details: Main arterial trunk. Nicotine and toxic lipids increase arterial wall stiffness."></a-sphere>
+        <a-text value="Aortic Arch" position="0.08 0.3 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
+
+        <a-sphere class="raycastable" position="0.2 -0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Left Ventricle; details: Main pumping chamber. Overexertion causes myocardial wall thickening."></a-sphere>
+        <a-text value="Left Ventricle" position="0.28 -0.2 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 2" id="target-lungs">
-      <a-gltf-model class="ar-model" data-organ="LUNGS" src="#lungModel" position="0 0 0" scale="0.8 0.8 0.8" viewport-controls></a-gltf-model>
-      <a-entity position="0 0 0">
-        <a-sphere class="raycastable" position="0.1 0.1 0.1" radius="0.04" color="#38bdf8" anatomical-hotspot="title: Bronchial Tree; details: Airway passages. Carbon deposits cause chronic bronchitis and reduced elasticity."></a-sphere>
+      <a-gltf-model class="ar-model" data-organ="LUNGS" src="#lungModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-entity position="0 0 0.1">
+        <a-sphere class="raycastable" position="0.15 0.15 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Bronchial Tree; details: Airway passages. Carbon particulates induce bronchitis and loss of ciliary motion."></a-sphere>
+        <a-text value="Bronchial Tree" position="0.22 0.15 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
+
+        <a-sphere class="raycastable" position="-0.2 -0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Alveolar Sacs; details: Primary gas exchange sacs. Smoke destroys sac walls, causing emphysema."></a-sphere>
+        <a-text value="Alveoli Sacs" position="-0.45 -0.2 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 3" id="target-kidneys">
-      <a-gltf-model class="ar-model" data-organ="KIDNEYS" src="#kidneyModel" position="0 0 0" scale="0.8 0.8 0.8" viewport-controls></a-gltf-model>
-      <a-entity position="0 0 0">
-        <a-sphere class="raycastable" position="0 0.15 0.1" radius="0.04" color="#38bdf8" anatomical-hotspot="title: Renal Cortex; details: Contains nephrons. Prolonged chemical exposure causes glomerulosclerosis."></a-sphere>
+      <a-gltf-model class="ar-model" data-organ="KIDNEYS" src="#kidneyModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-entity position="0 0 0.1">
+        <a-sphere class="raycastable" position="0 0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Renal Cortex; details: Contains microscopic nephrons. Prolonged chemical toxicity causes glomerulosclerosis."></a-sphere>
+        <a-text value="Renal Cortex" position="0.08 0.2 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 4" id="target-stomach">
-      <a-gltf-model class="ar-model" data-organ="STOMACH" src="#stomachModel" position="0 0 0" scale="0.8 0.8 0.8" viewport-controls></a-gltf-model>
-      <a-entity position="0 0 0">
-        <a-sphere class="raycastable" position="0.05 0.1 0.1" radius="0.04" color="#38bdf8" anatomical-hotspot="title: Gastric Mucosa; details: Protective epithelial layer. Alcohol dissolves this barrier, generating ulcers."></a-sphere>
+      <a-gltf-model class="ar-model" data-organ="STOMACH" src="#stomachModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-entity position="0 0 0.1">
+        <a-sphere class="raycastable" position="0.1 0.1 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Gastric Mucosa; details: Protective epithelial lining. Ethanol dissolves this layer, causing deep ulcers."></a-sphere>
+        <a-text value="Gastric Mucosa" position="0.18 0.1 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
@@ -418,30 +430,25 @@
       factors: { alcohol: false, tobacco: false, substance: false }
     };
 
-    // User Gesture Handler: Forces native browser permission prompt
     async function initializeCamera(provider) {
       document.getElementById("authOverlay").style.display = "none";
       document.getElementById("scanBanner").style.display = "block";
 
       try {
-        // Request media stream directly inside touch click event stack
         const stream = await navigator.mediaDevices.getUserMedia({ 
           video: { facingMode: { exact: "environment" } } 
         }).catch(() => {
-          // Fallback to default camera if rear facingMode fails
           return navigator.mediaDevices.getUserMedia({ video: true });
         });
 
-        // Release temporary probe stream so MindAR takes ownership cleanly
         stream.getTracks().forEach(track => track.stop());
 
-        // Start MindAR spatial engine
         const sceneEl = document.querySelector("a-scene");
         const arSystem = sceneEl.systems["mindar-image-system"];
         if (arSystem) arSystem.start();
 
       } catch (err) {
-        alert("Camera Access Error: Please ensure you are opening this HTTPS link in Mobile Safari or Chrome, and click 'Allow' when prompted for camera permissions.");
+        alert("Camera Access Error: Open this HTTPS link in Safari or Chrome and allow camera permissions.");
       }
     }
 
@@ -506,7 +513,6 @@
         });
       };
 
-      // Target Detection Event Handlers
       document.querySelectorAll("[mindar-image-target]").forEach((targetEl) => {
         targetEl.addEventListener("targetFound", () => {
           const modelEl = targetEl.querySelector(".ar-model");
@@ -530,7 +536,6 @@
         });
       });
 
-      // Factor Buttons
       document.getElementById("substanceGroup").addEventListener("click", (e) => {
         const chip = e.target.closest(".substance-chip");
         if (!chip) return;
@@ -541,23 +546,9 @@
         render();
       });
 
-      // Slider
       yearSlider.addEventListener("input", (e) => {
         AppState.years = parseInt(e.target.value, 10);
         render();
-      });
-
-      // Zoom Controls
-      document.getElementById("zoomInBtn").addEventListener("click", () => {
-        document.querySelectorAll(".ar-model").forEach(el => {
-          el.components['viewport-controls']?.adjustScale(1);
-        });
-      });
-
-      document.getElementById("zoomOutBtn").addEventListener("click", () => {
-        document.querySelectorAll(".ar-model").forEach(el => {
-          el.components['viewport-controls']?.adjustScale(-1);
-        });
       });
     });
   </script>
