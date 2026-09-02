@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>OrganoAR — Spatial Health Experience</title>
 
+  <!-- WebAR Core Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     :root {
-      --sys-color-surface: rgba(18, 24, 38, 0.82);
+      --sys-color-surface: rgba(18, 24, 38, 0.85);
       --sys-color-primary: #38bdf8;
       --sys-color-danger: #fb7185;
       --sys-color-text-main: #f8fafc;
@@ -33,6 +34,7 @@
       color: var(--sys-color-text-main);
     }
 
+    /* Force WebGL Canvas Transparency Above Native Camera Feed */
     a-scene {
       position: absolute !important;
       inset: 0 !important;
@@ -200,7 +202,7 @@
   </style>
 
   <script>
-    // Orbit Rotation & Bounded Pinch-to-Zoom Gesture Handler
+    // Smooth Touch Gestures: Orbit Rotation & Bounded Pinch-to-Zoom
     AFRAME.registerComponent('spatial-gestures', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
@@ -236,9 +238,8 @@
             const factor = currentDistance / this.initialPinchDistance;
             const currentScale = this.el.getAttribute('scale').x;
             
-            // Fixed Bounded Zoom Scale
             let newScale = currentScale * factor;
-            newScale = Math.min(Math.max(newScale, 0.4), 1.6);
+            newScale = Math.min(Math.max(newScale, 0.3), 1.8);
 
             this.el.setAttribute('scale', `${newScale} ${newScale} ${newScale}`);
             this.initialPinchDistance = currentDistance;
@@ -259,6 +260,7 @@
 </head>
 <body>
 
+  <!-- Onboarding Gate -->
   <div id="welcomeGate">
     <div class="welcome-card">
       <div class="app-badge">OrganoAR Spatial Health</div>
@@ -279,8 +281,10 @@
     </div>
   </div>
 
+  <!-- Camera Guidance Banner -->
   <div id="guideBanner">Point camera at an organ card</div>
 
+  <!-- Bottom Sheet Controls -->
   <main class="sheet-overlay" id="sheetControls">
     <section class="sheet-card">
       <div class="sheet-header">
@@ -304,6 +308,7 @@
     </section>
   </main>
 
+  <!-- WebAR Scene Engine -->
   <a-scene 
     mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: false; uiScanning: no;" 
     color-space="sRGB" 
@@ -324,22 +329,27 @@
     <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
+    <!-- Target 0: Liver -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-liver">
       <a-gltf-model class="ar-model" data-organ="Liver" src="#liverModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
+    <!-- Target 1: Heart -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-heart">
       <a-gltf-model class="ar-model" data-organ="Heart" src="#heartModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
+    <!-- Target 2: Lungs -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-lungs">
       <a-gltf-model class="ar-model" data-organ="Lungs" src="#lungModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
+    <!-- Target 3: Kidneys -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-kidneys">
       <a-gltf-model class="ar-model" data-organ="Kidneys" src="#kidneyModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
+    <!-- Target 4: Stomach -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-stomach">
       <a-gltf-model class="ar-model" data-organ="Stomach" src="#stomachModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
@@ -353,24 +363,15 @@
       factors: { alcohol: false, tobacco: false, substance: false }
     };
 
-    async function startCameraExperience(provider) {
+    // Native MindAR Boot Function
+    function startCameraExperience(provider) {
       document.getElementById("welcomeGate").style.display = "none";
       document.getElementById("guideBanner").style.display = "block";
 
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: "environment" } 
-        });
-
-        stream.getTracks().forEach(track => track.stop());
-
-        const sceneEl = document.querySelector("a-scene");
-        const arSystem = sceneEl.systems["mindar-image-system"];
-        if (arSystem) {
-          arSystem.start();
-        }
-      } catch (err) {
-        alert("Camera Permission Required: Allow camera permissions in browser settings to scan flashcards.");
+      const sceneEl = document.querySelector("a-scene");
+      const arSystem = sceneEl.systems["mindar-image-system"];
+      if (arSystem) {
+        arSystem.start();
       }
     }
 
@@ -396,12 +397,14 @@
           healthPill.classList.remove("is-critical");
         }
 
-        // Material Color Modulation (Position Locked)
         document.querySelectorAll(".ar-model").forEach((modelEl) => {
           const mesh = modelEl.getObject3D('mesh');
           if (!mesh) return;
 
           const yearRatio = AppState.years / 20.0;
+          let baseScale = 0.8;
+          let shrinkScale = baseScale - (yearRatio * 0.18 * activeFactorCount);
+          modelEl.setAttribute("scale", `${shrinkScale} ${shrinkScale} ${shrinkScale}`);
 
           mesh.traverse((node) => {
             if (node.isMesh && node.material) {
