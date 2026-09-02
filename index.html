@@ -41,6 +41,10 @@
       z-index: 1;
     }
 
+    #arContainer video {
+      object-fit: cover !important;
+    }
+
     /* Onboarding Permission Screen */
     #welcomeGate {
       position: fixed;
@@ -245,7 +249,6 @@
     </section>
   </main>
 
-  <!-- AR Container -->
   <div id="arContainer"></div>
 
   <script>
@@ -266,11 +269,14 @@
     let mindThree, loadedModels = {};
 
     async function initNativeAR(provider) {
-      document.getElementById("welcomeGate").style.display = "none";
-      document.getElementById("guideBanner").style.display = "block";
-
       try {
-        // Initialize MindAR with pure Three.js (No A-Frame)
+        // Request media permission explicitly first inside click handler
+        const userStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        userStream.getTracks().forEach(track => track.stop()); // Stop temporary stream
+
+        document.getElementById("welcomeGate").style.display = "none";
+        document.getElementById("guideBanner").style.display = "block";
+
         mindThree = new window.MINDAR.IMAGE.MindARThree({
           container: document.getElementById("arContainer"),
           imageTargetSrc: "./assets/targets/organs.mind",
@@ -280,17 +286,14 @@
 
         const { renderer, scene, camera } = mindThree;
 
-        // Ambient & Studio Lights
         const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.5);
         scene.add(light);
 
         const gltfLoader = new THREE.GLTFLoader();
 
-        // Create anchors for all 5 target indices
         OrganConfig.forEach((config, idx) => {
           const anchor = mindThree.addAnchor(idx);
 
-          // Lazy load GLTF model when target is detected
           anchor.onTargetFound = () => {
             AppState.activeOrgan = config.name;
             document.getElementById("guideBanner").innerText = `Viewing ${config.name}`;
@@ -356,14 +359,21 @@
           }
         }, { passive: true });
 
-        // Start WebRTC camera and WebGL loop
         await mindThree.start();
+
+        const videoEl = document.querySelector("#arContainer video");
+        if (videoEl) {
+          videoEl.setAttribute("playsinline", "");
+          videoEl.setAttribute("webkit-playsinline", "");
+        }
+
         renderer.setAnimationLoop(() => {
           renderer.render(scene, camera);
         });
 
       } catch (err) {
-        alert("Camera permission denied or unsupported browser. Please open in native Chrome or Safari over HTTPS.");
+        // Log the exact error message so we know if it's NotAllowedError or NotFoundError
+        alert(`Camera System Error: ${err.name} — ${err.message}`);
       }
     }
 
