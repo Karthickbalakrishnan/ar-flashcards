@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>OrganoAR — Clinical Spatial Suite</title>
+  <title>OrganoAR — Spatial Health Experience</title>
 
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     :root {
-      --surface-base: rgba(15, 23, 42, 0.85);
-      --border-light: rgba(255, 255, 255, 0.12);
-      --brand-primary: #38bdf8;
-      --status-danger: #f43f5e;
-      --text-main: #f8fafc;
-      --text-sub: #94a3b8;
-      --radius-pill: 9999px;
-      --radius-card: 20px;
+      --sys-color-surface: rgba(18, 24, 38, 0.82);
+      --sys-color-surface-hover: rgba(255, 255, 255, 0.08);
+      --sys-color-primary: #38bdf8;
+      --sys-color-danger: #fb7185;
+      --sys-color-text-main: #f8fafc;
+      --sys-color-text-sub: #94a3b8;
+      --sys-radius-sheet: 28px;
+      --sys-radius-chip: 14px;
+      --sys-radius-pill: 9999px;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -28,106 +29,107 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #020617 !important;
-      color: var(--text-main);
+      color: var(--sys-color-text-main);
     }
 
-    /* Transparent WebGL Overlay */
     a-scene {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
+      position: absolute !important;
+      inset: 0 !important;
+      z-index: 1 !important;
       background: transparent !important;
     }
 
-    /* Landing Auth Modal */
-    #authOverlay {
+    .a-canvas { background: transparent !important; }
+
+    /* Humanized Onboarding Gate */
+    #welcomeGate {
       position: fixed;
       inset: 0;
       z-index: 999;
-      background: radial-gradient(circle at 50% 20%, #1e293b, #020617);
+      background: radial-gradient(circle at 50% 30%, #1e293b, #020617);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
     }
 
-    .auth-card {
-      background: rgba(15, 23, 42, 0.85);
+    .welcome-card {
+      background: rgba(15, 23, 42, 0.88);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--border-light);
-      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 32px;
       padding: 40px 32px;
       width: 100%;
-      max-width: 400px;
+      max-width: 380px;
       text-align: center;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
     }
 
-    .brand-pill {
+    .app-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      padding: 6px 14px;
-      border-radius: var(--radius-pill);
-      color: var(--brand-primary);
-      font-size: 0.75rem;
+      background: rgba(56, 189, 248, 0.08);
+      padding: 6px 16px;
+      border-radius: var(--sys-radius-pill);
+      color: var(--sys-color-primary);
+      font-size: 0.8125rem;
       font-weight: 600;
-      margin-bottom: 24px;
+      letter-spacing: 0.2px;
+      margin-bottom: 20px;
     }
 
-    .auth-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 8px 0; }
-    .auth-desc { font-size: 0.875rem; color: var(--text-sub); margin: 0 0 28px 0; line-height: 1.5; }
+    .welcome-title { font-size: 1.625rem; font-weight: 700; margin: 0 0 10px 0; letter-spacing: -0.02em; line-height: 1.2; }
+    .welcome-desc { font-size: 0.9375rem; color: var(--sys-color-text-sub); margin: 0 0 32px 0; line-height: 1.5; }
 
-    .sso-group { display: flex; flex-direction: column; gap: 12px; }
+    .sso-stack { display: flex; flex-direction: column; gap: 12px; }
 
-    .sso-button {
+    .btn-sso {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
       width: 100%;
-      padding: 14px 16px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--border-light);
-      border-radius: 12px;
-      color: var(--text-main);
-      font-size: 0.875rem;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      color: var(--sys-color-text-main);
+      font-size: 0.9375rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: background 0.2s ease, transform 0.1s ease;
     }
 
-    .sso-button:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
+    .btn-sso:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.12); }
 
-    /* Top Detection Status Bar */
-    #scanBanner {
+    /* Minimalist Camera Guidance Banner */
+    #guideBanner {
       position: fixed;
       top: 24px;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--surface-base);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-light);
+      background: var(--sys-color-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       padding: 10px 22px;
-      border-radius: var(--radius-pill);
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--brand-primary);
+      border-radius: var(--sys-radius-pill);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--sys-color-text-main);
       z-index: 100;
       display: none;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.3);
     }
 
-    /* Cleaned Up Floating HUD Controls (No Zoom Buttons) */
-    .hud-overlay {
+    /* Native-Style Bottom Control Sheet */
+    .sheet-overlay {
       position: fixed;
-      bottom: 24px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 100;
@@ -136,93 +138,96 @@
       display: none;
     }
 
-    .hud-card {
-      background: var(--surface-base);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-card);
-      padding: 16px;
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+    .sheet-card {
+      background: var(--sys-color-surface);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--sys-radius-sheet);
+      padding: 20px;
+      box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
     }
 
-    .card-header { display: flex; justify-content: space-between; align-items: center; }
-    .organ-label { font-size: 0.9rem; font-weight: 700; color: var(--brand-primary); letter-spacing: 0.5px; }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; }
+    .organ-heading { font-size: 1.0625rem; font-weight: 700; color: var(--sys-color-text-main); }
 
-    .health-badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: var(--radius-pill);
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--brand-primary);
-    }
-
-    .health-badge.is-warning { background: rgba(244, 63, 94, 0.15); color: var(--status-danger); }
-
-    .substance-group { display: flex; gap: 8px; }
-
-    .substance-chip {
-      flex: 1;
-      padding: 10px 4px;
-      border: 1px solid var(--border-light);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text-main);
-      font-size: 0.75rem;
+    .health-pill {
+      font-size: 0.78125rem;
       font-weight: 600;
-      border-radius: 10px;
+      padding: 4px 12px;
+      border-radius: var(--sys-radius-pill);
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--sys-color-primary);
+    }
+
+    .health-pill.is-critical { background: rgba(251, 113, 133, 0.15); color: var(--sys-color-danger); }
+
+    .lifestyle-grid { display: flex; gap: 8px; }
+
+    .lifestyle-chip {
+      flex: 1;
+      padding: 10px 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--sys-color-text-sub);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border-radius: var(--sys-radius-chip);
       cursor: pointer;
       text-align: center;
+      transition: all 0.2s ease;
     }
 
-    .substance-chip.is-active {
-      background: rgba(244, 63, 94, 0.2);
-      border-color: var(--status-danger);
-      color: var(--status-danger);
+    .lifestyle-chip.is-active {
+      background: rgba(251, 113, 133, 0.15);
+      border-color: var(--sys-color-danger);
+      color: var(--sys-color-text-main);
+      font-weight: 600;
     }
 
-    .slider-row { display: flex; flex-direction: column; gap: 6px; }
-    .slider-header { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-sub); font-weight: 600; }
+    .slider-container { display: flex; flex-direction: column; gap: 8px; }
+    .slider-labels { display: flex; justify-content: space-between; font-size: 0.8125rem; color: var(--sys-color-text-sub); font-weight: 500; }
 
     input[type=range] {
       width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.15);
-      accent-color: var(--brand-primary);
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.12);
+      accent-color: var(--sys-color-primary);
+      cursor: pointer;
     }
 
-    /* Anatomical Structure Modal Card */
-    #infoModal {
+    /* Humanized Structure Inspection Modal */
+    #structureModal {
       position: fixed;
       top: 80px;
       left: 50%;
       transform: translateX(-50%);
       width: calc(100% - 32px);
       max-width: 380px;
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--brand-primary);
-      border-radius: 16px;
-      padding: 14px 18px;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 20px;
+      padding: 18px 20px;
       z-index: 200;
       display: none;
-      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
 
     .modal-header { display: flex; justify-content: space-between; align-items: center; }
-    .modal-title { font-size: 0.875rem; font-weight: 700; color: var(--brand-primary); }
-    .modal-close { background: none; border: none; color: var(--text-sub); font-size: 1.2rem; cursor: pointer; }
-    .modal-body { font-size: 0.8rem; color: var(--text-sub); margin-top: 6px; line-height: 1.4; }
+    .modal-title { font-size: 0.9375rem; font-weight: 700; color: var(--sys-color-primary); }
+    .btn-close { background: none; border: none; color: var(--sys-color-text-sub); font-size: 1.25rem; cursor: pointer; padding: 0; }
+    .modal-body { font-size: 0.875rem; color: var(--sys-color-text-sub); margin-top: 8px; line-height: 1.45; }
   </style>
 
   <script>
-    // Advanced Touch Gestures: 1-Finger Rotation + 2-Finger Pinch-to-Zoom
-    AFRAME.registerComponent('pinch-rotate-gestures', {
+    // Smooth Touch Gestures: Orbit Rotation & Pinch Zooming
+    AFRAME.registerComponent('spatial-gestures', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
         this.lastX = 0;
@@ -239,7 +244,6 @@
         }, { passive: true });
 
         window.addEventListener('touchmove', (e) => {
-          // 1-Finger Orbit Rotation
           if (e.touches.length === 1) {
             const deltaX = e.touches[0].clientX - this.lastX;
             const deltaY = e.touches[0].clientY - this.lastY;
@@ -253,15 +257,13 @@
 
             this.lastX = e.touches[0].clientX;
             this.lastY = e.touches[0].clientY;
-          } 
-          // 2-Finger Pinch-to-Zoom
-          else if (e.touches.length === 2 && this.initialPinchDistance) {
+          } else if (e.touches.length === 2 && this.initialPinchDistance) {
             const currentDistance = this.getDistance(e.touches);
             const factor = currentDistance / this.initialPinchDistance;
             const currentScale = this.el.getAttribute('scale').x;
             
             let newScale = currentScale * factor;
-            newScale = Math.min(Math.max(newScale, 0.2), 2.5); // Bounded Scale
+            newScale = Math.min(Math.max(newScale, 0.25), 2.2);
 
             this.el.setAttribute('scale', `${newScale} ${newScale} ${newScale}`);
             this.initialPinchDistance = currentDistance;
@@ -279,7 +281,7 @@
       }
     });
 
-    // Interactive Hotspot Component
+    // Hotspot Selection Component
     AFRAME.registerComponent('anatomical-hotspot', {
       schema: {
         title: { type: 'string', default: 'Structure' },
@@ -287,9 +289,9 @@
       },
       init: function () {
         this.el.addEventListener('click', () => {
-          document.getElementById("infoTitle").innerText = this.data.title;
-          document.getElementById("infoBody").innerText = this.data.details;
-          document.getElementById("infoModal").style.display = "block";
+          document.getElementById("modalTitle").innerText = this.data.title;
+          document.getElementById("modalBody").innerText = this.data.details;
+          document.getElementById("structureModal").style.display = "block";
         });
       }
     });
@@ -297,19 +299,19 @@
 </head>
 <body>
 
-  <div id="authOverlay">
-    <div class="auth-card">
-      <div class="brand-pill">✨ OrganoAR Enterprise</div>
-      <h1 class="auth-title">Clinical Spatial Suite</h1>
-      <p class="auth-desc">Tap below to authorize camera access and launch real-time 3D flashcard recognition.</p>
+  <div id="welcomeGate">
+    <div class="welcome-card">
+      <div class="app-badge">OrganoAR Spatial Health</div>
+      <h1 class="welcome-title">Explore Human Anatomy</h1>
+      <p class="welcome-desc">Sign in to begin real-time spatial scanning and understand how lifestyle habits affect organ health.</p>
 
-      <div class="sso-group">
-        <button class="sso-button" onclick="initializeCamera('Google')">
+      <div class="sso-stack">
+        <button class="btn-sso" onclick="startCameraExperience('Google')">
           <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
           Continue with Google
         </button>
 
-        <button class="sso-button" onclick="initializeCamera('Microsoft')">
+        <button class="btn-sso" onclick="startCameraExperience('Microsoft')">
           <svg width="18" height="18" viewBox="0 0 23 23"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H1z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/></svg>
           Continue with Microsoft
         </button>
@@ -317,35 +319,35 @@
     </div>
   </div>
 
-  <div id="scanBanner">📷 Point camera at any flashcard</div>
+  <div id="guideBanner">Point camera at an organ card</div>
 
-  <div id="infoModal">
+  <div id="structureModal">
     <div class="modal-header">
-      <span class="modal-title" id="infoTitle">Structure</span>
-      <button class="modal-close" onclick="document.getElementById('infoModal').style.display='none'">×</button>
+      <span class="modal-title" id="modalTitle">Structure</span>
+      <button class="btn-close" onclick="document.getElementById('structureModal').style.display='none'">×</button>
     </div>
-    <div class="modal-body" id="infoBody">Details</div>
+    <div class="modal-body" id="modalBody">Details</div>
   </div>
 
-  <main class="hud-overlay" id="hudControls">
-    <section class="hud-card">
-      <div class="card-header">
-        <span class="organ-label" id="organTitle">ORGAN PATHOLOGY</span>
-        <span class="health-badge" id="healthBadge">Efficiency 100%</span>
+  <main class="sheet-overlay" id="sheetControls">
+    <section class="sheet-card">
+      <div class="sheet-header">
+        <span class="organ-heading" id="organHeading">Organ View</span>
+        <span class="health-pill" id="healthPill">Health Score 100%</span>
       </div>
 
-      <div class="substance-group" id="substanceGroup">
-        <button class="substance-chip" data-factor="alcohol">🍺 Alcohol</button>
-        <button class="substance-chip" data-factor="tobacco">🚬 Tobacco</button>
-        <button class="substance-chip" data-factor="substance">💊 Opioids</button>
+      <div class="lifestyle-grid" id="lifestyleGrid">
+        <button class="lifestyle-chip" data-factor="alcohol">🍺 Alcohol</button>
+        <button class="lifestyle-chip" data-factor="tobacco">🚬 Tobacco</button>
+        <button class="lifestyle-chip" data-factor="substance">💊 Opioids</button>
       </div>
 
-      <div class="slider-row">
-        <div class="slider-header">
-          <span>Exposure Timeline</span>
-          <span id="yearLabel">1 Year</span>
+      <div class="slider-container">
+        <div class="slider-labels">
+          <span>Simulate Exposure</span>
+          <span id="durationLabel">1 Year</span>
         </div>
-        <input type="range" id="yearSlider" min="1" max="20" value="1">
+        <input type="range" id="exposureSlider" min="1" max="20" value="1">
       </div>
     </section>
   </main>
@@ -373,51 +375,51 @@
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
     <a-entity mindar-image-target="targetIndex: 0" id="target-liver">
-      <a-gltf-model class="ar-model" data-organ="LIVER" src="#liverModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-gltf-model class="ar-model" data-organ="Liver" src="#liverModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
       <a-entity position="0 0 0.1">
-        <a-sphere class="raycastable" position="0.2 0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Hepatic Portal Vein; details: Supplies 75% of liver blood flow. Chronic toxicity causes severe portal hypertension."></a-sphere>
-        <a-text value="Hepatic Vein" position="0.28 0.2 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
+        <a-sphere class="raycastable" position="0.2 0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Hepatic Portal Vein; details: Carries 75% of blood flow to the liver. Prolonged toxin exposure increases portal vein pressure."></a-sphere>
+        <a-text value="Portal Vein" position="0.28 0.2 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
 
-        <a-sphere class="raycastable" position="-0.2 -0.1 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Right Lobe Lobules; details: Detoxification zone. Fatty infiltration damages hepatocytes leading to nodular cirrhosis."></a-sphere>
+        <a-sphere class="raycastable" position="-0.2 -0.1 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Right Lobe Tissue; details: Key zone for nutrient processing. Heavy alcohol exposure can lead to fatty liver changes."></a-sphere>
         <a-text value="Right Lobe" position="-0.45 -0.1 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 1" id="target-heart">
-      <a-gltf-model class="ar-model" data-organ="HEART" src="#heartModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-gltf-model class="ar-model" data-organ="Heart" src="#heartModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
       <a-entity position="0 0 0.1">
-        <a-sphere class="raycastable" position="0 0.3 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Aortic Arch; details: Main arterial trunk. Nicotine and toxic lipids increase arterial wall stiffness."></a-sphere>
+        <a-sphere class="raycastable" position="0 0.3 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Aortic Arch; details: Distributes oxygenated blood to the body. Nicotine exposure leads to arterial wall stiffening."></a-sphere>
         <a-text value="Aortic Arch" position="0.08 0.3 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
 
-        <a-sphere class="raycastable" position="0.2 -0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Left Ventricle; details: Main pumping chamber. Overexertion causes myocardial wall thickening."></a-sphere>
+        <a-sphere class="raycastable" position="0.2 -0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Left Ventricle; details: Main pumping chamber. Overexertion causes heart muscle thickening over time."></a-sphere>
         <a-text value="Left Ventricle" position="0.28 -0.2 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 2" id="target-lungs">
-      <a-gltf-model class="ar-model" data-organ="LUNGS" src="#lungModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-gltf-model class="ar-model" data-organ="Lungs" src="#lungModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
       <a-entity position="0 0 0.1">
-        <a-sphere class="raycastable" position="0.15 0.15 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Bronchial Tree; details: Airway passages. Carbon particulates induce bronchitis and loss of ciliary motion."></a-sphere>
+        <a-sphere class="raycastable" position="0.15 0.15 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Bronchial Passages; details: Main airways in the lungs. Smoke particles cause mucosal irritation and elasticity loss."></a-sphere>
         <a-text value="Bronchial Tree" position="0.22 0.15 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
 
-        <a-sphere class="raycastable" position="-0.2 -0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Alveolar Sacs; details: Primary gas exchange sacs. Smoke destroys sac walls, causing emphysema."></a-sphere>
+        <a-sphere class="raycastable" position="-0.2 -0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Alveoli Clusters; details: Tiny air sacs responsible for gas exchange. Toxins damage sac walls over time."></a-sphere>
         <a-text value="Alveoli Sacs" position="-0.45 -0.2 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 3" id="target-kidneys">
-      <a-gltf-model class="ar-model" data-organ="KIDNEYS" src="#kidneyModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-gltf-model class="ar-model" data-organ="Kidneys" src="#kidneyModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
       <a-entity position="0 0 0.1">
-        <a-sphere class="raycastable" position="0 0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Renal Cortex; details: Contains microscopic nephrons. Prolonged chemical toxicity causes glomerulosclerosis."></a-sphere>
+        <a-sphere class="raycastable" position="0 0.2 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Renal Cortex; details: Contains filtering nephrons. Sustained chemical strain affects overall filtration capacity."></a-sphere>
         <a-text value="Renal Cortex" position="0.08 0.2 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 4" id="target-stomach">
-      <a-gltf-model class="ar-model" data-organ="STOMACH" src="#stomachModel" position="0 0 0" scale="0.8 0.8 0.8" pinch-rotate-gestures></a-gltf-model>
+      <a-gltf-model class="ar-model" data-organ="Stomach" src="#stomachModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
       <a-entity position="0 0 0.1">
-        <a-sphere class="raycastable" position="0.1 0.1 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Gastric Mucosa; details: Protective epithelial lining. Ethanol dissolves this layer, causing deep ulcers."></a-sphere>
-        <a-text value="Gastric Mucosa" position="0.18 0.1 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
+        <a-sphere class="raycastable" position="0.1 0.1 0.1" radius="0.05" color="#38bdf8" anatomical-hotspot="title: Gastric Lining; details: Protective inner mucus layer. Heavy alcohol use irritates this barrier over time."></a-sphere>
+        <a-text value="Gastric Lining" position="0.18 0.1 0.1" scale="0.4 0.4 0.4" color="#f8fafc"></a-text>
       </a-entity>
     </a-entity>
 
@@ -425,53 +427,52 @@
 
   <script>
     const AppState = {
-      activeOrgan: "LIVER",
+      activeOrgan: "Liver",
       years: 1,
       factors: { alcohol: false, tobacco: false, substance: false }
     };
 
-    async function initializeCamera(provider) {
-      document.getElementById("authOverlay").style.display = "none";
-      document.getElementById("scanBanner").style.display = "block";
+    async function startCameraExperience(provider) {
+      document.getElementById("welcomeGate").style.display = "none";
+      document.getElementById("guideBanner").style.display = "block";
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: { exact: "environment" } } 
-        }).catch(() => {
-          return navigator.mediaDevices.getUserMedia({ video: true });
+          video: { facingMode: "environment" } 
         });
 
         stream.getTracks().forEach(track => track.stop());
 
         const sceneEl = document.querySelector("a-scene");
         const arSystem = sceneEl.systems["mindar-image-system"];
-        if (arSystem) arSystem.start();
-
+        if (arSystem) {
+          arSystem.start();
+        }
       } catch (err) {
-        alert("Camera Access Error: Open this HTTPS link in Safari or Chrome and allow camera permissions.");
+        alert("Camera Access Required: Please allow camera permissions in your browser settings to scan flashcards.");
       }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      const organTitle = document.getElementById("organTitle");
-      const healthBadge = document.getElementById("healthBadge");
-      const yearLabel = document.getElementById("yearLabel");
-      const yearSlider = document.getElementById("yearSlider");
-      const scanBanner = document.getElementById("scanBanner");
-      const hudControls = document.getElementById("hudControls");
+      const organHeading = document.getElementById("organHeading");
+      const healthPill = document.getElementById("healthPill");
+      const durationLabel = document.getElementById("durationLabel");
+      const exposureSlider = document.getElementById("exposureSlider");
+      const guideBanner = document.getElementById("guideBanner");
+      const sheetControls = document.getElementById("sheetControls");
 
       const render = () => {
         let activeFactorCount = Object.values(AppState.factors).filter(Boolean).length;
-        let healthValue = Math.max(12, 100 - (AppState.years * activeFactorCount * 2.2));
+        let healthScore = Math.max(15, 100 - (AppState.years * activeFactorCount * 2.2));
 
-        organTitle.innerText = `${AppState.activeOrgan} PATHOLOGY`;
-        yearLabel.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
-        healthBadge.innerText = `Efficiency ${Math.round(healthValue)}%`;
+        organHeading.innerText = `${AppState.activeOrgan} Health View`;
+        durationLabel.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
+        healthPill.innerText = `Health Score ${Math.round(healthScore)}%`;
 
-        if (healthValue < 65) {
-          healthBadge.classList.add("is-warning");
+        if (healthScore < 65) {
+          healthPill.classList.add("is-critical");
         } else {
-          healthBadge.classList.remove("is-warning");
+          healthPill.classList.remove("is-critical");
         }
 
         document.querySelectorAll(".ar-model").forEach((modelEl) => {
@@ -480,7 +481,7 @@
 
           const yearRatio = AppState.years / 20.0;
           let baseScale = 0.8;
-          let shrinkScale = baseScale - (yearRatio * 0.2 * activeFactorCount);
+          let shrinkScale = baseScale - (yearRatio * 0.18 * activeFactorCount);
           modelEl.setAttribute("scale", `${shrinkScale} ${shrinkScale} ${shrinkScale}`);
 
           mesh.traverse((node) => {
@@ -519,25 +520,25 @@
           if (modelEl) {
             AppState.activeOrgan = modelEl.dataset.organ;
             
-            scanBanner.innerText = `✅ DETECTED: ${AppState.activeOrgan}`;
-            scanBanner.style.borderColor = "#38bdf8";
-            hudControls.style.display = "block"; 
+            guideBanner.innerText = `Viewing ${AppState.activeOrgan}`;
+            guideBanner.style.borderColor = "#38bdf8";
+            sheetControls.style.display = "block"; 
             
             render();
           }
         });
 
         targetEl.addEventListener("targetLost", () => {
-          scanBanner.innerText = "📷 Point camera at any flashcard";
-          scanBanner.style.borderColor = "rgba(255, 255, 255, 0.12)";
+          guideBanner.innerText = "Point camera at an organ card";
+          guideBanner.style.borderColor = "rgba(255, 255, 255, 0.1)";
           
-          hudControls.style.display = "none"; 
-          document.getElementById("infoModal").style.display = "none";
+          sheetControls.style.display = "none"; 
+          document.getElementById("structureModal").style.display = "none";
         });
       });
 
-      document.getElementById("substanceGroup").addEventListener("click", (e) => {
-        const chip = e.target.closest(".substance-chip");
+      document.getElementById("lifestyleGrid").addEventListener("click", (e) => {
+        const chip = e.target.closest(".lifestyle-chip");
         if (!chip) return;
 
         const factor = chip.dataset.factor;
@@ -546,7 +547,7 @@
         render();
       });
 
-      yearSlider.addEventListener("input", (e) => {
+      exposureSlider.addEventListener("input", (e) => {
         AppState.years = parseInt(e.target.value, 10);
         render();
       });
