@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>OrganoAR — Spatial Health Experience</title>
 
+  <!-- Stable WebAR Core Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
@@ -51,7 +52,7 @@
       z-index: 0 !important;
     }
 
-    /* Personalized Academic Header & Onboarding Gate */
+    /* Onboarding & Scholar Header Screen */
     #welcomeGate {
       position: fixed;
       inset: 0;
@@ -282,8 +283,15 @@
 </head>
 <body>
 
+  <!-- Onboarding & Scholar Header Screen -->
   <div id="welcomeGate">
     <div class="welcome-card">
+      <div class="scholar-meta">
+        <span class="scholar-name">Karthick B</span>
+        <span class="scholar-title">UX / HCI Research Scholar</span>
+        <span class="scholar-org">NITTTR Chennai</span>
+      </div>
+
       <h1 class="welcome-title">OrganoAR Spatial Suite</h1>
       <p class="welcome-desc">Authenticate to initialize real-time spatial target recognition and interactive pathology models.</p>
 
@@ -326,6 +334,7 @@
     </section>
   </main>
 
+  <!-- WebAR Scene Engine -->
   <a-scene 
     mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: false; uiScanning: no;" 
     embedded
@@ -347,22 +356,27 @@
     <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
+    <!-- Index 0: Liver Target -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-liver">
       <a-gltf-model class="ar-model" data-organ="Liver" src="#liverModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
+    <!-- Index 1: Heart Target -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-heart">
       <a-gltf-model class="ar-model" data-organ="Heart" src="#heartModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
+    <!-- Index 2: Lungs Target -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-lungs">
       <a-gltf-model class="ar-model" data-organ="Lungs" src="#lungModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
+    <!-- Index 3: Kidneys Target -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-kidneys">
       <a-gltf-model class="ar-model" data-organ="Kidneys" src="#kidneyModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
+    <!-- Index 4: Stomach Target -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-stomach">
       <a-gltf-model class="ar-model" data-organ="Stomach" src="#stomachModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
@@ -382,16 +396,26 @@
 
       const sceneEl = document.querySelector("a-scene");
       
-      // Ensure WebGL renderer clears background completely
-      sceneEl.addEventListener("render-target-loaded", () => {
-        if (sceneEl.renderer) {
-          sceneEl.renderer.setClearColor(0x000000, 0);
-        }
-      });
+      if (sceneEl.hasLoaded) {
+        initARSystem(sceneEl);
+      } else {
+        sceneEl.addEventListener("loaded", () => initARSystem(sceneEl));
+      }
+    }
 
+    function initARSystem(sceneEl) {
+      if (sceneEl.renderer) {
+        sceneEl.renderer.setClearColor(0x000000, 0);
+      }
       const arSystem = sceneEl.systems["mindar-image-system"];
       if (arSystem) {
         arSystem.start();
+      } else {
+        console.warn("MindAR system not found, retrying...");
+        setTimeout(() => {
+          const retrySystem = sceneEl.systems["mindar-image-system"];
+          if (retrySystem) retrySystem.start();
+        }, 1000);
       }
     }
 
