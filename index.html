@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OrganoAR — Interactive Physiological Explorer</title>
+  <title>OrganoAR — Multi-Organ Spatial Pathology Suite</title>
 
-  <!-- Core Libraries -->
+  <!-- Core WebAR & 3D Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    /* Material Design 3 Expressive Tokens */
     :root {
       --md-surface: #0f172a;
-      --md-surface-container: rgba(30, 41, 59, 0.82);
-      --md-outline: rgba(255, 255, 255, 0.08);
+      --md-surface-container: rgba(30, 41, 59, 0.85);
+      --md-outline: rgba(255, 255, 255, 0.1);
       --md-primary: #38bdf8;
       --md-primary-container: rgba(56, 189, 248, 0.12);
       --md-error: #f43f5e;
@@ -107,6 +106,7 @@
       border: 1px solid var(--md-outline);
       border-radius: var(--md-radius-lg);
       padding: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
     }
 
     /* Factor Selection Group */
@@ -228,7 +228,7 @@
   </style>
 
   <script>
-    // Custom Gesture Component for Object Manipulation
+    // Touch Gesture Component for Object Rotation and Scaling
     AFRAME.registerComponent('viewport-gestures', {
       schema: {
         rotateSpeed: { type: 'number', default: 0.5 },
@@ -282,8 +282,8 @@
     <nav class="organ-bar" id="organSelector">
       <button class="organ-chip is-active" data-organ="liver" data-asset="#liverModel">Liver</button>
       <button class="organ-chip" data-organ="heart" data-asset="#heartModel">Heart</button>
-      <button class="organ-chip" data-organ="kidney" data-asset="#kidneyModel">Kidneys</button>
       <button class="organ-chip" data-organ="lungs" data-asset="#lungModel">Lungs</button>
+      <button class="organ-chip" data-organ="kidneys" data-asset="#kidneyModel">Kidneys</button>
       <button class="organ-chip" data-organ="stomach" data-asset="#stomachModel">Stomach</button>
     </nav>
   </div>
@@ -316,30 +316,30 @@
 
       <!-- Organ Status Info -->
       <div class="info-header">
-        <span class="info-title" id="organTitle">Liver View</span>
+        <span class="info-title" id="organTitle">LIVER — Anatomy View</span>
         <span class="status-badge" id="efficiencyBadge">Efficiency 100%</span>
       </div>
       <p class="info-description" id="organDescription">
-        Select lifestyle factors to simulate structural changes over time.
+        Scan a flashcard to inspect anatomical structures in WebAR.
       </p>
 
     </section>
   </main>
 
-  <!-- AR Canvas Scene -->
+  <!-- AR Canvas Scene using Single Unified organs.mind Target File -->
   <a-scene 
-    mindar-image="imageTargetSrc: ./livertargets.mind; autoStart: true;" 
+    mindar-image="imageTargetSrc: ./organs.mind; autoStart: true;" 
     color-space="sRGB" 
     renderer="colorManagement: true, physicallyCorrectLights: true" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
     
     <a-assets>
-      <a-asset-item id="liverModel" src="./liver.glb"></a-asset-item>
-      <a-asset-item id="heartModel" src="./heart.glb"></a-asset-item>
-      <a-asset-item id="kidneyModel" src="./kidney.glb"></a-asset-item>
-      <a-asset-item id="lungModel" src="./lung.glb"></a-asset-item>
-      <a-asset-item id="stomachModel" src="./stomach.glb"></a-asset-item>
+      <a-asset-item id="liverModel" src="./assets/models/liver.glb"></a-asset-item>
+      <a-asset-item id="heartModel" src="./assets/models/heart.glb"></a-asset-item>
+      <a-asset-item id="lungModel" src="./assets/models/lung.glb"></a-asset-item>
+      <a-asset-item id="kidneyModel" src="./assets/models/kidney.glb"></a-asset-item>
+      <a-asset-item id="stomachModel" src="./assets/models/stomach.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -348,20 +348,36 @@
     <a-light type="ambient" intensity="1.6"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.2"></a-light>
 
-    <!-- Target Entities -->
-    <a-entity mindar-image-target="targetIndex: 0" id="target-0">
-      <a-gltf-model class="ar-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" viewport-gestures></a-gltf-model>
+    <!-- LIVER TARGETS (Indices 0 - 8) -->
+    <a-entity mindar-image-target="targetIndex: 0" id="liver-target-0">
+      <a-gltf-model class="ar-model" data-organ="liver" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" viewport-gestures></a-gltf-model>
     </a-entity>
 
-    <a-entity mindar-image-target="targetIndex: 1" id="target-1">
-      <a-gltf-model class="ar-model" src="#liverModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 180 0" viewport-gestures></a-gltf-model>
+    <!-- HEART TARGETS (Indices 9 - 17) -->
+    <a-entity mindar-image-target="targetIndex: 9" id="heart-target-0">
+      <a-gltf-model class="ar-model" data-organ="heart" src="#heartModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" viewport-gestures></a-gltf-model>
     </a-entity>
+
+    <!-- LUNGS TARGETS (Indices 18 - 26) -->
+    <a-entity mindar-image-target="targetIndex: 18" id="lung-target-0">
+      <a-gltf-model class="ar-model" data-organ="lungs" src="#lungModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" viewport-gestures></a-gltf-model>
+    </a-entity>
+
+    <!-- KIDNEYS TARGETS (Indices 27 - 35) -->
+    <a-entity mindar-image-target="targetIndex: 27" id="kidney-target-0">
+      <a-gltf-model class="ar-model" data-organ="kidneys" src="#kidneyModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" viewport-gestures></a-gltf-model>
+    </a-entity>
+
+    <!-- STOMACH TARGETS (Indices 36 - 44) -->
+    <a-entity mindar-image-target="targetIndex: 36" id="stomach-target-0">
+      <a-gltf-model class="ar-model" data-organ="stomach" src="#stomachModel" position="0 0 0.2" scale="2.5 2.5 2.5" rotation="0 0 0" viewport-gestures></a-gltf-model>
+    </a-entity>
+
   </a-scene>
 
   <!-- Application Logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Centralized State
       const AppState = {
         selectedOrgan: "liver",
         selectedAsset: "#liverModel",
@@ -374,27 +390,24 @@
       };
 
       const OrganDescriptions = {
-        liver: "Filters toxins and aids digestion. Prolonged exposure causes tissue inflammation and fibrotic scarring.",
-        heart: "Pumps blood throughout the body. Substance strain increases blood pressure and weakens heart muscle.",
-        kidney: "Filters waste from the blood. Chronic exposure leads to renal strain and reduced filtration efficiency.",
-        lungs: "Facilitates oxygen exchange. Toxic smoke reduces alveolar elasticity and lung capacity.",
-        stomach: "Processes nutrients. High alcohol and substance intake irritates the mucosal lining, causing ulcers."
+        liver: "Filters toxins and aids metabolism. Prolonged exposure causes hepatic inflammation and fibrotic tissue scarring.",
+        heart: "Cardiovascular center. Substance strain increases arterial stiffness, causing myocardial hypertrophy.",
+        lungs: "Facilitates gas exchange. Smoke toxins destroy pulmonary alveoli, reducing overall vital lung capacity.",
+        kidneys: "Renal filtration system. Chronic toxin exposure causes glomerulosclerosis and reduced renal filtration.",
+        stomach: "Gastrointestinal organ. Heavy alcohol and opioid use irritates mucosal lining, causing ulcers."
       };
 
-      // UI Element References
       const organTitle = document.getElementById("organTitle");
       const organDescription = document.getElementById("organDescription");
       const efficiencyBadge = document.getElementById("efficiencyBadge");
       const yearDisplay = document.getElementById("yearDisplay");
       const exposureSlider = document.getElementById("exposureSlider");
 
-      // Update Render & Shader
       const render = () => {
         let activeFactorCount = Object.values(AppState.factors).filter(Boolean).length;
-        let healthValue = Math.max(15, 100 - (AppState.years * activeFactorCount * 2.2));
+        let healthValue = Math.max(12, 100 - (AppState.years * activeFactorCount * 2.2));
 
-        // UI Updates
-        organTitle.innerText = `${AppState.selectedOrgan.toUpperCase()} — Anatomy View`;
+        organTitle.innerText = `${AppState.selectedOrgan.toUpperCase()} — Pathology View`;
         yearDisplay.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
         efficiencyBadge.innerText = `Efficiency ${Math.round(healthValue)}%`;
 
@@ -410,7 +423,7 @@
           organDescription.innerText = "Select lifestyle factors above to simulate structural changes over time.";
         }
 
-        // Material Color Modulation in Three.js
+        // High-Contrast Shader & Material Transformation Engine
         document.querySelectorAll(".ar-model").forEach((modelEl) => {
           const mesh = modelEl.getObject3D('mesh');
           if (!mesh) return;
@@ -418,22 +431,48 @@
           mesh.traverse((node) => {
             if (node.isMesh && node.material) {
               let color = new THREE.Color(0xffffff);
-              if (activeFactorCount > 0) {
-                const darkFactor = 1.0 - ((AppState.years / 20) * 0.5);
-                color.multiplyScalar(darkFactor);
+              let roughness = 0.4;
 
-                if (AppState.factors.tobacco) color.lerp(new THREE.Color(0x334155), (AppState.years / 20) * 0.35);
-                if (AppState.factors.alcohol) color.lerp(new THREE.Color(0x7c2d12), (AppState.years / 20) * 0.35);
-                if (AppState.factors.substance) color.lerp(new THREE.Color(0x4c1d95), (AppState.years / 20) * 0.4);
+              if (activeFactorCount > 0) {
+                const yearRatio = AppState.years / 20.0; // 0.05 to 1.0
+
+                // 1. Alcohol Impact: Fatty Steatosis / Inflammatory Crimson
+                if (AppState.factors.alcohol && !AppState.factors.tobacco && !AppState.factors.substance) {
+                  color.lerp(new THREE.Color(0xd97706), yearRatio * 0.85); // Vibrant Yellow-Orange
+                  roughness = 0.2; // Greasy sheen
+                }
+
+                // 2. Tobacco Impact: Carbon Deposition & Severe Hypoxia
+                else if (AppState.factors.tobacco && !AppState.factors.alcohol && !AppState.factors.substance) {
+                  color.lerp(new THREE.Color(0x1e293b), yearRatio * 0.90); // Dark Slate Black
+                  roughness = 0.85; // Dry rough surface
+                }
+
+                // 3. Opioid Impact: Deep Ischemic Purple
+                else if (AppState.factors.substance && !AppState.factors.alcohol && !AppState.factors.tobacco) {
+                  color.lerp(new THREE.Color(0x581c87), yearRatio * 0.88); // Deep Purple
+                  roughness = 0.6;
+                }
+
+                // 4. Combined Multi-Factor Impact: Severe Necrosis
+                else {
+                  color.lerp(new THREE.Color(0x270707), yearRatio * 0.95); // Necrotic Dark Red-Black
+                  roughness = 0.95;
+                }
+
+                // Apply progressive darkening over time
+                color.multiplyScalar(1.0 - (yearRatio * 0.45));
               }
+
               node.material.color = color;
+              node.material.roughness = roughness;
               node.material.needsUpdate = true;
             }
           });
         });
       };
 
-      // Event Delegation: Organ Switcher
+      // Top Tab Manual Selection
       document.getElementById("organSelector").addEventListener("click", (e) => {
         const chip = e.target.closest(".organ-chip");
         if (!chip) return;
@@ -444,27 +483,38 @@
         AppState.selectedOrgan = chip.dataset.organ;
         AppState.selectedAsset = chip.dataset.asset;
 
-        document.querySelectorAll(".ar-model").forEach(model => {
-          model.setAttribute("gltf-model", AppState.selectedAsset);
-        });
-
         render();
       });
 
-      // Event Delegation: Factor Toggles
+      // Target Scanning Event Handler
+      document.querySelectorAll("[mindar-image-target]").forEach((targetEl) => {
+        targetEl.addEventListener("targetFound", () => {
+          const modelEl = targetEl.querySelector(".ar-model");
+          if (modelEl && modelEl.dataset.organ) {
+            AppState.selectedOrgan = modelEl.dataset.organ;
+            
+            document.querySelectorAll(".organ-chip").forEach((chip) => {
+              chip.classList.toggle("is-active", chip.dataset.organ === AppState.selectedOrgan);
+            });
+
+            render();
+          }
+        });
+      });
+
+      // Factor Toggles
       document.getElementById("factorGroup").addEventListener("click", (e) => {
         const chip = e.target.closest(".factor-chip");
         if (!chip) return;
 
         const factor = chip.dataset.factor;
         AppState.factors[factor] = !AppState.factors[factor];
-        chip.classList.toggle("active", AppState.factors[factor]);
         chip.classList.toggle("is-active", AppState.factors[factor]);
 
         render();
       });
 
-      // Timeline Slider
+      // Exposure Duration Slider
       exposureSlider.addEventListener("input", (e) => {
         AppState.years = parseInt(e.target.value, 10);
         render();
