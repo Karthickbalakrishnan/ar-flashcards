@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>OrganoAR — Spatial Health Experience</title>
 
-  <!-- Core 3D & Tracking Engines -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"></script>
+  <!-- Stable WebAR Core Libraries -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     :root {
@@ -31,19 +30,19 @@
       height: 100vh;
       overflow: hidden;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #020617;
+      background-color: #020617 !important;
       color: var(--sys-text);
     }
 
-    #arContainer {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
+    /* Scene WebGL Canvas Transparency Overlays */
+    a-scene {
+      position: absolute !important;
+      inset: 0 !important;
+      z-index: 1 !important;
+      background: transparent !important;
     }
 
-    #arContainer video {
-      object-fit: cover !important;
-    }
+    .a-canvas { background: transparent !important; }
 
     /* Onboarding Permission Screen */
     #welcomeGate {
@@ -200,6 +199,63 @@
       cursor: pointer;
     }
   </style>
+
+  <script>
+    // Smooth Touch Gestures: Orbit Rotation & Bounded Pinch-to-Zoom
+    AFRAME.registerComponent('spatial-gestures', {
+      schema: { rotateSpeed: { type: 'number', default: 0.5 } },
+      init: function () {
+        this.lastX = 0;
+        this.lastY = 0;
+        this.initialPinchDistance = null;
+
+        window.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            this.lastX = e.touches[0].clientX;
+            this.lastY = e.touches[0].clientY;
+          } else if (e.touches.length === 2) {
+            this.initialPinchDistance = this.getDistance(e.touches);
+          }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+          if (e.touches.length === 1) {
+            const deltaX = e.touches[0].clientX - this.lastX;
+            const deltaY = e.touches[0].clientY - this.lastY;
+            const rot = this.el.getAttribute('rotation');
+
+            this.el.setAttribute('rotation', {
+              x: rot.x + deltaY * this.data.rotateSpeed,
+              y: rot.y + deltaX * this.data.rotateSpeed,
+              z: rot.z
+            });
+
+            this.lastX = e.touches[0].clientX;
+            this.lastY = e.touches[0].clientY;
+          } else if (e.touches.length === 2 && this.initialPinchDistance) {
+            const currentDistance = this.getDistance(e.touches);
+            const factor = currentDistance / this.initialPinchDistance;
+            const currentScale = this.el.getAttribute('scale').x;
+            
+            let newScale = currentScale * factor;
+            newScale = Math.min(Math.max(newScale, 0.3), 1.8);
+
+            this.el.setAttribute('scale', `${newScale} ${newScale} ${newScale}`);
+            this.initialPinchDistance = currentDistance;
+          }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+          this.initialPinchDistance = null;
+        });
+      },
+      getDistance: function (touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+    });
+  </script>
 </head>
 <body>
 
@@ -211,12 +267,12 @@
       <p class="welcome-desc">Sign in to authorize camera access and launch real-time flashcard recognition.</p>
 
       <div class="sso-stack">
-        <button class="btn-sso" onclick="initNativeAR('Google')">
+        <button class="btn-sso" onclick="startApp()">
           <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
           Continue with Google
         </button>
 
-        <button class="btn-sso" onclick="initNativeAR('Microsoft')">
+        <button class="btn-sso" onclick="startApp()">
           <svg width="18" height="18" viewBox="0 0 23 23"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/></svg>
           Continue with Microsoft
         </button>
@@ -249,7 +305,53 @@
     </section>
   </main>
 
-  <div id="arContainer"></div>
+  <!-- WebAR Scene Engine -->
+  <a-scene 
+    mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: false; uiScanning: no;" 
+    color-space="sRGB" 
+    renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true;" 
+    vr-mode-ui="enabled: false" 
+    device-orientation-permission-ui="enabled: false">
+    
+    <a-assets>
+      <a-asset-item id="liverModel" src="./assets/models/liver.glb"></a-asset-item>
+      <a-asset-item id="heartModel" src="./assets/models/heart.glb"></a-asset-item>
+      <a-asset-item id="lungModel" src="./assets/models/lung.glb"></a-asset-item>
+      <a-asset-item id="kidneyModel" src="./assets/models/kidney.glb"></a-asset-item>
+      <a-asset-item id="stomachModel" src="./assets/models/stomach.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-light type="ambient" intensity="1.8"></a-light>
+    <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
+
+    <!-- Target 0: Liver -->
+    <a-entity mindar-image-target="targetIndex: 0" id="target-liver">
+      <a-gltf-model class="ar-model" data-organ="Liver" src="#liverModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    </a-entity>
+
+    <!-- Target 1: Heart -->
+    <a-entity mindar-image-target="targetIndex: 1" id="target-heart">
+      <a-gltf-model class="ar-model" data-organ="Heart" src="#heartModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    </a-entity>
+
+    <!-- Target 2: Lungs -->
+    <a-entity mindar-image-target="targetIndex: 2" id="target-lungs">
+      <a-gltf-model class="ar-model" data-organ="Lungs" src="#lungModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    </a-entity>
+
+    <!-- Target 3: Kidneys -->
+    <a-entity mindar-image-target="targetIndex: 3" id="target-kidneys">
+      <a-gltf-model class="ar-model" data-organ="Kidneys" src="#kidneyModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    </a-entity>
+
+    <!-- Target 4: Stomach -->
+    <a-entity mindar-image-target="targetIndex: 4" id="target-stomach">
+      <a-gltf-model class="ar-model" data-organ="Stomach" src="#stomachModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    </a-entity>
+
+  </a-scene>
 
   <script>
     const AppState = {
@@ -258,184 +360,113 @@
       factors: { alcohol: false, tobacco: false, substance: false }
     };
 
-    const OrganConfig = [
-      { name: "Liver", model: "./assets/models/liver.glb" },
-      { name: "Heart", model: "./assets/models/heart.glb" },
-      { name: "Lungs", model: "./assets/models/lung.glb" },
-      { name: "Kidneys", model: "./assets/models/kidney.glb" },
-      { name: "Stomach", model: "./assets/models/stomach.glb" }
-    ];
+    function startApp() {
+      document.getElementById("welcomeGate").style.display = "none";
+      document.getElementById("guideBanner").style.display = "block";
 
-    let mindThree, loadedModels = {};
-
-    async function initNativeAR(provider) {
-      try {
-        // Request media permission explicitly first inside click handler
-        const userStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        userStream.getTracks().forEach(track => track.stop()); // Stop temporary stream
-
-        document.getElementById("welcomeGate").style.display = "none";
-        document.getElementById("guideBanner").style.display = "block";
-
-        mindThree = new window.MINDAR.IMAGE.MindARThree({
-          container: document.getElementById("arContainer"),
-          imageTargetSrc: "./assets/targets/organs.mind",
-          uiScanning: "no",
-          uiLoading: "no"
-        });
-
-        const { renderer, scene, camera } = mindThree;
-
-        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.5);
-        scene.add(light);
-
-        const gltfLoader = new THREE.GLTFLoader();
-
-        OrganConfig.forEach((config, idx) => {
-          const anchor = mindThree.addAnchor(idx);
-
-          anchor.onTargetFound = () => {
-            AppState.activeOrgan = config.name;
-            document.getElementById("guideBanner").innerText = `Viewing ${config.name}`;
-            document.getElementById("sheetControls").style.display = "block";
-
-            if (!loadedModels[config.name]) {
-              gltfLoader.load(config.model, (gltf) => {
-                const model = gltf.scene;
-                model.scale.set(0.5, 0.5, 0.5);
-                anchor.group.add(model);
-                loadedModels[config.name] = model;
-                updateMaterials();
-              });
-            } else {
-              updateMaterials();
-            }
-          };
-
-          anchor.onTargetLost = () => {
-            document.getElementById("guideBanner").innerText = "Point camera at an organ card";
-            document.getElementById("sheetControls").style.display = "none";
-          };
-        });
-
-        // Touch gesture tracking for rotation & pinch scale
-        let lastTouchX = 0, lastTouchY = 0, initialPinchDistance = null;
-
-        window.addEventListener('touchstart', (e) => {
-          if (e.touches.length === 1) {
-            lastTouchX = e.touches[0].clientX;
-            lastTouchY = e.touches[0].clientY;
-          } else if (e.touches.length === 2) {
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
-          }
-        }, { passive: true });
-
-        window.addEventListener('touchmove', (e) => {
-          const activeModel = loadedModels[AppState.activeOrgan];
-          if (!activeModel) return;
-
-          if (e.touches.length === 1) {
-            const deltaX = e.touches[0].clientX - lastTouchX;
-            const deltaY = e.touches[0].clientY - lastTouchY;
-
-            activeModel.rotation.y += deltaX * 0.01;
-            activeModel.rotation.x += deltaY * 0.01;
-
-            lastTouchX = e.touches[0].clientX;
-            lastTouchY = e.touches[0].clientY;
-          } else if (e.touches.length === 2 && initialPinchDistance) {
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const factor = dist / initialPinchDistance;
-
-            let newScale = activeModel.scale.x * factor;
-            newScale = Math.min(Math.max(newScale, 0.2), 1.5);
-            activeModel.scale.set(newScale, newScale, newScale);
-
-            initialPinchDistance = dist;
-          }
-        }, { passive: true });
-
-        await mindThree.start();
-
-        const videoEl = document.querySelector("#arContainer video");
-        if (videoEl) {
-          videoEl.setAttribute("playsinline", "");
-          videoEl.setAttribute("webkit-playsinline", "");
-        }
-
-        renderer.setAnimationLoop(() => {
-          renderer.render(scene, camera);
-        });
-
-      } catch (err) {
-        // Log the exact error message so we know if it's NotAllowedError or NotFoundError
-        alert(`Camera System Error: ${err.name} — ${err.message}`);
+      const sceneEl = document.querySelector("a-scene");
+      const arSystem = sceneEl.systems["mindar-image-system"];
+      if (arSystem) {
+        arSystem.start();
       }
     }
 
-    function updateMaterials() {
-      const activeModel = loadedModels[AppState.activeOrgan];
-      if (!activeModel) return;
-
-      let activeFactorCount = Object.values(AppState.factors).filter(Boolean).length;
-      let healthScore = Math.max(15, 100 - (AppState.years * activeFactorCount * 2.2));
-
-      document.getElementById("organHeading").innerText = `${AppState.activeOrgan} Health View`;
-      document.getElementById("durationLabel").innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
-      
+    document.addEventListener("DOMContentLoaded", () => {
+      const organHeading = document.getElementById("organHeading");
       const healthPill = document.getElementById("healthPill");
-      healthPill.innerText = `Health Score ${Math.round(healthScore)}%`;
-      if (healthScore < 65) healthPill.classList.add("is-critical");
-      else healthPill.classList.remove("is-critical");
+      const durationLabel = document.getElementById("durationLabel");
+      const exposureSlider = document.getElementById("exposureSlider");
+      const guideBanner = document.getElementById("guideBanner");
+      const sheetControls = document.getElementById("sheetControls");
 
-      const yearRatio = AppState.years / 20.0;
+      const render = () => {
+        let activeFactorCount = Object.values(AppState.factors).filter(Boolean).length;
+        let healthScore = Math.max(15, 100 - (AppState.years * activeFactorCount * 2.2));
 
-      activeModel.traverse((node) => {
-        if (node.isMesh && node.material) {
-          let color = new THREE.Color(0xffffff);
-          let roughness = 0.4;
+        organHeading.innerText = `${AppState.activeOrgan} Health View`;
+        durationLabel.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
+        healthPill.innerText = `Health Score ${Math.round(healthScore)}%`;
 
-          if (activeFactorCount > 0) {
-            if (AppState.factors.alcohol && !AppState.factors.tobacco && !AppState.factors.substance) {
-              color.lerp(new THREE.Color(0xd97706), yearRatio * 0.85);
-              roughness = 0.2;
-            } else if (AppState.factors.tobacco && !AppState.factors.alcohol && !AppState.factors.substance) {
-              color.lerp(new THREE.Color(0x1e293b), yearRatio * 0.90);
-              roughness = 0.85;
-            } else if (AppState.factors.substance && !AppState.factors.alcohol && !AppState.factors.tobacco) {
-              color.lerp(new THREE.Color(0x581c87), yearRatio * 0.88);
-              roughness = 0.6;
-            } else {
-              color.lerp(new THREE.Color(0x270707), yearRatio * 0.95);
-              roughness = 0.95;
-            }
-            color.multiplyScalar(1.0 - (yearRatio * 0.45));
-          }
-
-          node.material.color = color;
-          node.material.roughness = roughness;
-          node.material.needsUpdate = true;
+        if (healthScore < 65) {
+          healthPill.classList.add("is-critical");
+        } else {
+          healthPill.classList.remove("is-critical");
         }
+
+        document.querySelectorAll(".ar-model").forEach((modelEl) => {
+          const mesh = modelEl.getObject3D('mesh');
+          if (!mesh) return;
+
+          const yearRatio = AppState.years / 20.0;
+          let baseScale = 0.8;
+          let shrinkScale = baseScale - (yearRatio * 0.18 * activeFactorCount);
+          modelEl.setAttribute("scale", `${shrinkScale} ${shrinkScale} ${shrinkScale}`);
+
+          mesh.traverse((node) => {
+            if (node.isMesh && node.material) {
+              let color = new THREE.Color(0xffffff);
+              let roughness = 0.4;
+
+              if (activeFactorCount > 0) {
+                if (AppState.factors.alcohol && !AppState.factors.tobacco && !AppState.factors.substance) {
+                  color.lerp(new THREE.Color(0xd97706), yearRatio * 0.85);
+                  roughness = 0.2;
+                } else if (AppState.factors.tobacco && !AppState.factors.alcohol && !AppState.factors.substance) {
+                  color.lerp(new THREE.Color(0x1e293b), yearRatio * 0.90);
+                  roughness = 0.85;
+                } else if (AppState.factors.substance && !AppState.factors.alcohol && !AppState.factors.tobacco) {
+                  color.lerp(new THREE.Color(0x581c87), yearRatio * 0.88);
+                  roughness = 0.6;
+                } else {
+                  color.lerp(new THREE.Color(0x270707), yearRatio * 0.95);
+                  roughness = 0.95;
+                }
+                color.multiplyScalar(1.0 - (yearRatio * 0.45));
+              }
+
+              node.material.color = color;
+              node.material.roughness = roughness;
+              node.material.needsUpdate = true;
+            }
+          });
+        });
+      };
+
+      document.querySelectorAll("[mindar-image-target]").forEach((targetEl) => {
+        targetEl.addEventListener("targetFound", () => {
+          const modelEl = targetEl.querySelector(".ar-model");
+          if (modelEl) {
+            AppState.activeOrgan = modelEl.dataset.organ;
+            
+            guideBanner.innerText = `Viewing ${AppState.activeOrgan}`;
+            guideBanner.style.borderColor = "#38bdf8";
+            sheetControls.style.display = "block"; 
+            
+            render();
+          }
+        });
+
+        targetEl.addEventListener("targetLost", () => {
+          guideBanner.innerText = "Point camera at an organ card";
+          guideBanner.style.borderColor = "rgba(255, 255, 255, 0.1)";
+          sheetControls.style.display = "none"; 
+        });
       });
-    }
 
-    document.getElementById("lifestyleGrid").addEventListener("click", (e) => {
-      const chip = e.target.closest(".lifestyle-chip");
-      if (!chip) return;
+      document.getElementById("lifestyleGrid").addEventListener("click", (e) => {
+        const chip = e.target.closest(".lifestyle-chip");
+        if (!chip) return;
 
-      const factor = chip.dataset.factor;
-      AppState.factors[factor] = !AppState.factors[factor];
-      chip.classList.toggle("is-active", AppState.factors[factor]);
-      updateMaterials();
-    });
+        const factor = chip.dataset.factor;
+        AppState.factors[factor] = !AppState.factors[factor];
+        chip.classList.toggle("is-active", AppState.factors[factor]);
+        render();
+      });
 
-    document.getElementById("exposureSlider").addEventListener("input", (e) => {
-      AppState.years = parseInt(e.target.value, 10);
-      updateMaterials();
+      exposureSlider.addEventListener("input", (e) => {
+        AppState.years = parseInt(e.target.value, 10);
+        render();
+      });
     });
   </script>
 </body>
