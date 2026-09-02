@@ -5,14 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>OrganoAR — Spatial Health Experience</title>
 
-  <!-- Stable WebAR Core Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     :root {
-      --sys-surface: rgba(15, 23, 42, 0.85);
-      --sys-border: rgba(255, 255, 255, 0.1);
+      --sys-surface: rgba(15, 23, 42, 0.88);
+      --sys-border: rgba(255, 255, 255, 0.12);
       --sys-primary: #38bdf8;
       --sys-danger: #fb7185;
       --sys-text: #f8fafc;
@@ -30,21 +29,29 @@
       height: 100vh;
       overflow: hidden;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #020617 !important;
+      background: transparent !important;
       color: var(--sys-text);
     }
 
-    /* Scene WebGL Canvas Transparency Overlays */
-    a-scene {
+    /* Transparent Scene Canvas Layer */
+    a-scene, .a-canvas {
       position: absolute !important;
       inset: 0 !important;
       z-index: 1 !important;
+      background-color: transparent !important;
       background: transparent !important;
     }
 
-    .a-canvas { background: transparent !important; }
+    video {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+    }
 
-    /* Onboarding Permission Screen */
+    /* Onboarding & Academic Scholar Header */
     #welcomeGate {
       position: fixed;
       inset: 0;
@@ -57,33 +64,49 @@
     }
 
     .welcome-card {
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.92);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--sys-border);
       border-radius: 32px;
-      padding: 40px 32px;
+      padding: 36px 28px;
       width: 100%;
-      max-width: 380px;
+      max-width: 400px;
       text-align: center;
       box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
     }
 
-    .app-badge {
-      display: inline-flex;
+    .scholar-meta {
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 6px;
-      background: rgba(56, 189, 248, 0.1);
-      padding: 6px 16px;
-      border-radius: var(--radius-pill);
-      color: var(--sys-primary);
-      font-size: 0.8125rem;
-      font-weight: 600;
-      margin-bottom: 20px;
+      gap: 4px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .welcome-title { font-size: 1.625rem; font-weight: 700; margin: 0 0 10px 0; letter-spacing: -0.02em; }
-    .welcome-desc { font-size: 0.9375rem; color: var(--sys-subtext); margin: 0 0 32px 0; line-height: 1.5; }
+    .scholar-name {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--sys-text);
+      letter-spacing: -0.01em;
+    }
+
+    .scholar-title {
+      font-size: 0.8125rem;
+      color: var(--sys-primary);
+      font-weight: 600;
+    }
+
+    .scholar-org {
+      font-size: 0.75rem;
+      color: var(--sys-subtext);
+      font-weight: 500;
+    }
+
+    .welcome-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.02em; }
+    .welcome-desc { font-size: 0.875rem; color: var(--sys-subtext); margin: 0 0 28px 0; line-height: 1.5; }
 
     .sso-stack { display: flex; flex-direction: column; gap: 12px; }
 
@@ -106,7 +129,7 @@
 
     .btn-sso:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
 
-    /* Top Guidance Pill */
+    /* HUD Guidance Banner */
     #guideBanner {
       position: fixed;
       top: 24px;
@@ -201,7 +224,6 @@
   </style>
 
   <script>
-    // Smooth Touch Gestures: Orbit Rotation & Bounded Pinch-to-Zoom
     AFRAME.registerComponent('spatial-gestures', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
@@ -259,12 +281,16 @@
 </head>
 <body>
 
-  <!-- SSO Authentication Gate -->
   <div id="welcomeGate">
     <div class="welcome-card">
-      <div class="app-badge">OrganoAR Spatial Health</div>
-      <h1 class="welcome-title">Explore Human Anatomy</h1>
-      <p class="welcome-desc">Sign in to authorize camera access and launch real-time flashcard recognition.</p>
+      <div class="scholar-meta">
+        <span class="scholar-name">Karthick Balakrishnan</span>
+        <span class="scholar-title">UX / HCI Research Scholar</span>
+        <span class="scholar-org">NITTTR Chennai</span>
+      </div>
+
+      <h1 class="welcome-title">OrganoAR Spatial Suite</h1>
+      <p class="welcome-desc">Authenticate to initialize real-time spatial target recognition and interactive pathology models.</p>
 
       <div class="sso-stack">
         <button class="btn-sso" onclick="startApp()">
@@ -305,11 +331,11 @@
     </section>
   </main>
 
-  <!-- WebAR Scene Engine -->
   <a-scene 
     mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: false; uiScanning: no;" 
+    embedded
     color-space="sRGB" 
-    renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true;" 
+    renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true; transparent: true;" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
     
@@ -326,27 +352,22 @@
     <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
-    <!-- Target 0: Liver -->
     <a-entity mindar-image-target="targetIndex: 0" id="target-liver">
       <a-gltf-model class="ar-model" data-organ="Liver" src="#liverModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
-    <!-- Target 1: Heart -->
     <a-entity mindar-image-target="targetIndex: 1" id="target-heart">
       <a-gltf-model class="ar-model" data-organ="Heart" src="#heartModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
-    <!-- Target 2: Lungs -->
     <a-entity mindar-image-target="targetIndex: 2" id="target-lungs">
       <a-gltf-model class="ar-model" data-organ="Lungs" src="#lungModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
-    <!-- Target 3: Kidneys -->
     <a-entity mindar-image-target="targetIndex: 3" id="target-kidneys">
       <a-gltf-model class="ar-model" data-organ="Kidneys" src="#kidneyModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
 
-    <!-- Target 4: Stomach -->
     <a-entity mindar-image-target="targetIndex: 4" id="target-stomach">
       <a-gltf-model class="ar-model" data-organ="Stomach" src="#stomachModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
     </a-entity>
@@ -365,6 +386,10 @@
       document.getElementById("guideBanner").style.display = "block";
 
       const sceneEl = document.querySelector("a-scene");
+      sceneEl.addEventListener("render-target-loaded", () => {
+        sceneEl.renderer.setClearColor(0x000000, 0);
+      });
+
       const arSystem = sceneEl.systems["mindar-image-system"];
       if (arSystem) {
         arSystem.start();
