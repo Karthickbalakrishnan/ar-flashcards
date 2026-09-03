@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>OrganoAR — Spatial Health Experience</title>
+  <title>OrganoAR — Advanced Spatial Health & Pathology Suite</title>
 
   <!-- Stable WebAR Core Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -12,9 +12,12 @@
   <style>
     :root {
       --sys-surface: rgba(15, 23, 42, 0.88);
+      --sys-surface-glass: rgba(15, 23, 42, 0.75);
       --sys-border: rgba(255, 255, 255, 0.12);
       --sys-primary: #38bdf8;
       --sys-danger: #fb7185;
+      --sys-warning: #facc15;
+      --sys-success: #4ade80;
       --sys-text: #f8fafc;
       --sys-subtext: #94a3b8;
       --radius-sheet: 28px;
@@ -87,24 +90,9 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .scholar-name {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--sys-text);
-      letter-spacing: -0.01em;
-    }
-
-    .scholar-title {
-      font-size: 0.8125rem;
-      color: var(--sys-primary);
-      font-weight: 600;
-    }
-
-    .scholar-org {
-      font-size: 0.75rem;
-      color: var(--sys-subtext);
-      font-weight: 500;
-    }
+    .scholar-name { font-size: 1.125rem; font-weight: 700; color: var(--sys-text); letter-spacing: -0.01em; }
+    .scholar-title { font-size: 0.8125rem; color: var(--sys-primary); font-weight: 600; }
+    .scholar-org { font-size: 0.75rem; color: var(--sys-subtext); font-weight: 500; }
 
     .welcome-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.02em; }
     .welcome-desc { font-size: 0.875rem; color: var(--sys-subtext); margin: 0 0 28px 0; line-height: 1.5; }
@@ -130,35 +118,104 @@
 
     .btn-sso:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
 
-    /* Top HUD Banner */
-    #guideBanner {
+    /* Top Navigation Bar */
+    #topNavbar {
       position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      z-index: 100;
+      display: none;
+      justify-content: space-between;
+      align-items: center;
       background: var(--sys-surface);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--sys-border);
-      padding: 10px 22px;
+      padding: 10px 18px;
       border-radius: var(--radius-pill);
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--sys-text);
-      z-index: 100;
-      display: none;
       box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.3);
     }
 
-    /* Bottom Control Sheet */
+    .nav-back-btn {
+      background: none;
+      border: none;
+      color: var(--sys-primary);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .nav-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--sys-text);
+    }
+
+    /* Floating Info Card (Lower-Middle Viewport) */
+    #infoCard {
+      position: fixed;
+      bottom: 180px;
+      left: 16px;
+      right: 16px;
+      z-index: 100;
+      display: none;
+      max-width: 420px;
+      margin: 0 auto;
+      background: var(--sys-surface-glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--sys-border);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .info-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .phase-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .phase-badge.is-early { background: rgba(74, 222, 128, 0.15); color: var(--sys-success); border: 1px solid rgba(74, 222, 128, 0.3); }
+    .phase-badge.is-mid { background: rgba(250, 204, 21, 0.15); color: var(--sys-warning); border: 1px solid rgba(250, 204, 21, 0.3); }
+    .phase-badge.is-late { background: rgba(251, 113, 133, 0.15); color: var(--sys-danger); border: 1px solid rgba(251, 113, 133, 0.3); }
+
+    .reversibility-status {
+      font-size: 0.78125rem;
+      font-weight: 600;
+      color: var(--sys-subtext);
+    }
+
+    .symptoms-list {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 0.8125rem;
+      color: var(--sys-text);
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* Bottom Control Dock */
     .sheet-overlay {
       position: fixed;
       bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 16px;
+      right: 16px;
       z-index: 100;
-      width: calc(100% - 32px);
       max-width: 420px;
+      margin: 0 auto;
       display: none;
     }
 
@@ -168,32 +225,23 @@
       -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--sys-border);
       border-radius: var(--radius-sheet);
-      padding: 20px;
+      padding: 16px;
       box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5);
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
     }
 
-    .sheet-header { display: flex; justify-content: space-between; align-items: center; }
-    .organ-heading { font-size: 1.0625rem; font-weight: 700; color: var(--sys-text); }
-
-    .health-pill {
-      font-size: 0.78125rem;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: var(--radius-pill);
-      background: rgba(56, 189, 248, 0.12);
-      color: var(--sys-primary);
+    .substance-grid {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
     }
 
-    .health-pill.is-critical { background: rgba(251, 113, 133, 0.15); color: var(--sys-danger); }
-
-    .lifestyle-grid { display: flex; gap: 8px; }
-
-    .lifestyle-chip {
+    .substance-chip {
       flex: 1;
-      padding: 10px 6px;
+      padding: 10px 12px;
       border: 1px solid var(--sys-border);
       background: rgba(255, 255, 255, 0.03);
       color: var(--sys-subtext);
@@ -202,16 +250,18 @@
       border-radius: 14px;
       cursor: pointer;
       text-align: center;
+      white-space: nowrap;
+      transition: all 0.2s ease;
     }
 
-    .lifestyle-chip.is-active {
-      background: rgba(251, 113, 133, 0.15);
-      border-color: var(--sys-danger);
+    .substance-chip.is-active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--sys-primary);
       color: var(--sys-text);
       font-weight: 600;
     }
 
-    .slider-container { display: flex; flex-direction: column; gap: 8px; }
+    .slider-container { display: flex; flex-direction: column; gap: 6px; }
     .slider-labels { display: flex; justify-content: space-between; font-size: 0.8125rem; color: var(--sys-subtext); font-weight: 500; }
 
     input[type=range] {
@@ -222,17 +272,99 @@
       accent-color: var(--sys-primary);
       cursor: pointer;
     }
+
+    .slider-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.6875rem;
+      color: var(--sys-subtext);
+      padding: 0 2px;
+    }
   </style>
 
   <script>
-    // Smooth Spatial Gestures: 1-Finger Orbit Rotation & 2-Finger Pinch Scale
-    AFRAME.registerComponent('spatial-gestures', {
+    // Centralized Data Model mapped across 3 progression phases
+    const ORGAN_DATA = {
+      BRAIN: {
+        name: "Brain",
+        substances: ["Alcohol", "Smoking", "Narcotics"],
+        phases: {
+          early: { years: "1-3", badge: "Reversible", desc: ["Dopamine receptor downregulation", "Mild cognitive fatigue", "Anhedonia"] },
+          mid: { years: "3-10", badge: "Progressive", desc: ["Cortical thinning & white matter loss", "Memory consolidation deficits", "Impaired inhibition"] },
+          late: { years: "10-20+", badge: "Irreversible", desc: ["Severe structural atrophy", "Ventricular enlargement", "Wernicke-Korsakoff / Dementia risk"] }
+        }
+      },
+      LUNGS: {
+        name: "Lungs",
+        substances: ["Smoking", "Narcotics", "Alcohol"],
+        phases: {
+          early: { years: "1-3", badge: "Reversible", desc: ["Cilia paralysis", "Smoker's cough", "Bronchial inflammation"] },
+          mid: { years: "3-10", badge: "Progressive", desc: ["Alveolar wall collapse", "Reduced gas exchange", "Exertional dyspnea"] },
+          late: { years: "10-20+", badge: "Irreversible", desc: ["COPD onset", "Irreversible tissue scarring", "Severe hypoxia & carcinoma risk"] }
+        }
+      },
+      HEART: {
+        name: "Heart",
+        substances: ["Alcohol", "Smoking", "Narcotics"],
+        phases: {
+          early: { years: "1-3", badge: "Reversible", desc: ["Vascular spasms", "Elevated resting heart rate", "Hypertension spikes"] },
+          mid: { years: "3-10", badge: "Progressive", desc: ["Atherosclerotic plaque accumulation", "Alcoholic Cardiomyopathy", "Arterial stiffening"] },
+          late: { years: "10-20+", badge: "Irreversible", desc: ["Congestive heart failure", "Myocardial infarction risk", "Ischemic stroke elevation"] }
+        }
+      },
+      LIVER: {
+        name: "Liver",
+        substances: ["Alcohol", "Narcotics", "Smoking"],
+        phases: {
+          early: { years: "1-3", badge: "Reversible", desc: ["Hepatic Steatosis (Fatty Liver)", "Cellular fat accumulation", "Enzyme elevation"] },
+          mid: { years: "3-10", badge: "Progressive", desc: ["Alcoholic Hepatitis", "Fibrotic scar tissue deposits", "Jaundice risk"] },
+          late: { years: "10-20+", badge: "Irreversible", desc: ["Nodular Cirrhosis", "Portal hypertension", "Complete hepatic failure risk"] }
+        }
+      },
+      KIDNEYS: {
+        name: "Kidneys",
+        substances: ["Alcohol", "Narcotics", "Smoking"],
+        phases: {
+          early: { years: "1-3", badge: "Reversible", desc: ["GFR rate fluctuations", "Dehydration strain", "Acute kidney stress"] },
+          mid: { years: "3-10", badge: "Progressive", desc: ["Microvascular damage", "Proteinuria (protein leakage)", "Filtration decline"] },
+          late: { years: "10-20+", badge: "Irreversible", desc: ["Chronic Kidney Disease (CKD)", "Uremic toxin accumulation", "Dialysis dependency"] }
+        }
+      },
+      STOMACH: {
+        name: "Stomach",
+        substances: ["Alcohol", "Smoking", "Narcotics"],
+        phases: {
+          early: { years: "1-3", badge: "Reversible", desc: ["Mucosal lining erosion", "Acute gastritis", "Peptic acid reflux"] },
+          mid: { years: "3-10", badge: "Progressive", desc: ["Chronic mucosal ulceration", "Vitamin B12 / Thiamine malabsorption", "Internal bleeding"] },
+          late: { years: "10-20+", badge: "Irreversible", desc: ["Intestinal metaplasia", "Atrophic gastritis", "Elevated gastric cancer risk"] }
+        }
+      }
+    };
+
+    // 3D Model Pivot Anchor & Gestures Component
+    // Fixes swinging off-screen and submerging into flashcard by auto-centering mesh, applying fixed Y offset,
+    // and isolating gestures strictly to OrganPivotAnchor container.
+    AFRAME.registerComponent('organ-pivot-anchor', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
         this.lastX = 0;
         this.lastY = 0;
         this.initialPinchDistance = null;
 
+        // Apply fixed Y offset (+0.25m) so model floats cleanly above the tracked card target
+        this.el.setAttribute('position', '0 0.25 0');
+
+        this.el.addEventListener('model-loaded', (e) => {
+          const mesh = this.el.getObject3D('mesh');
+          if (mesh) {
+            // Auto-center imported geometry exactly to (0,0,0) inside container
+            const box = new THREE.Box3().setFromObject(mesh);
+            const center = box.getCenter(new THREE.Vector3());
+            mesh.position.sub(center);
+          }
+        });
+
+        // Attach touch gestures strictly to OrganPivotAnchor
         window.addEventListener('touchstart', (e) => {
           if (e.touches.length === 1) {
             this.lastX = e.touches[0].clientX;
@@ -245,11 +377,11 @@
         window.addEventListener('touchmove', (e) => {
           if (e.touches.length === 1) {
             const deltaX = e.touches[0].clientX - this.lastX;
-            const deltaY = e.touches[0].clientY - this.lastY;
             const rot = this.el.getAttribute('rotation');
 
+            // 1-finger drag strictly for Y-axis rotation
             this.el.setAttribute('rotation', {
-              x: rot.x + deltaY * this.data.rotateSpeed,
+              x: rot.x,
               y: rot.y + deltaX * this.data.rotateSpeed,
               z: rot.z
             });
@@ -293,7 +425,7 @@
       </div>
 
       <h1 class="welcome-title">OrganoAR Spatial Suite</h1>
-      <p class="welcome-desc">Authenticate to initialize real-time spatial target recognition and interactive pathology models.</p>
+      <p class="welcome-desc">Authenticate to initialize real-time spatial target recognition and 1-to-20 year organ pathology models.</p>
 
       <div class="sso-stack">
         <button class="btn-sso" onclick="startApp()">
@@ -309,27 +441,47 @@
     </div>
   </div>
 
-  <div id="guideBanner">Point camera at an organ card</div>
+  <!-- Top Navigation Bar -->
+  <nav id="topNavbar">
+    <button class="nav-back-btn" onclick="resetARView()">← Scan Card</button>
+    <span class="nav-title" id="navTitle">Brain - Central Command</span>
+    <span style="width: 48px;"></span>
+  </nav>
 
+  <!-- Floating Info Card (Lower-Middle Viewport) -->
+  <aside id="infoCard">
+    <div class="info-card-header">
+      <span class="phase-badge" id="phaseBadge">Early Phase (1–3 Yrs)</span>
+      <span class="reversibility-status" id="reversibilityStatus">Reversible</span>
+    </div>
+    <ul class="symptoms-list" id="symptomsList">
+      <li>Dopamine receptor downregulation</li>
+      <li>Mild cognitive fatigue</li>
+      <li>Anhedonia</li>
+    </ul>
+  </aside>
+
+  <!-- Bottom Control Dock -->
   <main class="sheet-overlay" id="sheetControls">
     <section class="sheet-card">
-      <div class="sheet-header">
-        <span class="organ-heading" id="organHeading">Organ View</span>
-        <span class="health-pill" id="healthPill">Health Score 100%</span>
-      </div>
-
-      <div class="lifestyle-grid" id="lifestyleGrid">
-        <button class="lifestyle-chip" data-factor="alcohol">🍺 Alcohol</button>
-        <button class="lifestyle-chip" data-factor="tobacco">🚬 Tobacco</button>
-        <button class="lifestyle-chip" data-factor="substance">💊 Opioids</button>
+      <div class="substance-grid" id="substanceGrid">
+        <button class="substance-chip is-active" data-substance="Alcohol">🍺 Alcohol</button>
+        <button class="substance-chip" data-substance="Smoking">🚬 Smoking</button>
+        <button class="substance-chip" data-substance="Narcotics">💊 Narcotics</button>
       </div>
 
       <div class="slider-container">
         <div class="slider-labels">
-          <span>Simulate Exposure</span>
+          <span>Exposure Timeline</span>
           <span id="durationLabel">1 Year</span>
         </div>
         <input type="range" id="exposureSlider" min="1" max="20" value="1">
+        <div class="slider-ticks">
+          <span>1 Yr</span>
+          <span>3 Yrs</span>
+          <span>10 Yrs</span>
+          <span>20+ Yrs</span>
+        </div>
       </div>
     </section>
   </main>
@@ -344,9 +496,10 @@
     device-orientation-permission-ui="enabled: false">
     
     <a-assets>
-      <a-asset-item id="liverModel" src="./assets/models/liver.glb"></a-asset-item>
-      <a-asset-item id="heartModel" src="./assets/models/heart.glb"></a-asset-item>
+      <a-asset-item id="brainModel" src="./assets/models/brain.glb"></a-asset-item>
       <a-asset-item id="lungModel" src="./assets/models/lung.glb"></a-asset-item>
+      <a-asset-item id="heartModel" src="./assets/models/heart.glb"></a-asset-item>
+      <a-asset-item id="liverModel" src="./assets/models/liver.glb"></a-asset-item>
       <a-asset-item id="kidneyModel" src="./assets/models/kidney.glb"></a-asset-item>
       <a-asset-item id="stomachModel" src="./assets/models/stomach.glb"></a-asset-item>
     </a-assets>
@@ -356,44 +509,59 @@
     <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
-    <!-- Index 0: Liver Target -->
-    <a-entity mindar-image-target="targetIndex: 0" id="target-liver">
-      <a-gltf-model class="ar-model" data-organ="Liver" src="#liverModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    <!-- Target 0: Brain -->
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity organ-pivot-anchor>
+        <a-gltf-model class="ar-model" data-key="BRAIN" src="#brainModel" scale="0.8 0.8 0.8"></a-gltf-model>
+      </a-entity>
     </a-entity>
 
-    <!-- Index 1: Heart Target -->
-    <a-entity mindar-image-target="targetIndex: 1" id="target-heart">
-      <a-gltf-model class="ar-model" data-organ="Heart" src="#heartModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    <!-- Target 1: Lungs -->
+    <a-entity mindar-image-target="targetIndex: 1">
+      <a-entity organ-pivot-anchor>
+        <a-gltf-model class="ar-model" data-key="LUNGS" src="#lungModel" scale="0.8 0.8 0.8"></a-gltf-model>
+      </a-entity>
     </a-entity>
 
-    <!-- Index 2: Lungs Target -->
-    <a-entity mindar-image-target="targetIndex: 2" id="target-lungs">
-      <a-gltf-model class="ar-model" data-organ="Lungs" src="#lungModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    <!-- Target 2: Heart -->
+    <a-entity mindar-image-target="targetIndex: 2">
+      <a-entity organ-pivot-anchor>
+        <a-gltf-model class="ar-model" data-key="HEART" src="#heartModel" scale="0.8 0.8 0.8"></a-gltf-model>
+      </a-entity>
     </a-entity>
 
-    <!-- Index 3: Kidneys Target -->
-    <a-entity mindar-image-target="targetIndex: 3" id="target-kidneys">
-      <a-gltf-model class="ar-model" data-organ="Kidneys" src="#kidneyModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    <!-- Target 3: Liver -->
+    <a-entity mindar-image-target="targetIndex: 3">
+      <a-entity organ-pivot-anchor>
+        <a-gltf-model class="ar-model" data-key="LIVER" src="#liverModel" scale="0.8 0.8 0.8"></a-gltf-model>
+      </a-entity>
     </a-entity>
 
-    <!-- Index 4: Stomach Target -->
-    <a-entity mindar-image-target="targetIndex: 4" id="target-stomach">
-      <a-gltf-model class="ar-model" data-organ="Stomach" src="#stomachModel" position="0 0 0" scale="0.8 0.8 0.8" spatial-gestures></a-gltf-model>
+    <!-- Target 4: Kidneys -->
+    <a-entity mindar-image-target="targetIndex: 4">
+      <a-entity organ-pivot-anchor>
+        <a-gltf-model class="ar-model" data-key="KIDNEYS" src="#kidneyModel" scale="0.8 0.8 0.8"></a-gltf-model>
+      </a-entity>
+    </a-entity>
+
+    <!-- Target 5: Stomach -->
+    <a-entity mindar-image-target="targetIndex: 5">
+      <a-entity organ-pivot-anchor>
+        <a-gltf-model class="ar-model" data-key="STOMACH" src="#stomachModel" scale="0.8 0.8 0.8"></a-gltf-model>
+      </a-entity>
     </a-entity>
 
   </a-scene>
 
   <script>
     const AppState = {
-      activeOrgan: "Liver",
-      years: 1,
-      factors: { alcohol: false, tobacco: false, substance: false }
+      activeKey: "BRAIN",
+      activeSubstance: "Alcohol",
+      years: 1
     };
 
     function startApp() {
       document.getElementById("welcomeGate").style.display = "none";
-      document.getElementById("guideBanner").style.display = "block";
-
       const sceneEl = document.querySelector("a-scene");
       
       if (sceneEl.hasLoaded) {
@@ -411,7 +579,6 @@
       if (arSystem) {
         arSystem.start();
       } else {
-        console.warn("MindAR system not found, retrying...");
         setTimeout(() => {
           const retrySystem = sceneEl.systems["mindar-image-system"];
           if (retrySystem) retrySystem.start();
@@ -419,35 +586,61 @@
       }
     }
 
+    function resetARView() {
+      document.getElementById("topNavbar").style.display = "none";
+      document.getElementById("infoCard").style.display = "none";
+      document.getElementById("sheetControls").style.display = "none";
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
-      const organHeading = document.getElementById("organHeading");
-      const healthPill = document.getElementById("healthPill");
+      const navTitle = document.getElementById("navTitle");
+      const phaseBadge = document.getElementById("phaseBadge");
+      const reversibilityStatus = document.getElementById("reversibilityStatus");
+      const symptomsList = document.getElementById("symptomsList");
       const durationLabel = document.getElementById("durationLabel");
       const exposureSlider = document.getElementById("exposureSlider");
-      const guideBanner = document.getElementById("guideBanner");
+      const topNavbar = document.getElementById("topNavbar");
+      const infoCard = document.getElementById("infoCard");
       const sheetControls = document.getElementById("sheetControls");
+      const substanceGrid = document.getElementById("substanceGrid");
 
-      const render = () => {
-        let activeFactorCount = Object.values(AppState.factors).filter(Boolean).length;
-        let healthScore = Math.max(15, 100 - (AppState.years * activeFactorCount * 2.2));
+      const updateUIAndShaders = () => {
+        const organObj = ORGAN_DATA[AppState.activeKey];
+        if (!organObj) return;
 
-        organHeading.innerText = `${AppState.activeOrgan} Health View`;
+        navTitle.innerText = `${organObj.name} Pathology`;
+
+        // Determine phase based on timeline scrubber state
+        let phaseKey = "early";
+        if (AppState.years >= 3 && AppState.years < 10) phaseKey = "mid";
+        else if (AppState.years >= 10) phaseKey = "late";
+
+        const phaseData = organObj.phases[phaseKey];
+
+        // Update Floating Info Card Content
+        phaseBadge.innerText = `${phaseKey === 'early' ? 'Early Phase (1–3 Yrs)' : phaseKey === 'mid' ? 'Mid Phase (3–10 Yrs)' : 'Late Phase (10–20+ Yrs)'}`;
+        phaseBadge.className = `phase-badge is-${phaseKey}`;
+        reversibilityStatus.innerText = phaseData.badge;
+
+        symptomsList.innerHTML = "";
+        phaseData.desc.forEach(symptom => {
+          const li = document.createElement("li");
+          li.innerText = symptom;
+          symptomsList.appendChild(li);
+        });
+
         durationLabel.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
-        healthPill.innerText = `Health Score ${Math.round(healthScore)}%`;
 
-        if (healthScore < 65) {
-          healthPill.classList.add("is-critical");
-        } else {
-          healthPill.classList.remove("is-critical");
-        }
-
+        // Procedural Shader & Scale Modulation on 3D Models
+        const yearRatio = AppState.years / 20.0;
         document.querySelectorAll(".ar-model").forEach((modelEl) => {
+          if (modelEl.dataset.key !== AppState.activeKey) return;
+          
           const mesh = modelEl.getObject3D('mesh');
           if (!mesh) return;
 
-          const yearRatio = AppState.years / 20.0;
           let baseScale = 0.8;
-          let shrinkScale = baseScale - (yearRatio * 0.18 * activeFactorCount);
+          let shrinkScale = baseScale - (yearRatio * 0.15);
           modelEl.setAttribute("scale", `${shrinkScale} ${shrinkScale} ${shrinkScale}`);
 
           mesh.traverse((node) => {
@@ -455,22 +648,17 @@
               let color = new THREE.Color(0xffffff);
               let roughness = 0.4;
 
-              if (activeFactorCount > 0) {
-                if (AppState.factors.alcohol && !AppState.factors.tobacco && !AppState.factors.substance) {
-                  color.lerp(new THREE.Color(0xd97706), yearRatio * 0.85);
-                  roughness = 0.2;
-                } else if (AppState.factors.tobacco && !AppState.factors.alcohol && !AppState.factors.substance) {
-                  color.lerp(new THREE.Color(0x1e293b), yearRatio * 0.90);
-                  roughness = 0.85;
-                } else if (AppState.factors.substance && !AppState.factors.alcohol && !AppState.factors.tobacco) {
-                  color.lerp(new THREE.Color(0x581c87), yearRatio * 0.88);
-                  roughness = 0.6;
-                } else {
-                  color.lerp(new THREE.Color(0x270707), yearRatio * 0.95);
-                  roughness = 0.95;
-                }
-                color.multiplyScalar(1.0 - (yearRatio * 0.45));
+              if (phaseKey === "early") {
+                color.lerp(new THREE.Color(0x38bdf8), yearRatio * 0.5);
+                roughness = 0.3;
+              } else if (phaseKey === "mid") {
+                color.lerp(new THREE.Color(0xfacc15), yearRatio * 0.7);
+                roughness = 0.6;
+              } else {
+                color.lerp(new THREE.Color(0xfb7185), yearRatio * 0.9);
+                roughness = 0.9;
               }
+              color.multiplyScalar(1.0 - (yearRatio * 0.3));
 
               node.material.color = color;
               node.material.roughness = roughness;
@@ -480,40 +668,52 @@
         });
       };
 
-      document.querySelectorAll("[mindar-image-target]").forEach((targetEl) => {
+      // Target Tracking Event Listeners
+      document.querySelectorAll("[mindar-image-target]").forEach((targetEl, index) => {
         targetEl.addEventListener("targetFound", () => {
-          const modelEl = targetEl.querySelector(".ar-model");
-          if (modelEl) {
-            AppState.activeOrgan = modelEl.dataset.organ;
-            
-            guideBanner.innerText = `Viewing ${AppState.activeOrgan}`;
-            guideBanner.style.borderColor = "#38bdf8";
-            sheetControls.style.display = "block"; 
-            
-            render();
-          }
+          const keys = ["BRAIN", "LUNGS", "HEART", "LIVER", "KIDNEYS", "STOMACH"];
+          AppState.activeKey = keys[index] || "BRAIN";
+
+          const organObj = ORGAN_DATA[AppState.activeKey];
+          
+          // Populate dynamic substance selector pills
+          substanceGrid.innerHTML = "";
+          organObj.substances.forEach((sub, i) => {
+            const btn = document.createElement("button");
+            btn.className = `substance-chip ${i === 0 ? 'is-active' : ''}`;
+            btn.dataset.substance = sub;
+            btn.innerText = sub === "Alcohol" ? `🍺 ${sub}` : sub === "Smoking" ? `🚬 ${sub}` : `💊 ${sub}`;
+            substanceGrid.appendChild(btn);
+          });
+          AppState.activeSubstance = organObj.substances[0];
+
+          topNavbar.style.display = "flex";
+          infoCard.style.display = "block";
+          sheetControls.style.display = "block";
+
+          updateUIAndShaders();
         });
 
         targetEl.addEventListener("targetLost", () => {
-          guideBanner.innerText = "Point camera at an organ card";
-          guideBanner.style.borderColor = "rgba(255, 255, 255, 0.1)";
-          sheetControls.style.display = "none"; 
+          resetARView();
         });
       });
 
-      document.getElementById("lifestyleGrid").addEventListener("click", (e) => {
-        const chip = e.target.closest(".lifestyle-chip");
+      // Substance Selector Click Handler
+      substanceGrid.addEventListener("click", (e) => {
+        const chip = e.target.closest(".substance-chip");
         if (!chip) return;
 
-        const factor = chip.dataset.factor;
-        AppState.factors[factor] = !AppState.factors[factor];
-        chip.classList.toggle("is-active", AppState.factors[factor]);
-        render();
+        document.querySelectorAll(".substance-chip").forEach(c => c.classList.remove("is-active"));
+        chip.classList.add("is-active");
+        AppState.activeSubstance = chip.dataset.substance;
+        updateUIAndShaders();
       });
 
+      // Timeline Scrubber Input Handler
       exposureSlider.addEventListener("input", (e) => {
         AppState.years = parseInt(e.target.value, 10);
-        render();
+        updateUIAndShaders();
       });
     });
   </script>
