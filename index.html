@@ -288,11 +288,16 @@
   </style>
 
   <script>
-    // Centralized Data Model mapped across 3 progression phases
+    // Centralized Data Model mapped across 3 progression phases + Regional Annotations
     const ORGAN_DATA = {
       BRAIN: {
         name: "Brain",
         substances: ["Alcohol", "Smoking", "Narcotics"],
+        annotations: [
+          { text: "FRONTAL CORTEX", pos: "0 0.4 0.1", sub: "Executive control degradation" },
+          { text: "LIMBIC SYSTEM", pos: "-0.2 0.2 0", sub: "Emotional regulation deficit" },
+          { text: "CEREBELLUM", pos: "0 -0.2 -0.2", sub: "Motor ataxia & balance loss" }
+        ],
         phases: {
           early: { years: "1-3", badge: "Reversible", desc: ["Dopamine receptor downregulation", "Mild cognitive fatigue", "Anhedonia"] },
           mid: { years: "3-10", badge: "Progressive", desc: ["Cortical thinning & white matter loss", "Memory consolidation deficits", "Impaired inhibition"] },
@@ -302,6 +307,11 @@
       LUNGS: {
         name: "Lungs",
         substances: ["Smoking", "Narcotics", "Alcohol"],
+        annotations: [
+          { text: "UPPER LOBE BRONCHI", pos: "0 0.35 0", sub: "Epithelial metaplasia" },
+          { text: "ALVEOLAR CLUSTERS", pos: "-0.25 0 0.1", sub: "Septal wall breakdown" },
+          { text: "PLEURAL MEMBRANE", pos: "0.2 -0.2 -0.1", sub: "Inflammatory fibrosis" }
+        ],
         phases: {
           early: { years: "1-3", badge: "Reversible", desc: ["Cilia paralysis", "Smoker's cough", "Bronchial inflammation"] },
           mid: { years: "3-10", badge: "Progressive", desc: ["Alveolar wall collapse", "Reduced gas exchange", "Exertional dyspnea"] },
@@ -311,6 +321,11 @@
       HEART: {
         name: "Heart",
         substances: ["Alcohol", "Smoking", "Narcotics"],
+        annotations: [
+          { text: "AORTIC ARCH", pos: "0 0.4 0", sub: "Atherosclerotic stiffening" },
+          { text: "LEFT VENTRICLE", pos: "-0.2 0 0.1", sub: "Myocardial hypertrophy" },
+          { text: "CORONARY ARTERY", pos: "0.2 0.1 -0.1", sub: "Plaque accumulation" }
+        ],
         phases: {
           early: { years: "1-3", badge: "Reversible", desc: ["Vascular spasms", "Elevated resting heart rate", "Hypertension spikes"] },
           mid: { years: "3-10", badge: "Progressive", desc: ["Atherosclerotic plaque accumulation", "Alcoholic Cardiomyopathy", "Arterial stiffening"] },
@@ -320,6 +335,11 @@
       LIVER: {
         name: "Liver",
         substances: ["Alcohol", "Narcotics", "Smoking"],
+        annotations: [
+          { text: "RIGHT HEPATIC LOBE", pos: "0.2 0.2 0", sub: "Macrovesicular steatosis" },
+          { text: "PORTAL VEIN TRACT", pos: "-0.1 0 0.1", sub: "Sinusoidal capillarization" },
+          { text: "FIBROTIC SEPTA", pos: "0 -0.2 -0.1", sub: "Collagen scar deposits" }
+        ],
         phases: {
           early: { years: "1-3", badge: "Reversible", desc: ["Hepatic Steatosis (Fatty Liver)", "Cellular fat accumulation", "Enzyme elevation"] },
           mid: { years: "3-10", badge: "Progressive", desc: ["Alcoholic Hepatitis", "Fibrotic scar tissue deposits", "Jaundice risk"] },
@@ -329,6 +349,11 @@
       KIDNEYS: {
         name: "Kidneys",
         substances: ["Alcohol", "Narcotics", "Smoking"],
+        annotations: [
+          { text: "RENAL CORTEX", pos: "0 0.3 0", sub: "Glomerular sclerosis" },
+          { text: "MEDULLARY PYRAMIDS", pos: "-0.15 -0.1 0", sub: "Tubular ischemia" },
+          { text: "RENAL PELVIS", pos: "0.15 -0.2 0", sub: "Uremic crystal concentration" }
+        ],
         phases: {
           early: { years: "1-3", badge: "Reversible", desc: ["GFR rate fluctuations", "Dehydration strain", "Acute kidney stress"] },
           mid: { years: "3-10", badge: "Progressive", desc: ["Microvascular damage", "Proteinuria (protein leakage)", "Filtration decline"] },
@@ -338,6 +363,11 @@
       STOMACH: {
         name: "Stomach",
         substances: ["Alcohol", "Smoking", "Narcotics"],
+        annotations: [
+          { text: "FUNDUS MUCOSA", pos: "0 0.35 0", sub: "Parietal cell erosion" },
+          { text: "GASTRIC BODY", pos: "-0.2 0 0.1", sub: "Peptic ulceration" },
+          { text: "PYLORIC SPHINCTER", pos: "0.15 -0.2 -0.1", sub: "Spasmodic reflux" }
+        ],
         phases: {
           early: { years: "1-3", badge: "Reversible", desc: ["Mucosal lining erosion", "Acute gastritis", "Peptic acid reflux"] },
           mid: { years: "3-10", badge: "Progressive", desc: ["Chronic mucosal ulceration", "Vitamin B12 / Thiamine malabsorption", "Internal bleeding"] },
@@ -346,7 +376,6 @@
       }
     };
 
-    // Explicit string-keyed Target-to-Organ Dictionary to fix index mapping bugs
     const TARGET_MAP = {
       "target_brain": "BRAIN",
       "target_lungs": "LUNGS",
@@ -356,7 +385,7 @@
       "target_stomach": "STOMACH"
     };
 
-    // 3D Model Pivot Anchor & Gestures Component
+    // 3D Model Pivot Anchor, Gestures & Spatial Billboarded Annotations Component
     AFRAME.registerComponent('organ-pivot-anchor', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
@@ -420,6 +449,78 @@
         return Math.sqrt(dx * dx + dy * dy);
       }
     });
+
+    // Component to build and render floating billboarded spatial labels & dynamic leader lines
+    AFRAME.registerComponent('spatial-annotations', {
+      schema: { organKey: { type: 'string', default: 'BRAIN' } },
+      init: function () {
+        this.buildAnnotations();
+      },
+      update: function (oldData) {
+        if (oldData.organKey !== this.data.organKey) {
+          this.buildAnnotations();
+        }
+      },
+      buildAnnotations: function () {
+        // Clear previous annotations
+        while (this.el.firstChild) {
+          this.el.removeChild(this.el.firstChild);
+        }
+
+        const organData = ORGAN_DATA[this.data.organKey];
+        if (!organData || !organData.annotations) return;
+
+        organData.annotations.forEach(ann => {
+          // Container entity for position & billboarding
+          const annotEl = document.createElement('a-entity');
+          annotEl.setAttribute('position', ann.pos);
+          annotEl.classList.add('spatial-annotation');
+
+          // Floating Glassmorphism Badge (HTML plane via A-Frame)
+          const badgeEl = document.createElement('a-entity');
+          badgeEl.setAttribute('geometry', 'primitive: plane; width: 0.55; height: 0.18');
+          badgeEl.setAttribute('material', 'shader: flat; color: #0f172a; transparent: true; opacity: 0.9');
+          badgeEl.setAttribute('position', '0 0.08 0');
+          
+          // Label Text
+          const textEl = document.createElement('a-text');
+          textEl.setAttribute('value', ann.text);
+          textEl.setAttribute('align', 'center');
+          textEl.setAttribute('color', '#38bdf8');
+          textEl.setAttribute('scale', '0.3 0.3 0.3');
+          textEl.setAttribute('position', '0 0.02 0.01');
+          badgeEl.appendChild(textEl);
+
+          // Subtext
+          const subTextEl = document.createElement('a-text');
+          subTextEl.setAttribute('value', ann.sub);
+          subTextEl.setAttribute('align', 'center');
+          subTextEl.setAttribute('color', '#94a3b8');
+          subTextEl.setAttribute('scale', '0.2 0.2 0.2');
+          subTextEl.setAttribute('position', '0 -0.03 0.01');
+          badgeEl.appendChild(subTextEl);
+
+          annotEl.appendChild(badgeEl);
+
+          // Dynamic Leader Line pointing from anchor to badge
+          const lineEl = document.createElement('a-entity');
+          lineEl.setAttribute('line', `start: 0 0 0; end: 0 0.08 0; color: #38bdf8; opacity: 0.6`);
+          annotEl.appendChild(lineEl);
+
+          this.el.appendChild(annotEl);
+        });
+      },
+      tick: function () {
+        const sceneEl = this.el.sceneEl;
+        if (!sceneEl.camera) return;
+        const cameraQuaternion = sceneEl.camera.quaternion;
+
+        // Apply camera billboarding continuously to all spatial labels
+        this.el.querySelectorAll('.spatial-annotation').forEach(annot => {
+          annot.object3D.quaternion.copy(cameraQuaternion);
+        });
+      }
+    });
   </script>
 </head>
 <body>
@@ -434,7 +535,7 @@
       </div>
 
       <h1 class="welcome-title">OrganoAR Spatial Suite</h1>
-      <p class="welcome-desc">Authenticate to initialize real-time spatial target recognition and poly-substance health simulation models.</p>
+      <p class="welcome-desc">Authenticate to initialize real-time spatial target recognition and medical flyer spatial annotations.</p>
 
       <div class="sso-stack">
         <button class="btn-sso" onclick="startApp()">
@@ -518,40 +619,46 @@
     <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
-    <!-- Target Entities mapped securely via ID strings -->
+    <!-- Target Entities mapped securely via ID strings with Spatial Annotations -->
     <a-entity mindar-image-target="targetIndex: 0" id="target_brain">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="BRAIN" src="#brainModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-entity spatial-annotations="organKey: BRAIN" id="annot_brain"></a-entity>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 1" id="target_lungs">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="LUNGS" src="#lungModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-entity spatial-annotations="organKey: LUNGS" id="annot_lungs"></a-entity>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 2" id="target_heart">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="HEART" src="#heartModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-entity spatial-annotations="organKey: HEART" id="annot_heart"></a-entity>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 3" id="target_liver">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="LIVER" src="#liverModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-entity spatial-annotations="organKey: LIVER" id="annot_liver"></a-entity>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 4" id="target_kidneys">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="KIDNEYS" src="#kidneyModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-entity spatial-annotations="organKey: KIDNEYS" id="annot_kidneys"></a-entity>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 5" id="target_stomach">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="STOMACH" src="#stomachModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-entity spatial-annotations="organKey: STOMACH" id="annot_stomach"></a-entity>
       </a-entity>
     </a-entity>
 
@@ -560,7 +667,7 @@
   <script>
     const AppState = {
       activeKey: "BRAIN",
-      activeSubstances: new Set(["Alcohol"]), // Poly-Substance Multi-Selection State
+      activeSubstances: new Set(["Alcohol"]),
       years: 1
     };
 
@@ -596,7 +703,6 @@
       document.getElementById("sheetControls").style.display = "none";
     }
 
-    // Target Found Dispatcher using explicit TARGET_MAP dictionary
     function onTargetFound(targetName) {
       const organKey = TARGET_MAP[targetName];
       if (organKey) {
@@ -612,7 +718,6 @@
       const navTitle = document.getElementById("navTitle");
       navTitle.innerText = `${organObj.name} Pathology`;
 
-      // Populate dynamic substance selector pills for multi-selection
       const substanceGrid = document.getElementById("substanceGrid");
       substanceGrid.innerHTML = "";
       organObj.substances.forEach((sub, i) => {
@@ -642,18 +747,14 @@
         const organObj = ORGAN_DATA[AppState.activeKey];
         if (!organObj) return;
 
-        // Determine phase based on timeline scrubber state
         let phaseKey = "early";
         if (AppState.years >= 3 && AppState.years < 10) phaseKey = "mid";
         else if (AppState.years >= 10) phaseKey = "late";
 
         const phaseData = organObj.phases[phaseKey];
-
-        // Dynamic Organ Health Scoring Engine calculation
         const activeCount = Math.max(1, AppState.activeSubstances.size);
         const healthScore = Math.max(12, Math.round(100 - (AppState.years * activeCount * 3.8)));
 
-        // Update Floating Info Card Content & Health Pill
         phaseBadge.innerText = `${phaseKey === 'early' ? 'Early Phase (1–3 Yrs)' : phaseKey === 'mid' ? 'Mid Phase (3–10 Yrs)' : 'Late Phase (10–20+ Yrs)'}`;
         phaseBadge.className = `phase-badge is-${phaseKey}`;
         
@@ -673,7 +774,6 @@
 
         durationLabel.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
 
-        // Procedural Shader & Scale Modulation on 3D Models
         const yearRatio = AppState.years / 20.0;
         document.querySelectorAll(".ar-model").forEach((modelEl) => {
           if (modelEl.dataset.key !== AppState.activeKey) return;
@@ -710,10 +810,8 @@
         });
       };
 
-      // Attach global scope reference so render loop accesses it cleanly
       window.updateUIAndShaders = updateUIAndShaders;
 
-      // Secure Target Tracking Event Listeners mapping via TARGET_MAP
       document.querySelectorAll("[mindar-image-target]").forEach((targetEl) => {
         const targetId = targetEl.getAttribute("id");
 
@@ -726,14 +824,12 @@
         });
       });
 
-      // Poly-Substance Multi-Selection Click Handler
       substanceGrid.addEventListener("click", (e) => {
         const chip = e.target.closest(".substance-chip");
         if (!chip) return;
 
         const substance = chip.dataset.substance;
         if (AppState.activeSubstances.has(substance)) {
-          // Prevent deselecting the last active substance to maintain simulation state
           if (AppState.activeSubstances.size > 1) {
             AppState.activeSubstances.delete(substance);
             chip.classList.remove("is-active");
@@ -746,7 +842,6 @@
         updateUIAndShaders();
       });
 
-      // Timeline Scrubber Input Handler
       exposureSlider.addEventListener("input", (e) => {
         AppState.years = parseInt(e.target.value, 10);
         updateUIAndShaders();
