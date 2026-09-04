@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>OrganoAR — Progressive Disclosure Spatial Suite</title>
+  <title>OrganoAR Clinical Suite — Spatial Pathology Visualizer</title>
 
+  <!-- Stable WebAR Core Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     :root {
-      --sys-surface: rgba(15, 23, 42, 0.88);
+      --sys-surface: rgba(15, 23, 42, 0.90);
       --sys-surface-glass: rgba(15, 23, 42, 0.82);
       --sys-border: rgba(255, 255, 255, 0.12);
       --sys-primary: #38bdf8;
@@ -374,7 +375,7 @@
   </style>
 
   <script>
-    // Centralized Data Model mapped across 3 progression phases + Regional Annotations with Leader Lines
+    // Clinical-Grade Comprehensive Organ Data Model (10 Major Organs mapped across 3 progression phases)
     const ORGAN_DATA = {
       BRAIN: {
         name: "Brain",
@@ -473,22 +474,80 @@
           mid: { years: "3-10", badge: "Progressive", desc: ["Early lenticular opacities", "Retinal microvasculopathy", "Contrast sensitivity loss"] },
           late: { years: "10-20+", badge: "Irreversible", desc: ["Ischemic optic neuropathy", "Accelerated cataract progression", "Permanent visual field defects"] }
         }
+      },
+      PANCREAS: {
+        name: "Pancreas",
+        substances: ["alcohol", "smoking", "narcotics"],
+        annotations: [
+          { text: "PANCREATIC HEAD", origin: "0 0.1 0", target: "0 0.4 0", sub: "Acinar cell autodigestion" },
+          { text: "ISLETS OF LANGERHANS", origin: "-0.1 0 0", target: "-0.5 0.2 0", sub: "Beta-cell apoptosis" },
+          { text: "MAIN DUCT", origin: "0.1 -0.1 0", target: "0.5 -0.2 0", sub: "Protein plug strictures" }
+        ],
+        phases: {
+          early: { years: "1-3", badge: "Reversible", desc: ["Subclinical enzymatic elevation", "Mild postprandial discomfort", "Intermittent inflammation"] },
+          mid: { years: "3-10", badge: "Progressive", desc: ["Chronic pancreatitis onset", "Fibrotic tissue replacement", "Exocrine insufficiency"] },
+          late: { years: "10-20+", badge: "Irreversible", desc: ["Endocrine failure (Type 3c Diabetes)", "Extensive calcification", "Pancreatic carcinoma risk"] }
+        }
+      },
+      VASCULAR: {
+        name: "Vascular System",
+        substances: ["smoking", "alcohol", "narcotics"],
+        annotations: [
+          { text: "ENDOTHELIAL LINING", origin: "0 0.1 0", target: "0 0.5 0", sub: "Nitric oxide depletion" },
+          { text: "ARTERIAL MEDIA", origin: "-0.1 0 0", target: "-0.5 0 0.3", sub: "Smooth muscle calcification" },
+          { text: "MICROVASCULATURE", origin: "0.1 -0.1 0", target: "0.5 -0.3 -0.3", sub: "Capillary rarefaction" }
+        ],
+        phases: {
+          early: { years: "1-3", badge: "Reversible", desc: ["Endothelial dysfunction", "Vasomotor reactivity loss", "Mild systemic hypertension"] },
+          mid: { years: "3-10", badge: "Progressive", desc: ["Atheromatous plaque buildup", "Increased arterial stiffness", "Pulse pressure widening"] },
+          late: { years: "10-20+", badge: "Irreversible", desc: ["Advanced arteriosclerosis", "Aneurysm formation risk", "Critical limb/organ ischemia"] }
+        }
+      },
+      BONES: {
+        name: "Bones",
+        substances: ["alcohol", "smoking", "narcotics"],
+        annotations: [
+          { text: "CORTICAL BONE", origin: "0 0.1 0", target: "0 0.5 0", sub: "Haversian canal widening" },
+          { text: "TRABECULAR MESHWORK", origin: "-0.1 0 0", target: "-0.5 0.2 0.3", sub: "Micro-architectural thinning" },
+          { text: "PERIOSTEUM", origin: "0.1 -0.1 0", target: "0.5 -0.3 -0.3", sub: "Reduced osteoblastic activity" }
+        ],
+        phases: {
+          early: { years: "1-3", badge: "Reversible", desc: ["Impaired calcium absorption", "Suppressed bone turnover", "Subtle bone mineral density decline"] },
+          mid: { years: "3-10", badge: "Progressive", desc: ["Osteopenia staging", "Trabecular connectivity loss", "Increased micro-fracture susceptibility"] },
+          late: { years: "10-20+", badge: "Irreversible", desc: ["Severe Osteoporosis", "Avascular necrosis risk", "Spontaneous fragility fractures"] }
+        }
       }
     };
 
-    // Explicit Target ID Mapping Dictionary for MindAR tracked target indices (0 through 6)
-    const TARGET_DICTIONARY = {
+    // Explicit Target ID Mapping Dictionary (0 to 9 for 10 major clinical targets)
+    const TARGET_MAP = {
       0: "BRAIN",
       1: "LUNGS",
       2: "HEART",
       3: "LIVER",
       4: "STOMACH",
       5: "KIDNEYS",
-      6: "EYES"
+      6: "EYES",
+      7: "PANCREAS",
+      8: "VASCULAR",
+      9: "BONES"
     };
 
-    let activeOrganMesh = null;
-    let currentTargetId = null;
+    const MODEL_SOURCES = {
+      BRAIN: "#brainModel",
+      LUNGS: "#lungModel",
+      HEART: "#heartModel",
+      LIVER: "#liverModel",
+      STOMACH: "#stomachModel",
+      KIDNEYS: "#kidneyModel",
+      EYES: "#eyeModel",
+      PANCREAS: "#pancreasModel",
+      VASCULAR: "#vascularModel",
+      BONES: "#boneModel"
+    };
+
+    let activeOrganMeshes = {};
+    let currentTargetIndex = null;
 
     // Progressive Disclosure & Viewport Toggle Handlers
     function toggleBottomSheet() {
@@ -500,7 +559,7 @@
       document.body.classList.toggle("clean-canvas");
     }
 
-    // 3D Model Pivot Anchor & Gestures Component
+    // 3D Model Pivot Anchor, Bounding Box Normalization & Gestures Component
     AFRAME.registerComponent('organ-pivot-anchor', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
@@ -508,14 +567,25 @@
         this.lastY = 0;
         this.initialPinchDistance = null;
 
+        // Apply fixed Y offset (+0.35m) so model floats cleanly above tracked marker
         this.el.setAttribute('position', '0 0.35 0');
 
         this.el.addEventListener('model-loaded', () => {
           const mesh = this.el.getObject3D('mesh');
           if (mesh) {
+            // Auto-center geometry and normalize bounding box scale to fit precisely in 0.4m radius viewport
             const box = new THREE.Box3().setFromObject(mesh);
             const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            
             mesh.position.sub(center);
+
+            const maxDim = Math.max(size.x, size.y, size.z);
+            if (maxDim > 0) {
+              const targetSize = 0.45;
+              const scaleFactor = targetSize / maxDim;
+              mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            }
           }
         });
 
@@ -660,6 +730,7 @@
 </head>
 <body>
 
+  <!-- Onboarding & Scholar Header Screen -->
   <div id="welcomeGate">
     <div class="welcome-card">
       <div class="scholar-meta">
@@ -668,8 +739,8 @@
         <span class="scholar-org">NITTTR Chennai</span>
       </div>
 
-      <h1 class="welcome-title">OrganoAR Spatial Suite</h1>
-      <p class="welcome-desc">Authenticate to initialize multi-target 7-organ recognition and interactive pathology leader lines.</p>
+      <h1 class="welcome-title">OrganoAR Clinical Suite</h1>
+      <p class="welcome-desc">Authenticate to initialize 10-organ clinical-grade spatial pathology recognition and memory disposal pipeline.</p>
 
       <div class="sso-stack">
         <button class="btn-sso" onclick="startApp()">
@@ -685,12 +756,15 @@
     </div>
   </div>
 
+  <!-- Exit Focus Mode Toast -->
   <div id="exit-focus-toast" onclick="toggleCleanCanvas()">
     ✕ Exit Focus View
   </div>
 
+  <!-- Responsive Mobile AR Overlay Structure with Progressive Disclosure -->
   <div id="ar-ui-container">
 
+    <!-- 1. Top Bar: Focus View Toggle & Active Title -->
     <header class="ar-top-bar">
       <div class="organ-badge">
         <span id="active-organ-title">BRAIN</span>
@@ -701,8 +775,10 @@
       </button>
     </header>
 
+    <!-- 2. Progressive Disclosure Bottom Sheet -->
     <div id="bottom-sheet" class="bottom-sheet collapsed">
       
+      <!-- Drag Handle / Tap Header -->
       <div class="sheet-handle-bar" onclick="toggleBottomSheet()">
         <div class="drag-indicator"></div>
         <div class="summary-line">
@@ -711,8 +787,10 @@
         </div>
       </div>
 
+      <!-- Collapsible Extended Content Area -->
       <div class="sheet-content">
         
+        <!-- Substance Multi-Select Toggle Chips -->
         <div class="control-group">
           <label>Active Habits (Poly-Substance):</label>
           <div class="chip-group" id="substanceGrid">
@@ -722,6 +800,7 @@
           </div>
         </div>
 
+        <!-- Exposure Timeline Slider -->
         <div class="control-group">
           <div class="slider-header">
             <span>Exposure Timeline</span>
@@ -736,6 +815,7 @@
           </div>
         </div>
 
+        <!-- Biological Pathology Symptoms -->
         <div class="symptom-card">
           <ul id="symptom-list">
             <li>Dopamine receptor downregulation</li>
@@ -749,6 +829,7 @@
 
   </div>
 
+  <!-- WebAR Scene Engine configured for 10 clinical targets (indices 0 to 9) -->
   <a-scene 
     mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: false; uiScanning: no;" 
     embedded
@@ -765,6 +846,9 @@
       <a-asset-item id="stomachModel" src="./assets/models/stomach.glb"></a-asset-item>
       <a-asset-item id="kidneyModel" src="./assets/models/kidney.glb"></a-asset-item>
       <a-asset-item id="eyeModel" src="./assets/models/eyes.glb"></a-asset-item>
+      <a-asset-item id="pancreasModel" src="./assets/models/pancreas.glb"></a-asset-item>
+      <a-asset-item id="vascularModel" src="./assets/models/vascular.glb"></a-asset-item>
+      <a-asset-item id="boneModel" src="./assets/models/bone.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -772,6 +856,7 @@
     <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
+    <!-- 10 Universal Target Anchor Nodes mapping indices 0 through 9 -->
     <a-entity mindar-image-target="targetIndex: 0" id="arTargetNode0"></a-entity>
     <a-entity mindar-image-target="targetIndex: 1" id="arTargetNode1"></a-entity>
     <a-entity mindar-image-target="targetIndex: 2" id="arTargetNode2"></a-entity>
@@ -779,6 +864,9 @@
     <a-entity mindar-image-target="targetIndex: 4" id="arTargetNode4"></a-entity>
     <a-entity mindar-image-target="targetIndex: 5" id="arTargetNode5"></a-entity>
     <a-entity mindar-image-target="targetIndex: 6" id="arTargetNode6"></a-entity>
+    <a-entity mindar-image-target="targetIndex: 7" id="arTargetNode7"></a-entity>
+    <a-entity mindar-image-target="targetIndex: 8" id="arTargetNode8"></a-entity>
+    <a-entity mindar-image-target="targetIndex: 9" id="arTargetNode9"></a-entity>
   </a-scene>
 
   <script>
@@ -787,18 +875,6 @@
       activeSubstances: new Set(["alcohol"]),
       years: 1
     };
-
-    const MODEL_SOURCES = {
-      BRAIN: "#brainModel",
-      LUNGS: "#lungModel",
-      HEART: "#heartModel",
-      LIVER: "#liverModel",
-      STOMACH: "#stomachModel",
-      KIDNEYS: "#kidneyModel",
-      EYES: "#eyeModel"
-    };
-
-    let activeOrganMeshes = {}; // Tracks active meshes per target index
 
     function startApp() {
       document.getElementById("welcomeGate").style.display = "none";
@@ -827,22 +903,35 @@
     }
 
     function handleTargetFound(targetIndex) {
-      const organKey = TARGET_DICTIONARY[targetIndex];
-      if (!organKey) return;
-
-      console.log(`[AR Target Found] Index: ${targetIndex} -> Organ: ${organKey}`);
+      const organKey = TARGET_MAP[targetIndex];
+      if (!organKey || currentTargetIndex === targetIndex) return;
+      currentTargetIndex = targetIndex;
       AppState.activeKey = organKey;
 
       const targetNode = document.getElementById(`arTargetNode${targetIndex}`);
       if (!targetNode) return;
 
-      // Clean up existing mesh on this specific target if present
+      // 1. Memory Cleanup of Stale Mesh & Disposal Sequence
       if (activeOrganMeshes[targetIndex]) {
         targetNode.removeChild(activeOrganMeshes[targetIndex]);
+        activeOrganMeshes[targetIndex].traverse((child) => {
+          if (child.isMesh) {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+              else child.material.dispose();
+            }
+          }
+        });
         delete activeOrganMeshes[targetIndex];
       }
 
-      // Instantiate Pivot Anchor, 3D GLTF Model, and Leader Line Annotations
+      loadAndNormalizeOrgan(organKey, targetIndex, targetNode);
+    }
+
+    function loadAndNormalizeOrgan(organKey, targetIndex, targetNode) {
+      console.log(`[Clinical AR Pipeline] Target Index: ${targetIndex} -> Loading Organ: ${organKey}`);
+
       const pivotEl = document.createElement('a-entity');
       pivotEl.setAttribute('organ-pivot-anchor', '');
 
@@ -850,7 +939,6 @@
       modelEl.setAttribute('class', 'ar-model');
       modelEl.setAttribute('data-key', organKey);
       modelEl.setAttribute('src', MODEL_SOURCES[organKey]);
-      modelEl.setAttribute('scale', '0.8 0.8 0.8');
       pivotEl.appendChild(modelEl);
 
       const annotEl = document.createElement('a-entity');
@@ -865,16 +953,25 @@
     }
 
     function handleTargetLost(targetIndex) {
-      console.log(`[AR Target Lost] Index: ${targetIndex}`);
+      console.log(`[Clinical AR Pipeline] Target Lost Index: ${targetIndex}`);
       const targetNode = document.getElementById(`arTargetNode${targetIndex}`);
       if (targetNode && activeOrganMeshes[targetIndex]) {
         targetNode.removeChild(activeOrganMeshes[targetIndex]);
+        activeOrganMeshes[targetIndex].traverse((child) => {
+          if (child.isMesh) {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+              else child.material.dispose();
+            }
+          }
+        });
         delete activeOrganMeshes[targetIndex];
       }
 
-      // Hide UI if no targets are currently tracked
       if (Object.keys(activeOrganMeshes).length === 0) {
         document.getElementById("ar-ui-container").style.display = "none";
+        currentTargetIndex = null;
       }
     }
 
@@ -945,7 +1042,6 @@
 
           let baseScale = 0.8;
           let shrinkScale = baseScale - (yearRatio * 0.15 * activeCount);
-          modelEl.setAttribute("scale", `${shrinkScale} ${shrinkScale} ${shrinkScale}`);
 
           mesh.traverse((node) => {
             if (node.isMesh && node.material) {
@@ -974,8 +1070,8 @@
 
       window.updateUIAndShaders = updateUIAndShaders;
 
-      // Bind all 7 target nodes (indices 0 to 6) independently so multiple cards can be scanned simultaneously
-      for (let i = 0; i <= 6; i++) {
+      // Bind all 10 clinical target nodes (indices 0 to 9) independently
+      for (let i = 0; i <= 9; i++) {
         const node = document.getElementById(`arTargetNode${i}`);
         if (node) {
           node.addEventListener("targetFound", () => handleTargetFound(i));
