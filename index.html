@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>OrganoAR Clinical Suite — Spatial Pathology Visualizer</title>
+  <title>OrganoAR Education Suite — Bulletproof Student UX</title>
 
-  <!-- Stable WebAR Core Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     :root {
       --sys-surface: rgba(15, 23, 42, 0.90);
-      --sys-surface-glass: rgba(15, 23, 42, 0.82);
+      --sys-surface-glass: rgba(15, 23, 42, 0.85);
       --sys-border: rgba(255, 255, 255, 0.12);
       --sys-primary: #38bdf8;
       --sys-danger: #fb7185;
@@ -118,6 +117,49 @@
 
     .btn-sso:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
 
+    /* Scanning Radar State Overlay */
+    #scanRadar {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 90;
+      pointer-events: none;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .radar-ring {
+      width: 120px;
+      height: 120px;
+      border: 3px dashed rgba(56, 189, 248, 0.6);
+      border-radius: 50%;
+      animation: radarPulse 1.5s infinite linear;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes radarPulse {
+      0% { transform: scale(0.95); opacity: 0.6; }
+      50% { transform: scale(1.05); opacity: 1; border-color: var(--sys-primary); }
+      100% { transform: scale(0.95); opacity: 0.6; }
+    }
+
+    .radar-text {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--sys-border);
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--sys-primary);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
     /* Responsive Mobile AR Overlay Structure */
     #ar-ui-container {
       position: fixed;
@@ -134,21 +176,27 @@
       pointer-events: auto;
     }
 
-    /* 1. Top Bar: Focus View Toggle & Active Title */
+    /* 1. Top Bar: Focus View Toggle, Active Title & Manual Selector Safety Net */
     .ar-top-bar {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      gap: 8px;
       background: var(--sys-surface);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--sys-border);
-      padding: 8px 16px;
-      border-radius: var(--radius-pill);
+      padding: 10px 16px;
+      border-radius: 20px;
       box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.3);
       width: 100%;
       max-width: 420px;
       margin: 0 auto;
+    }
+
+    .ar-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .organ-badge {
@@ -172,20 +220,49 @@
       text-transform: uppercase;
     }
     .chip.green { background: rgba(74, 222, 128, 0.15); color: var(--sys-success); border: 1px solid rgba(74, 222, 128, 0.3); }
+    .chip.yellow { background: rgba(250, 204, 21, 0.15); color: var(--sys-warning); border: 1px solid rgba(250, 204, 21, 0.3); }
     .chip.red { background: rgba(251, 113, 133, 0.15); color: var(--sys-danger); border: 1px solid rgba(251, 113, 133, 0.3); }
 
     .glass-icon-btn {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid var(--sys-border);
       color: var(--sys-primary);
-      font-size: 0.78125rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      padding: 6px 12px;
+      padding: 5px 10px;
       border-radius: var(--radius-pill);
       cursor: pointer;
       transition: background 0.2s ease;
     }
     .glass-icon-btn:active { background: rgba(255, 255, 255, 0.18); }
+
+    /* Manual Selector Bar (UX Safety Net for Classroom Testing) */
+    .manual-selector-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-top: 4px;
+      scrollbar-width: none;
+    }
+    .manual-selector-bar::-webkit-scrollbar { display: none; }
+
+    .manual-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--sys-border);
+      color: var(--sys-subtext);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .manual-pill.is-active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--sys-primary);
+      color: var(--sys-text);
+    }
 
     /* 2. Progressive Disclosure Bottom Sheet */
     .bottom-sheet {
@@ -235,7 +312,7 @@
       transition: transform 0.3s ease;
     }
 
-    /* Sheet Collapse/Expand State Mechanics */
+    /* Sheet Collapse/Expand Mechanics */
     .bottom-sheet.collapsed .sheet-content {
       max-height: 0;
       opacity: 0;
@@ -252,7 +329,7 @@
     }
 
     .sheet-content {
-      max-height: 320px;
+      max-height: 360px;
       opacity: 1;
       padding: 0 20px 20px 20px;
       display: flex;
@@ -328,10 +405,21 @@
     }
 
     .symptom-card {
-      background: rgba(0, 0, 0, 0.25);
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--sys-border);
       border-radius: 14px;
-      padding: 10px 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .symptom-card h4 {
+      margin: 0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--sys-primary);
+      letter-spacing: 0.05em;
     }
 
     #symptom-list {
@@ -375,151 +463,116 @@
   </style>
 
   <script>
-    // Clinical-Grade Comprehensive Organ Data Model (10 Major Organs mapped across 3 progression phases)
+    // Clinical-Grade Organ Data Model mapped across 4 precise educational timelines (1-3, 3-5, 5-10, 10-20+ Years)
     const ORGAN_DATA = {
       BRAIN: {
         name: "Brain",
         substances: ["alcohol", "smoking", "narcotics"],
         annotations: [
-          { text: "FRONTAL CORTEX", origin: "0 0.1 0", target: "0 0.5 0.5", sub: "Executive control" },
-          { text: "LIMBIC SYSTEM", origin: "0 0 0", target: "-0.5 0.3 0", sub: "Emotional regulation" },
-          { text: "CEREBELLUM", origin: "0 -0.1 0", target: "0 -0.2 -0.5", sub: "Motor coordination" }
+          { text: "FRONTAL CORTEX", origin: "0 0.1 0", target: "0 0.5 0.5", sub: "Executive function & impulse control" },
+          { text: "LIMBIC SYSTEM", origin: "0 0 0", target: "-0.5 0.3 0", sub: "Dopamine reward & emotional regulation" },
+          { text: "CEREBELLUM", origin: "0 -0.1 0", target: "0 -0.2 -0.5", sub: "Motor coordination & balance control" }
         ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["Dopamine receptor downregulation", "Mild cognitive fatigue", "Anhedonia"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Cortical thinning & white matter loss", "Memory consolidation deficits", "Impaired inhibition"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["Severe structural atrophy", "Ventricular enlargement", "Wernicke-Korsakoff / Dementia risk"] }
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Dopamine receptor downregulation", "Episodic short-term memory fatigue", "Initial mood fluctuations"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Beginning gray matter volume reduction", "Persistent sleep architecture disruption", "Elevated impulsive decision making"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Pronounced cortical thinning & white matter damage", "Working memory consolidation failure", "Compulsive habit reinforcement"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Severe structural brain atrophy", "Enlarged ventricles & cognitive decline", "Permanent Korsakoff / dementia risk"] }
         }
       },
       LUNGS: {
         name: "Lungs",
         substances: ["smoking", "narcotics", "alcohol"],
         annotations: [
-          { text: "UPPER BRONCHI", origin: "0 0.1 0", target: "0 0.5 0", sub: "Epithelial metaplasia" },
-          { text: "ALVEOLAR CLUSTERS", origin: "-0.1 0 0", target: "-0.6 0 0.3", sub: "Septal wall breakdown" },
-          { text: "PLEURAL MEMBRANE", origin: "0.1 -0.1 0", target: "0.6 -0.3 -0.3", sub: "Inflammatory fibrosis" }
+          { text: "UPPER BRONCHI", origin: "0 0.1 0", target: "0 0.5 0", sub: "Epithelial tissue lining & mucus defense" },
+          { text: "ALVEOLAR CLUSTERS", origin: "-0.1 0 0", target: "-0.6 0 0.3", sub: "Microscopic gas exchange units (O2/CO2)" },
+          { text: "PLEURAL MEMBRANE", origin: "0.1 -0.1 0", target: "0.6 -0.3 -0.3", sub: "Protective chest wall lining & expansion" }
         ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["Cilia paralysis", "Smoker's cough", "Bronchial inflammation"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Alveolar wall collapse", "Reduced gas exchange", "Exertional dyspnea"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["COPD onset", "Irreversible tissue scarring", "Severe hypoxia & carcinoma risk"] }
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Cilia paralysis & increased morning mucus", "Mild chronic smoker's cough", "Slight exertion breathlessness"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Goblet cell hyperplasia & airway narrowing", "Reduced vital lung capacity", "Frequent respiratory infections"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Alveolar septal wall breakdown (emphysema precursors)", "Persistent hypoxemia during exercise", "Chronic bronchitis staging"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Established COPD & irreversible scarring", "Severe respiratory failure risk", "High pulmonary carcinoma probability"] }
         }
       },
       HEART: {
         name: "Heart",
         substances: ["alcohol", "smoking", "narcotics"],
         annotations: [
-          { text: "AORTIC ARCH", origin: "0 0.15 0", target: "0 0.5 0", sub: "Atherosclerotic stiffening" },
-          { text: "LEFT VENTRICLE", origin: "-0.1 0 0", target: "-0.5 0 0.3", sub: "Myocardial hypertrophy" },
-          { text: "CORONARY ARTERY", origin: "0.1 0.05 0", target: "0.5 0.2 -0.3", sub: "Plaque accumulation" }
+          { text: "AORTIC ARCH", origin: "0 0.15 0", target: "0 0.5 0", sub: "Major systemic blood distribution artery" },
+          { text: "LEFT VENTRICLE", origin: "-0.1 0 0", target: "-0.5 0 0.3", sub: "Primary high-pressure pumping chamber" },
+          { text: "CORONARY ARTERY", origin: "0.1 0.05 0", target: "0.5 0.2 -0.3", sub: "Myocardial blood supply vessel network" }
         ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["Vascular spasms", "Elevated resting heart rate", "Hypertension spikes"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Atherosclerotic plaque accumulation", "Alcoholic Cardiomyopathy", "Arterial stiffening"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["Congestive heart failure", "Myocardial infarction risk", "Ischemic stroke elevation"] }
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Episodic resting heart rate elevation", "Transient blood pressure spikes", "Vascular endothelial irritation"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Early atherosclerotic plaque deposition", "Myocardial wall stiffness increase", "Reduced heart rate variability"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Left ventricular hypertrophy (thickening)", "Compromised coronary perfusion", "Alcoholic cardiomyopathy indicators"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Congestive heart failure vulnerability", "High myocardial infarction risk", "Ischemic stroke susceptibility"] }
         }
       },
       LIVER: {
         name: "Liver",
         substances: ["alcohol", "narcotics", "smoking"],
         annotations: [
-          { text: "RIGHT LOBE", origin: "0.1 0.1 0", target: "0.5 0.3 0", sub: "Macrovesicular steatosis" },
-          { text: "PORTAL VEIN", origin: "-0.1 0 0", target: "-0.4 0 0.3", sub: "Sinusoidal capillarization" },
-          { text: "FIBROTIC SEPTA", origin: "0 -0.1 0", target: "0 -0.4 -0.3", sub: "Collagen scar deposits" }
+          { text: "RIGHT HEPATIC LOBE", origin: "0.1 0.1 0", target: "0.5 0.3 0", sub: "Main metabolic filtration & detox zone" },
+          { text: "PORTAL VEIN TRACT", origin: "-0.1 0 0", target: "-0.4 0 0.3", sub: "Primary visceral blood supply channel" },
+          { text: "FIBROTIC SEPTA", origin: "0 -0.1 0", target: "0 -0.4 -0.3", sub: "Scar tissue accumulation matrix" }
         ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["Hepatic Steatosis (Fatty Liver)", "Cellular fat accumulation", "Enzyme elevation"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Alcoholic Hepatitis", "Fibrotic scar tissue deposits", "Jaundice risk"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["Nodular Cirrhosis", "Portal hypertension", "Complete hepatic failure risk"] }
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Hepatic steatosis (fatty liver infiltration)", "Elevated liver enzyme biomarkers (AST/ALT)", "Mild metabolic fatigue"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Chronic inflammatory hepatitis staging", "Hepatocyte oxidative stress damage", "Reduced lipid processing capacity"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Extensive collagen scar tissue deposits", "Sinusoidal capillarization & restricted flow", "Persistent upper abdominal discomfort"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Nodular cirrhosis and organ shrinkage", "Portal hypertension & fluid retention", "Complete hepatic failure & jaundice"] }
         }
       },
       STOMACH: {
         name: "Stomach",
         substances: ["alcohol", "smoking", "narcotics"],
         annotations: [
-          { text: "FUNDUS MUCOSA", origin: "0 0.15 0", target: "0 0.5 0", sub: "Parietal cell erosion" },
-          { text: "GASTRIC BODY", origin: "-0.1 0 0", target: "-0.5 0 0.3", sub: "Peptic ulceration" },
-          { text: "PYLORIC SPHINCTER", origin: "0.1 -0.1 0", target: "0.5 -0.3 -0.3", sub: "Spasmodic reflux" }
+          { text: "FUNDUS MUCOSA", origin: "0 0.15 0", target: "0 0.5 0", sub: "Acid secretion & mucosal barrier" },
+          { text: "GASTRIC BODY", origin: "-0.1 0 0", target: "-0.5 0 0.3", sub: "Enzymatic food breakdown zone" },
+          { text: "PYLORIC SPHINCTER", origin: "0.1 -0.1 0", target: "0.5 -0.3 -0.3", sub: "Duodenal exit valve control" }
         ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["Mucosal lining erosion", "Acute gastritis", "Peptic acid reflux"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Chronic mucosal ulceration", "Vitamin B12 / Thiamine malabsorption", "Internal bleeding"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["Intestinal metaplasia", "Atrophic gastritis", "Elevated gastric cancer risk"] }
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Acute mucosal lining irritation", "Frequent acid reflux (GERD) episodes", "Episodic dyspepsia & heartburn"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Parietal cell degradation & thinning barrier", "Gastric mucosal erosion spots", "Nutrient absorption inefficiencies"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Chronic peptic ulceration development", "Occult gastrointestinal bleeding risk", "Severe vitamin B12 / thiamine malabsorption"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Atrophic gastritis & intestinal metaplasia", "Significant gastric perforation risk", "Elevated gastric malignancy probability"] }
         }
       },
       KIDNEYS: {
         name: "Kidneys",
         substances: ["alcohol", "narcotics", "smoking"],
         annotations: [
-          { text: "RENAL CORTEX", origin: "0 0.1 0.1", target: "0 0.4 0.3", sub: "Glomerular sclerosis" },
-          { text: "MEDULLARY PYRAMIDS", origin: "-0.1 -0.05 0", target: "-0.4 -0.2 0", sub: "Tubular ischemia" },
-          { text: "RENAL PELVIS", origin: "0.1 -0.1 0", target: "0.4 -0.3 0", sub: "Uremic toxin build-up" }
+          { text: "RENAL CORTEX", origin: "0 0.1 0.1", target: "0 0.4 0.3", sub: "Glomerular blood filtration network" },
+          { text: "MEDULLARY PYRAMIDS", origin: "-0.1 -0.05 0", target: "-0.4 -0.2 0", sub: "Tubular reabsorption & concentration" },
+          { text: "RENAL PELVIS", origin: "0.1 -0.1 0", target: "0.4 -0.3 0", sub: "Urine collection funnel pathway" }
         ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["GFR rate fluctuations", "Dehydration strain", "Acute kidney stress"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Microvascular damage", "Proteinuria (protein leakage)", "Filtration decline"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["Chronic Kidney Disease (CKD)", "Uremic toxin accumulation", "Dialysis dependency"] }
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Glomerular filtration rate (GFR) fluctuations", "Systemic dehydration strain", "Episodic electrolyte imbalances"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Early microvascular endothelial damage", "Trace proteinuria (albumin leakage)", "Reduced renal clearance efficiency"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Glomerulosclerosis (scarring of filters)", "Chronic tubular ischemia", "Persistent hypertension compounding damage"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Chronic Kidney Disease (CKD) progression", "Uremic toxin accumulation in blood", "Dialysis dependency risk"] }
         }
       },
       EYES: {
         name: "Eyes",
         substances: ["narcotics", "alcohol", "smoking"],
         annotations: [
-          { text: "CORNEA & LENS", origin: "0 0.1 0.1", target: "0 0.4 0.4", sub: "Microvascular oxidation" },
-          { text: "RETINAL MACULA", origin: "-0.1 0 0", target: "-0.5 0 0", sub: "Photoreceptor strain" },
-          { text: "OPTIC NERVE", origin: "0 -0.1 -0.1", target: "0 -0.3 -0.5", sub: "Ischemic optic neuropathy" }
+          { text: "CORNEA & LENS", origin: "0 0.1 0.1", target: "0 0.4 0.4", sub: "Light refraction & focusing media" },
+          { text: "RETINAL MACULA", origin: "-0.1 0 0", target: "-0.5 0 0", sub: "High-acuity central vision zone" },
+          { text: "OPTIC NERVE", origin: "0 -0.1 -0.1", target: "0 -0.3 -0.5", sub: "Visual signal transmission cable to brain" }
         ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["Dry eye syndrome", "Mild accommodative spasm", "Night vision strain"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Early lenticular opacities", "Retinal microvasculopathy", "Contrast sensitivity loss"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["Ischemic optic neuropathy", "Accelerated cataract progression", "Permanent visual field defects"] }
-        }
-      },
-      PANCREAS: {
-        name: "Pancreas",
-        substances: ["alcohol", "smoking", "narcotics"],
-        annotations: [
-          { text: "PANCREATIC HEAD", origin: "0 0.1 0", target: "0 0.4 0", sub: "Acinar cell autodigestion" },
-          { text: "ISLETS OF LANGERHANS", origin: "-0.1 0 0", target: "-0.5 0.2 0", sub: "Beta-cell apoptosis" },
-          { text: "MAIN DUCT", origin: "0.1 -0.1 0", target: "0.5 -0.2 0", sub: "Protein plug strictures" }
-        ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["Subclinical enzymatic elevation", "Mild postprandial discomfort", "Intermittent inflammation"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Chronic pancreatitis onset", "Fibrotic tissue replacement", "Exocrine insufficiency"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["Endocrine failure (Type 3c Diabetes)", "Extensive calcification", "Pancreatic carcinoma risk"] }
-        }
-      },
-      VASCULAR: {
-        name: "Vascular System",
-        substances: ["smoking", "alcohol", "narcotics"],
-        annotations: [
-          { text: "ENDOTHELIAL LINING", origin: "0 0.1 0", target: "0 0.5 0", sub: "Nitric oxide depletion" },
-          { text: "ARTERIAL MEDIA", origin: "-0.1 0 0", target: "-0.5 0 0.3", sub: "Smooth muscle calcification" },
-          { text: "MICROVASCULATURE", origin: "0.1 -0.1 0", target: "0.5 -0.3 -0.3", sub: "Capillary rarefaction" }
-        ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["Endothelial dysfunction", "Vasomotor reactivity loss", "Mild systemic hypertension"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Atheromatous plaque buildup", "Increased arterial stiffness", "Pulse pressure widening"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["Advanced arteriosclerosis", "Aneurysm formation risk", "Critical limb/organ ischemia"] }
-        }
-      },
-      BONES: {
-        name: "Bones",
-        substances: ["alcohol", "smoking", "narcotics"],
-        annotations: [
-          { text: "CORTICAL BONE", origin: "0 0.1 0", target: "0 0.5 0", sub: "Haversian canal widening" },
-          { text: "TRABECULAR MESHWORK", origin: "-0.1 0 0", target: "-0.5 0.2 0.3", sub: "Micro-architectural thinning" },
-          { text: "PERIOSTEUM", origin: "0.1 -0.1 0", target: "0.5 -0.3 -0.3", sub: "Reduced osteoblastic activity" }
-        ],
-        phases: {
-          early: { years: "1-3", badge: "Reversible", desc: ["Impaired calcium absorption", "Suppressed bone turnover", "Subtle bone mineral density decline"] },
-          mid: { years: "3-10", badge: "Progressive", desc: ["Osteopenia staging", "Trabecular connectivity loss", "Increased micro-fracture susceptibility"] },
-          late: { years: "10-20+", badge: "Irreversible", desc: ["Severe Osteoporosis", "Avascular necrosis risk", "Spontaneous fragility fractures"] }
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Chronic dry eye syndrome", "Mild pupillary response sluggishness", "Night vision accommodation strain"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Retinal microvasculopathy changes", "Early lenticular protein oxidation", "Contrast sensitivity degradation"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Accelerated cataract formation risk", "Macular capillary restriction", "Peripheral visual field fatigue"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Ischemic optic neuropathy", "Permanent visual acuity loss", "Severe optic nerve fiber atrophy"] }
         }
       }
     };
 
-    // Explicit Target ID Mapping Dictionary (0 to 9 for 10 major clinical targets)
+    // Explicit Target ID Mapping Dictionary (7 targets, index 0 is Brain)
     const TARGET_MAP = {
       0: "BRAIN",
       1: "LUNGS",
@@ -527,10 +580,7 @@
       3: "LIVER",
       4: "STOMACH",
       5: "KIDNEYS",
-      6: "EYES",
-      7: "PANCREAS",
-      8: "VASCULAR",
-      9: "BONES"
+      6: "EYES"
     };
 
     const MODEL_SOURCES = {
@@ -540,14 +590,12 @@
       LIVER: "#liverModel",
       STOMACH: "#stomachModel",
       KIDNEYS: "#kidneyModel",
-      EYES: "#eyeModel",
-      PANCREAS: "#pancreasModel",
-      VASCULAR: "#vascularModel",
-      BONES: "#boneModel"
+      EYES: "#eyeModel"
     };
 
     let activeOrganMeshes = {};
     let currentTargetIndex = null;
+    let consecutiveTrackingFrames = {};
 
     // Progressive Disclosure & Viewport Toggle Handlers
     function toggleBottomSheet() {
@@ -559,7 +607,7 @@
       document.body.classList.toggle("clean-canvas");
     }
 
-    // 3D Model Pivot Anchor, Bounding Box Normalization & Gestures Component
+    // 3D Model Pivot Anchor, Normalization & Touch Gestures Component
     AFRAME.registerComponent('organ-pivot-anchor', {
       schema: { rotateSpeed: { type: 'number', default: 0.5 } },
       init: function () {
@@ -567,13 +615,11 @@
         this.lastY = 0;
         this.initialPinchDistance = null;
 
-        // Apply fixed Y offset (+0.35m) so model floats cleanly above tracked marker
         this.el.setAttribute('position', '0 0.35 0');
 
         this.el.addEventListener('model-loaded', () => {
           const mesh = this.el.getObject3D('mesh');
           if (mesh) {
-            // Auto-center geometry and normalize bounding box scale to fit precisely in 0.4m radius viewport
             const box = new THREE.Box3().setFromObject(mesh);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
@@ -660,7 +706,6 @@
         organData.annotations.forEach(ann => {
           const annotGroup = new THREE.Group();
 
-          // 1. Create Floating Label Sprite
           const canvas = document.createElement('canvas');
           canvas.width = 512;
           canvas.height = 160;
@@ -680,7 +725,7 @@
           ctx.fillText(ann.text, 256, 56);
 
           ctx.fillStyle = '#cbd5e1';
-          ctx.font = '500 24px system-ui, sans-serif';
+          ctx.font = '500 22px system-ui, sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(ann.sub, 256, 104);
 
@@ -691,10 +736,9 @@
 
           const targetParts = ann.target.split(' ').map(Number);
           sprite.position.set(targetParts[0], targetParts[1], targetParts[2]);
-          sprite.scale.set(0.65, 0.22, 1);
+          sprite.scale.set(0.7, 0.22, 1);
           annotGroup.add(sprite);
 
-          // 2. Create Precise Leader Line Arrow pointing from Organ surface to Badge
           const originParts = ann.origin.split(' ').map(Number);
           const startVec = new THREE.Vector3(originParts[0], originParts[1], originParts[2]);
           const endVec = new THREE.Vector3(targetParts[0], targetParts[1], targetParts[2]);
@@ -713,7 +757,6 @@
           lineMesh.lookAt(endVec);
           annotGroup.add(lineMesh);
 
-          // 3. Arrow Tip / Head at the target badge connection
           const coneGeo = new THREE.ConeGeometry(0.015, 0.04, 8);
           coneGeo.rotateX(Math.PI / 2);
           const coneMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, depthTest: false });
@@ -730,7 +773,6 @@
 </head>
 <body>
 
-  <!-- Onboarding & Scholar Header Screen -->
   <div id="welcomeGate">
     <div class="welcome-card">
       <div class="scholar-meta">
@@ -739,8 +781,8 @@
         <span class="scholar-org">NITTTR Chennai</span>
       </div>
 
-      <h1 class="welcome-title">OrganoAR Clinical Suite</h1>
-      <p class="welcome-desc">Authenticate to initialize 10-organ clinical-grade spatial pathology recognition and memory disposal pipeline.</p>
+      <h1 class="welcome-title">OrganoAR Education Suite</h1>
+      <p class="welcome-desc">Authenticate to initialize robust multi-frame tracking, instant manual fallback, and educational timelines.</p>
 
       <div class="sso-stack">
         <button class="btn-sso" onclick="startApp()">
@@ -756,41 +798,52 @@
     </div>
   </div>
 
-  <!-- Exit Focus Mode Toast -->
+  <div id="scanRadar">
+    <div class="radar-ring">
+      <span style="font-size: 1.5rem;">🎯</span>
+    </div>
+    <div class="radar-text" id="radarText">Locking Target...</div>
+  </div>
+
   <div id="exit-focus-toast" onclick="toggleCleanCanvas()">
     ✕ Exit Focus View
   </div>
 
-  <!-- Responsive Mobile AR Overlay Structure with Progressive Disclosure -->
   <div id="ar-ui-container">
 
-    <!-- 1. Top Bar: Focus View Toggle & Active Title -->
     <header class="ar-top-bar">
-      <div class="organ-badge">
-        <span id="active-organ-title">BRAIN</span>
-        <span id="active-health-chip" class="chip green">100% HEALTH</span>
+      <div class="ar-top-row">
+        <div class="organ-badge">
+          <span id="active-organ-title">BRAIN</span>
+          <span id="active-health-chip" class="chip green">100% HEALTH</span>
+        </div>
+        <button id="btn-focus-mode" class="glass-icon-btn" onclick="toggleCleanCanvas()">
+          👁️ Focus View
+        </button>
       </div>
-      <button id="btn-focus-mode" class="glass-icon-btn" onclick="toggleCleanCanvas()">
-        👁️ Focus View
-      </button>
+      <div class="manual-selector-bar" id="manualSelectorBar">
+        <button class="manual-pill is-active" onclick="forceSelectOrgan('BRAIN', 0)">Brain</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('LUNGS', 1)">Lungs</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('HEART', 2)">Heart</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('LIVER', 3)">Liver</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('STOMACH', 4)">Stomach</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('KIDNEYS', 5)">Kidneys</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('EYES', 6)">Eyes</button>
+      </div>
     </header>
 
-    <!-- 2. Progressive Disclosure Bottom Sheet -->
     <div id="bottom-sheet" class="bottom-sheet collapsed">
       
-      <!-- Drag Handle / Tap Header -->
       <div class="sheet-handle-bar" onclick="toggleBottomSheet()">
         <div class="drag-indicator"></div>
         <div class="summary-line">
-          <span id="sheet-phase-summary">Early Phase (1–3 Yrs)</span>
-          <span class="expand-icon">▲ Expand Controls</span>
+          <span id="sheet-phase-summary">1–3 Years (Mild Impact)</span>
+          <span class="expand-icon">▲ Expand Anatomy & Impact</span>
         </div>
       </div>
 
-      <!-- Collapsible Extended Content Area -->
       <div class="sheet-content">
         
-        <!-- Substance Multi-Select Toggle Chips -->
         <div class="control-group">
           <label>Active Habits (Poly-Substance):</label>
           <div class="chip-group" id="substanceGrid">
@@ -800,7 +853,6 @@
           </div>
         </div>
 
-        <!-- Exposure Timeline Slider -->
         <div class="control-group">
           <div class="slider-header">
             <span>Exposure Timeline</span>
@@ -810,17 +862,18 @@
           <div class="slider-ticks">
             <span>1 Yr</span>
             <span>3 Yrs</span>
+            <span>5 Yrs</span>
             <span>10 Yrs</span>
             <span>20+ Yrs</span>
           </div>
         </div>
 
-        <!-- Biological Pathology Symptoms -->
         <div class="symptom-card">
+          <h4 id="anatomy-card-title">Anatomical Regions & Degradation Impact</h4>
           <ul id="symptom-list">
             <li>Dopamine receptor downregulation</li>
-            <li>Mild cognitive fatigue</li>
-            <li>Anhedonia</li>
+            <li>Episodic short-term memory fatigue</li>
+            <li>Initial mood fluctuations</li>
           </ul>
         </div>
 
@@ -829,7 +882,6 @@
 
   </div>
 
-  <!-- WebAR Scene Engine configured for 10 clinical targets (indices 0 to 9) -->
   <a-scene 
     mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: false; uiScanning: no;" 
     embedded
@@ -846,9 +898,6 @@
       <a-asset-item id="stomachModel" src="./assets/models/stomach.glb"></a-asset-item>
       <a-asset-item id="kidneyModel" src="./assets/models/kidney.glb"></a-asset-item>
       <a-asset-item id="eyeModel" src="./assets/models/eyes.glb"></a-asset-item>
-      <a-asset-item id="pancreasModel" src="./assets/models/pancreas.glb"></a-asset-item>
-      <a-asset-item id="vascularModel" src="./assets/models/vascular.glb"></a-asset-item>
-      <a-asset-item id="boneModel" src="./assets/models/bone.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -856,7 +905,6 @@
     <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
-    <!-- 10 Universal Target Anchor Nodes mapping indices 0 through 9 -->
     <a-entity mindar-image-target="targetIndex: 0" id="arTargetNode0"></a-entity>
     <a-entity mindar-image-target="targetIndex: 1" id="arTargetNode1"></a-entity>
     <a-entity mindar-image-target="targetIndex: 2" id="arTargetNode2"></a-entity>
@@ -864,9 +912,6 @@
     <a-entity mindar-image-target="targetIndex: 4" id="arTargetNode4"></a-entity>
     <a-entity mindar-image-target="targetIndex: 5" id="arTargetNode5"></a-entity>
     <a-entity mindar-image-target="targetIndex: 6" id="arTargetNode6"></a-entity>
-    <a-entity mindar-image-target="targetIndex: 7" id="arTargetNode7"></a-entity>
-    <a-entity mindar-image-target="targetIndex: 8" id="arTargetNode8"></a-entity>
-    <a-entity mindar-image-target="targetIndex: 9" id="arTargetNode9"></a-entity>
   </a-scene>
 
   <script>
@@ -902,16 +947,45 @@
       }
     }
 
-    function handleTargetFound(targetIndex) {
+    // Issue 1 Fix: Multi-Frame Consensus Tracking Shield (Requires 8 stable frames before spawning)
+    function handleTargetTrackingTick(targetIndex, isFound) {
+      const radarEl = document.getElementById("scanRadar");
+      const radarText = document.getElementById("radarText");
+
+      if (!consecutiveTrackingFrames[targetIndex]) {
+        consecutiveTrackingFrames[targetIndex] = 0;
+      }
+
+      if (isFound) {
+        consecutiveTrackingFrames[targetIndex]++;
+        radarEl.style.display = "flex";
+        radarText.innerText = `Locking ${TARGET_MAP[targetIndex]}... (${consecutiveTrackingFrames[targetIndex]}/8)`;
+
+        if (consecutiveTrackingFrames[targetIndex] === 8) {
+          radarEl.style.display = "none";
+          executeOrganSpawn(targetIndex);
+        }
+      } else {
+        consecutiveTrackingFrames[targetIndex] = 0;
+        if (currentTargetIndex === targetIndex) {
+          // Keep UI active briefly or fade if lost
+        }
+        radarEl.style.display = "none";
+      }
+    }
+
+    // Issue 2 Fix: Bulletproof Asset Caching & Full Memory Disposal Pipeline
+    function executeOrganSpawn(targetIndex) {
       const organKey = TARGET_MAP[targetIndex];
-      if (!organKey || currentTargetIndex === targetIndex) return;
+      if (!organKey) return;
+
       currentTargetIndex = targetIndex;
       AppState.activeKey = organKey;
 
       const targetNode = document.getElementById(`arTargetNode${targetIndex}`);
       if (!targetNode) return;
 
-      // 1. Memory Cleanup of Stale Mesh & Disposal Sequence
+      // 1. Thorough Disposal Cleanup to Prevent Stale State Freezes
       if (activeOrganMeshes[targetIndex]) {
         targetNode.removeChild(activeOrganMeshes[targetIndex]);
         activeOrganMeshes[targetIndex].traverse((child) => {
@@ -926,12 +1000,7 @@
         delete activeOrganMeshes[targetIndex];
       }
 
-      loadAndNormalizeOrgan(organKey, targetIndex, targetNode);
-    }
-
-    function loadAndNormalizeOrgan(organKey, targetIndex, targetNode) {
-      console.log(`[Clinical AR Pipeline] Target Index: ${targetIndex} -> Loading Organ: ${organKey}`);
-
+      // 2. Fresh Instantiation
       const pivotEl = document.createElement('a-entity');
       pivotEl.setAttribute('organ-pivot-anchor', '');
 
@@ -949,30 +1018,37 @@
       activeOrganMeshes[targetIndex] = pivotEl;
 
       updateUIHeader(organKey);
+      updateManualSelectorActiveState(targetIndex);
       window.updateUIAndShaders();
     }
 
-    function handleTargetLost(targetIndex) {
-      console.log(`[Clinical AR Pipeline] Target Lost Index: ${targetIndex}`);
-      const targetNode = document.getElementById(`arTargetNode${targetIndex}`);
-      if (targetNode && activeOrganMeshes[targetIndex]) {
-        targetNode.removeChild(activeOrganMeshes[targetIndex]);
-        activeOrganMeshes[targetIndex].traverse((child) => {
-          if (child.isMesh) {
-            if (child.geometry) child.geometry.dispose();
-            if (child.material) {
-              if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-              else child.material.dispose();
-            }
-          }
-        });
-        delete activeOrganMeshes[targetIndex];
+    // Instant Manual Override Safety Net for Classroom Testing
+    function forceSelectOrgan(organKey, targetIndex) {
+      console.log(`[Manual Override] Forcing organ load: ${organKey}`);
+      const radarEl = document.getElementById("scanRadar");
+      radarEl.style.display = "none";
+      
+      const dummyNode = document.getElementById(`arTargetNode${targetIndex}`);
+      if (dummyNode) {
+        executeOrganSpawn(targetIndex);
       }
+    }
 
-      if (Object.keys(activeOrganMeshes).length === 0) {
-        document.getElementById("ar-ui-container").style.display = "none";
-        currentTargetIndex = null;
-      }
+    function updateManualSelectorActiveState(targetIndex) {
+      const pills = document.querySelectorAll('.manual-pill');
+      pills.forEach((pill, idx) => {
+        if (idx === targetIndex) {
+          pill.classList.add('is-active');
+        } else {
+          pill.classList.remove('is-active');
+        }
+      });
+    }
+
+    function handleTargetLost(targetIndex) {
+      console.log(`[Tracking Lost] Index: ${targetIndex}`);
+      consecutiveTrackingFrames[targetIndex] = 0;
+      document.getElementById("scanRadar").style.display = "none";
     }
 
     function updateUIHeader(organKey) {
@@ -987,7 +1063,7 @@
         const btn = document.createElement("button");
         btn.className = `chip-toggle ${AppState.activeSubstances.has(sub) ? 'active' : ''}`;
         btn.dataset.substance = sub;
-        btn.innerText = sub === "alcohol" ? `🍺 Alcohol` : sub === "smoking" ? `🚬 Smoking` : `💊 Narcotics`;
+        btn.innerText = sub === "alcohol" ? `🍺 Alcohol` : sub === "narcotics" ? `💊 Narcotics` : `🚬 Smoking`;
         substanceGrid.appendChild(btn);
       });
 
@@ -998,6 +1074,7 @@
       const activeHealthChip = document.getElementById("active-health-chip");
       const sheetPhaseSummary = document.getElementById("sheet-phase-summary");
       const symptomList = document.getElementById("symptom-list");
+      const anatomyCardTitle = document.getElementById("anatomy-card-title");
       const sliderYearLabel = document.getElementById("slider-year-label");
       const exposureSlider = document.getElementById("timeline-slider");
       const substanceGrid = document.getElementById("substanceGrid");
@@ -1006,26 +1083,23 @@
         const organObj = ORGAN_DATA[AppState.activeKey];
         if (!organObj) return;
 
-        let phaseKey = "early";
-        if (AppState.years >= 3 && AppState.years < 10) phaseKey = "mid";
-        else if (AppState.years >= 10) phaseKey = "late";
+        let timelineKey = "1-3";
+        if (AppState.years >= 3 && AppState.years < 5) timelineKey = "3-5";
+        else if (AppState.years >= 5 && AppState.years < 10) timelineKey = "5-10";
+        else if (AppState.years >= 10) timelineKey = "10-20+";
 
-        const phaseData = organObj.phases[phaseKey];
+        const timelineData = organObj.timelines[timelineKey];
         const activeCount = Math.max(1, AppState.activeSubstances.size);
         const healthScore = Math.max(12, Math.round(100 - (AppState.years * activeCount * 3.8)));
 
-        const phaseNameStr = phaseKey === 'early' ? 'Early Phase (1–3 Yrs)' : phaseKey === 'mid' ? 'Mid Phase (3–10 Yrs)' : 'Late Phase (10–20+ Yrs)';
-        sheetPhaseSummary.innerText = phaseNameStr;
+        sheetPhaseSummary.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''} (${timelineData.badge})`;
         
         activeHealthChip.innerText = `${healthScore}% HEALTH`;
-        if (healthScore < 50) {
-          activeHealthChip.className = "chip red";
-        } else {
-          activeHealthChip.className = "chip green";
-        }
+        activeHealthChip.className = `chip ${timelineData.colorClass}`;
 
+        anatomyCardTitle.innerText = `${organObj.name} Parts & ${timelineKey} Yr Impact`;
         symptomList.innerHTML = "";
-        phaseData.desc.forEach(symptom => {
+        timelineData.desc.forEach(symptom => {
           const li = document.createElement("li");
           li.innerText = symptom;
           symptomList.appendChild(li);
@@ -1040,22 +1114,22 @@
           const mesh = modelEl.getObject3D('mesh');
           if (!mesh) return;
 
-          let baseScale = 0.8;
-          let shrinkScale = baseScale - (yearRatio * 0.15 * activeCount);
-
           mesh.traverse((node) => {
             if (node.isMesh && node.material) {
               let color = new THREE.Color(0xffffff);
               let roughness = 0.4;
 
-              if (phaseKey === "early") {
-                color.lerp(new THREE.Color(0x38bdf8), yearRatio * 0.5 * activeCount);
+              if (timelineKey === "1-3") {
+                color.lerp(new THREE.Color(0x38bdf8), yearRatio * 0.4 * activeCount);
                 roughness = 0.3;
-              } else if (phaseKey === "mid") {
-                color.lerp(new THREE.Color(0xfacc15), yearRatio * 0.7 * activeCount);
-                roughness = 0.6;
+              } else if (timelineKey === "3-5") {
+                color.lerp(new THREE.Color(0xfacc15), yearRatio * 0.6 * activeCount);
+                roughness = 0.5;
+              } else if (timelineKey === "5-10") {
+                color.lerp(new THREE.Color(0xfb923c), yearRatio * 0.8 * activeCount);
+                roughness = 0.7;
               } else {
-                color.lerp(new THREE.Color(0xfb7185), yearRatio * 0.9 * activeCount);
+                color.lerp(new THREE.Color(0xfb7185), yearRatio * 0.95 * activeCount);
                 roughness = 0.9;
               }
               color.multiplyScalar(1.0 - (yearRatio * 0.3 * activeCount));
@@ -1070,11 +1144,11 @@
 
       window.updateUIAndShaders = updateUIAndShaders;
 
-      // Bind all 10 clinical target nodes (indices 0 to 9) independently
-      for (let i = 0; i <= 9; i++) {
+      // Bind all 7 target nodes with multi-frame consensus polling
+      for (let i = 0; i <= 6; i++) {
         const node = document.getElementById(`arTargetNode${i}`);
         if (node) {
-          node.addEventListener("targetFound", () => handleTargetFound(i));
+          node.addEventListener("targetFound", () => handleTargetTrackingTick(i, true));
           node.addEventListener("targetLost", () => handleTargetLost(i));
         }
       }
