@@ -210,6 +210,22 @@
     .symptom-card { background: rgba(0, 0, 0, 0.3); border: 1px solid var(--sys-border); border-radius: 14px; padding: 12px; }
     #symptom-list { margin: 0; padding-left: 16px; font-size: 0.78125rem; color: var(--sys-text); }
 
+    /* debug overlay */
+    #debugOverlay {
+      position: fixed;
+      right: 12px;
+      top: 12px;
+      z-index: 1200;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      pointer-events: none;
+      max-width: 220px;
+      backdrop-filter: blur(6px);
+    }
+
     /* focus and accessibility */
     button:focus { outline: 3px solid rgba(56,189,248,0.18); outline-offset: 2px; }
   </style>
@@ -240,6 +256,10 @@
 
       // Ensure UI is hidden until a target is found
       document.getElementById("ar-ui-container").style.display = "none";
+
+      // show scanning debug UI
+      const dbg = document.getElementById('debugOverlay');
+      if (dbg) dbg.innerText = 'Scanning for targets...';
     }
 
     function activateOrgan(targetIndex) {
@@ -268,6 +288,22 @@
       // update health chip text (placeholder — you can compute actual health values)
       const healthChip = document.getElementById("active-health-chip");
       if (healthChip) healthChip.innerText = "100% HEALTH";
+
+      // update debug overlay
+      const dbg = document.getElementById('debugOverlay');
+      if (dbg) dbg.innerText = `Detected: ${organKey} (index ${targetIndex})`;
+      console.log(`[AR] targetFound index=${targetIndex} organ=${organKey}`);
+
+      // visual flash on organ icon to indicate detection
+      if (iconEl) {
+        iconEl.style.transition = 'transform 220ms ease, box-shadow 220ms ease';
+        iconEl.style.transform = 'scale(1.12)';
+        iconEl.style.boxShadow = '0 6px 18px rgba(56,189,248,0.18)';
+        setTimeout(() => {
+          iconEl.style.transform = '';
+          iconEl.style.boxShadow = '';
+        }, 420);
+      }
     }
 
     function deactivateAllNodes() {
@@ -277,6 +313,9 @@
       }
       AppState.activeKey = null;
       document.getElementById("ar-ui-container").style.display = "none";
+
+      const dbg = document.getElementById('debugOverlay');
+      if (dbg) dbg.innerText = 'Scanning for targets...';
     }
 
     function toggleSheet() {
@@ -285,6 +324,15 @@
 
     // Utility — called once DOM is ready to wire events
     document.addEventListener("DOMContentLoaded", () => {
+      // add debug overlay element (keeps visible even if we update file later)
+      let dbg = document.getElementById('debugOverlay');
+      if (!dbg) {
+        dbg = document.createElement('div');
+        dbg.id = 'debugOverlay';
+        dbg.innerText = 'Idle';
+        document.body.appendChild(dbg);
+      }
+
       // Initially hide all target nodes so nothing flashes until detection
       for (let i = 0; i <= 6; i++) {
         const node = document.getElementById(`arTargetNode${i}`);
@@ -292,22 +340,28 @@
 
         // hook into MindAR target events — targetFound/targetLost fire on the a-entity
         if (node) {
-          node.addEventListener("targetFound", () => {
+          node.addEventListener("targetFound", (evt) => {
+            console.log('[AR] event targetFound', i, evt);
             // when the image target is found, activate the corresponding organ view
+            // force visible true here to ensure A-Frame displays it
+            if (node.object3D) node.object3D.visible = true;
             activateOrgan(i);
           });
-          node.addEventListener("targetLost", () => {
+          node.addEventListener("targetLost", (evt) => {
+            console.log('[AR] event targetLost', i, evt);
             // when lost, hide the overlay and the mesh
             // but only clear if the lost target matches the active one
             if (AppState.activeKey === TARGET_MAP[i]) {
               // small delay so flicker doesn't hide immediately if reacquired quickly
               setTimeout(() => {
-                // if still not visible according to object3D, hide UI
-                const cur = document.getElementById(`arTargetNode${i}`);
-                if (cur && cur.object3D && !cur.object3D.visible) {
-                  deactivateAllNodes();
-                }
+                // hide the node explicitly
+                if (node && node.object3D) node.object3D.visible = false;
+                // if not reacquired, clear UI
+                if (AppState.activeKey === TARGET_MAP[i]) deactivateAllNodes();
               }, 300);
+            } else {
+              // ensure node hidden when lost
+              if (node && node.object3D) node.object3D.visible = false;
             }
           });
         }
@@ -317,6 +371,21 @@
       const sceneEl = document.querySelector('a-scene');
       if (sceneEl) {
         sceneEl.addEventListener('arReady', () => console.log('AR system ready'));
+        sceneEl.addEventListener('cameraPermissionRequested', () => console.log('camera permission requested'));
+        sceneEl.addEventListener('cameraPermissionGranted', () => console.log('camera permission granted'));
+        sceneEl.addEventListener('cameraPermissionDenied', () => console.log('camera permission denied'));
+      }
+
+      // Helpful tip: print system state if available
+      try {
+        const sys = sceneEl.systems && sceneEl.systems['mindar-image-system'];
+        if (sys) {
+          console.log('[AR] mindar-image-system available', sys);
+        } else {
+          console.warn('[AR] mindar-image-system not available on scene.systems');
+        }
+      } catch (e) {
+        console.warn('[AR] sys check failed', e);
       }
     });
   </script>
@@ -374,7 +443,7 @@
   </div>
 
   <a-scene 
-    mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/examples/image-tracking/assets/card-example/card.mind; autoStart: false; uiScanning: no;" 
+    mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/examples/image-tracking/assets/card-example/card.mind; autoStart: false; uiScanning: yes;" 
     embedded 
     renderer="colorManagement: true; alpha: true; transparent: true;" 
     vr-mode-ui="enabled: false" 
