@@ -113,14 +113,12 @@
       position: fixed;
       inset: 0;
       z-index: 100;
-      pointer-events: none;
-      display: none;
+      display: none; /* shown when a target is found */
       flex-direction: column;
       justify-content: space-between;
       padding: 16px;
+      pointer-events: auto;
     }
-
-    #ar-ui-container > * { pointer-events: auto; }
 
     .ar-top-bar {
       display: flex;
@@ -135,11 +133,16 @@
       width: 100%;
       max-width: 420px;
       margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .ar-top-row { display: flex; justify-content: space-between; align-items: center; }
+    .ar-top-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
     .organ-badge { display: flex; align-items: center; gap: 10px; }
     #active-organ-title { font-size: 0.9375rem; font-weight: 700; color: var(--sys-text); }
+
+    #organ-icon { font-size: 1.4rem; display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border-radius: 10px; }
 
     .chip {
       font-size: 0.6875rem;
@@ -147,35 +150,6 @@
       padding: 3px 8px;
       border-radius: var(--radius-pill);
       text-transform: uppercase;
-    }
-    .chip.green { background: rgba(74, 222, 128, 0.15); color: var(--sys-success); border: 1px solid rgba(74, 222, 128, 0.3); }
-    .chip.yellow { background: rgba(250, 204, 21, 0.15); color: var(--sys-warning); border: 1px solid rgba(250, 204, 21, 0.3); }
-    .chip.red { background: rgba(251, 113, 133, 0.15); color: var(--sys-danger); border: 1px solid rgba(251, 113, 133, 0.3); }
-
-    .manual-selector-bar {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-top: 4px;
-      scrollbar-width: none;
-    }
-    .manual-selector-bar::-webkit-scrollbar { display: none; }
-
-    .manual-pill {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--sys-border);
-      color: var(--sys-subtext);
-      font-size: 0.6875rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: var(--radius-pill);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .manual-pill.is-active {
-      background: rgba(56, 189, 248, 0.2);
-      border-color: var(--sys-primary);
-      color: var(--sys-text);
     }
 
     .bottom-sheet {
@@ -189,6 +163,7 @@
       margin: 0 auto;
       box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
       pointer-events: auto !important;
+      transition: transform 260ms cubic-bezier(.22,.9,.34,1);
     }
 
     .sheet-handle-bar {
@@ -203,7 +178,7 @@
     .drag-indicator { width: 36px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.25); }
     .summary-line { display: flex; justify-content: space-between; width: 100%; align-items: center; font-size: 0.8125rem; font-weight: 600; color: var(--sys-subtext); }
 
-    .bottom-sheet.collapsed .sheet-content { display: none; }
+    .bottom-sheet.collapsed { transform: translateY(56%); }
 
     .sheet-content {
       padding: 0 20px 20px 20px;
@@ -234,31 +209,37 @@
     input[type=range] { width: 100%; accent-color: var(--sys-primary); }
     .symptom-card { background: rgba(0, 0, 0, 0.3); border: 1px solid var(--sys-border); border-radius: 14px; padding: 12px; }
     #symptom-list { margin: 0; padding-left: 16px; font-size: 0.78125rem; color: var(--sys-text); }
+
+    /* focus and accessibility */
+    button:focus { outline: 3px solid rgba(56,189,248,0.18); outline-offset: 2px; }
   </style>
 
   <script>
     const ORGAN_DATA = {
-      BRAIN: { name: "Brain", substances: ["alcohol", "smoking", "narcotics"] },
-      KIDNEYS: { name: "Kidneys", substances: ["alcohol", "narcotics", "smoking"] },
-      LUNGS: { name: "Lungs", substances: ["smoking", "narcotics", "alcohol"] },
-      HEART: { name: "Heart", substances: ["alcohol", "smoking", "narcotics"] },
-      LIVER: { name: "Liver", substances: ["alcohol", "narcotics", "smoking"] },
-      STOMACH: { name: "Stomach", substances: ["alcohol", "smoking", "narcotics"] },
-      EYES: { name: "Eyes", substances: ["narcotics", "alcohol", "smoking"] }
+      BRAIN: { name: "Brain", substances: ["alcohol", "smoking", "narcotics"], emoji: "🧠" },
+      KIDNEYS: { name: "Kidneys", substances: ["alcohol", "narcotics", "smoking"], emoji: "🫀" },
+      LUNGS: { name: "Lungs", substances: ["smoking", "narcotics", "alcohol"], emoji: "🫁" },
+      HEART: { name: "Heart", substances: ["alcohol", "smoking", "narcotics"], emoji: "❤️" },
+      LIVER: { name: "Liver", substances: ["alcohol", "narcotics", "smoking"], emoji: "🟤" },
+      STOMACH: { name: "Stomach", substances: ["alcohol", "smoking", "narcotics"], emoji: "🍽️" },
+      EYES: { name: "Eyes", substances: ["narcotics", "alcohol", "smoking"], emoji: "👁️" }
     };
 
     const TARGET_MAP = { 0: "BRAIN", 1: "KIDNEYS", 2: "LUNGS", 3: "HEART", 4: "LIVER", 5: "STOMACH", 6: "EYES" };
 
-    const AppState = { activeKey: "HEART", activeSubstances: new Set(["alcohol"]), years: 1 };
+    const AppState = { activeKey: null, activeSubstances: new Set(["alcohol"]), years: 1 };
 
     function startApp() {
       document.getElementById("welcomeGate").style.display = "none";
       const sceneEl = document.querySelector("a-scene");
+      // Start MindAR image-tracking system
       const arSystem = sceneEl.systems["mindar-image-system"];
-      if (arSystem) arSystem.start();
-      
-      // Default initial activation to Heart for instant target testing
-      activateOrgan(3);
+      if (arSystem && typeof arSystem.start === 'function') {
+        arSystem.start();
+      }
+
+      // Ensure UI is hidden until a target is found
+      document.getElementById("ar-ui-container").style.display = "none";
     }
 
     function activateOrgan(targetIndex) {
@@ -267,26 +248,77 @@
 
       AppState.activeKey = organKey;
 
+      // show only the matched AR node and hide others
       for (let i = 0; i <= 6; i++) {
         const node = document.getElementById(`arTargetNode${i}`);
-        if (node) {
+        if (node && node.object3D) {
           node.object3D.visible = (i === targetIndex);
         }
       }
 
-      document.getElementById("active-organ-title").innerText = organKey;
+      // update top UI with organ name + emoji
+      const titleEl = document.getElementById("active-organ-title");
+      const iconEl = document.getElementById("organ-icon");
+      titleEl.innerText = ORGAN_DATA[organKey].name || organKey;
+      iconEl.innerText = ORGAN_DATA[organKey].emoji || "🔬";
+
+      // show the UI overlay
       document.getElementById("ar-ui-container").style.display = "flex";
 
-      const pills = document.querySelectorAll('.manual-pill');
-      pills.forEach((pill, idx) => {
-        if (idx === targetIndex) pill.classList.add('is-active');
-        else pill.classList.remove('is-active');
-      });
+      // update health chip text (placeholder — you can compute actual health values)
+      const healthChip = document.getElementById("active-health-chip");
+      if (healthChip) healthChip.innerText = "100% HEALTH";
+    }
+
+    function deactivateAllNodes() {
+      for (let i = 0; i <= 6; i++) {
+        const node = document.getElementById(`arTargetNode${i}`);
+        if (node && node.object3D) node.object3D.visible = false;
+      }
+      AppState.activeKey = null;
+      document.getElementById("ar-ui-container").style.display = "none";
     }
 
     function toggleSheet() {
       document.getElementById("bottom-sheet").classList.toggle("collapsed");
     }
+
+    // Utility — called once DOM is ready to wire events
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initially hide all target nodes so nothing flashes until detection
+      for (let i = 0; i <= 6; i++) {
+        const node = document.getElementById(`arTargetNode${i}`);
+        if (node && node.object3D) node.object3D.visible = false;
+
+        // hook into MindAR target events — targetFound/targetLost fire on the a-entity
+        if (node) {
+          node.addEventListener("targetFound", () => {
+            // when the image target is found, activate the corresponding organ view
+            activateOrgan(i);
+          });
+          node.addEventListener("targetLost", () => {
+            // when lost, hide the overlay and the mesh
+            // but only clear if the lost target matches the active one
+            if (AppState.activeKey === TARGET_MAP[i]) {
+              // small delay so flicker doesn't hide immediately if reacquired quickly
+              setTimeout(() => {
+                // if still not visible according to object3D, hide UI
+                const cur = document.getElementById(`arTargetNode${i}`);
+                if (cur && cur.object3D && !cur.object3D.visible) {
+                  deactivateAllNodes();
+                }
+              }, 300);
+            }
+          });
+        }
+      }
+
+      // Listen to scene-level MindAR events (optional) to debug
+      const sceneEl = document.querySelector('a-scene');
+      if (sceneEl) {
+        sceneEl.addEventListener('arReady', () => console.log('AR system ready'));
+      }
+    });
   </script>
 </head>
 <body>
@@ -297,8 +329,8 @@
         <span class="scholar-name">OrganoAR Education Suite</span>
         <span class="scholar-title">Substance Pathology Visualizer</span>
       </div>
-      <p class="welcome-desc">Scan target card or select an organ to visualize 3D degradation.</p>
-      <button class="btn-start" onclick="startApp()">Start AR Camera</button>
+      <p class="welcome-desc">Scan the target card. The system will detect the organ and show a 3D view automatically.</p>
+      <button class="btn-start" onclick="startApp()" aria-label="Start AR Camera">Start AR Camera</button>
     </div>
   </div>
 
@@ -306,26 +338,19 @@
     <header class="ar-top-bar">
       <div class="ar-top-row">
         <div class="organ-badge">
-          <span id="active-organ-title">HEART</span>
+          <span id="organ-icon">🔬</span>
+          <span id="active-organ-title">—</span>
           <span id="active-health-chip" class="chip green">100% HEALTH</span>
         </div>
       </div>
-      <div class="manual-selector-bar">
-        <button class="manual-pill" onclick="activateOrgan(0)">Brain</button>
-        <button class="manual-pill" onclick="activateOrgan(1)">Kidneys</button>
-        <button class="manual-pill" onclick="activateOrgan(2)">Lungs</button>
-        <button class="manual-pill is-active" onclick="activateOrgan(3)">Heart</button>
-        <button class="manual-pill" onclick="activateOrgan(4)">Liver</button>
-        <button class="manual-pill" onclick="activateOrgan(5)">Stomach</button>
-        <button class="manual-pill" onclick="activateOrgan(6)">Eyes</button>
-      </div>
+      <!-- manual selector removed: targets are chosen by image-tracking automatically -->
     </header>
 
     <div id="bottom-sheet" class="bottom-sheet collapsed">
       <div class="sheet-handle-bar" onclick="toggleSheet()">
         <div class="drag-indicator"></div>
         <div class="summary-line">
-          <span>1 Year Exposure</span>
+          <span id="exposure-line">1 Year Exposure</span>
           <span>▲ Expand</span>
         </div>
       </div>
@@ -337,7 +362,7 @@
             <button class="chip-toggle">🚬 Smoking</button>
           </div>
         </div>
-        <input type="range" min="1" max="20" value="1">
+        <input type="range" min="1" max="20" value="1" aria-label="Exposure years">
         <div class="symptom-card">
           <ul id="symptom-list">
             <li>Episodic resting heart rate elevation</li>
@@ -359,7 +384,7 @@
     <a-light type="ambient" intensity="1.5"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
-    <!-- Target Node 3: Heart with instant WebGL procedural fallback mesh -->
+    <!-- Target Node 0: Brain -->
     <a-entity mindar-image-target="targetIndex: 0" id="arTargetNode0">
       <a-sphere radius="0.3" color="#38bdf8"></a-sphere>
     </a-entity>
@@ -391,13 +416,17 @@
   </a-scene>
 
   <script>
+    // Defensive: if MindAR is not available, ensure app doesn't crash
     document.addEventListener("DOMContentLoaded", () => {
+      // Ensure nodes start hidden so they only appear when the system tells us they're found
       for (let i = 0; i <= 6; i++) {
         const node = document.getElementById(`arTargetNode${i}`);
-        if (node) {
-          node.addEventListener("targetFound", () => activateOrgan(i));
-        }
+        if (node && node.object3D) node.object3D.visible = false;
       }
+
+      // If the MindAR system fails to attach events, log to help debugging
+      const scene = document.querySelector('a-scene');
+      if (!scene) console.warn('A-Frame scene missing');
     });
   </script>
 </body>
