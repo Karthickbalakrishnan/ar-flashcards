@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>OrganoAR Education Suite — Real-time WebAR Engine</title>
+  <title>OrganoAR Education Suite — Instant Caching & Bulletproof UX</title>
 
   <!-- Stable WebAR Core Libraries -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -37,6 +37,7 @@
       color: var(--sys-text);
     }
 
+    /* Force WebGL Canvas Transparency Over Native Camera Feed */
     a-scene, .a-canvas {
       position: absolute !important;
       inset: 0 !important;
@@ -54,6 +55,7 @@
       z-index: 0 !important;
     }
 
+    /* Onboarding & Scholar Header Screen */
     #welcomeGate {
       position: fixed;
       inset: 0;
@@ -88,38 +90,94 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .scholar-name { font-size: 1.125rem; font-weight: 700; color: var(--sys-text); }
+    .scholar-name { font-size: 1.125rem; font-weight: 700; color: var(--sys-text); letter-spacing: -0.01em; }
     .scholar-title { font-size: 0.8125rem; color: var(--sys-primary); font-weight: 600; }
+    .scholar-org { font-size: 0.75rem; color: var(--sys-subtext); font-weight: 500; }
 
-    .welcome-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 8px 0; }
+    .welcome-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.02em; }
     .welcome-desc { font-size: 0.875rem; color: var(--sys-subtext); margin: 0 0 28px 0; line-height: 1.5; }
 
-    .btn-start {
+    .sso-stack { display: flex; flex-direction: column; gap: 12px; }
+
+    .btn-sso {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
       width: 100%;
-      padding: 16px;
-      background: var(--sys-primary);
-      border: none;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--sys-border);
       border-radius: 16px;
-      color: #020617;
-      font-size: 1rem;
-      font-weight: 700;
+      color: var(--sys-text);
+      font-size: 0.9375rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: transform 0.1s ease;
+      transition: background 0.2s ease, transform 0.1s ease;
     }
 
-    .btn-start:active { transform: scale(0.98); }
+    .btn-sso:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
 
+    /* Lightweight Instant Scanning Feedback Overlay */
+    #scanRadar {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 90;
+      pointer-events: none;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .radar-ring {
+      width: 80px;
+      height: 80px;
+      border: 2px dashed rgba(56, 189, 248, 0.7);
+      border-radius: 50%;
+      animation: radarPulse 1.2s infinite linear;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes radarPulse {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      50% { transform: scale(1.05); opacity: 1; border-color: var(--sys-primary); }
+      100% { transform: scale(0.95); opacity: 0.5; }
+    }
+
+    .radar-text {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--sys-border);
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--sys-primary);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Responsive Mobile AR Overlay Structure */
     #ar-ui-container {
       position: fixed;
       inset: 0;
       z-index: 100;
-      display: none; /* shown when a target is found */
+      pointer-events: none;
+      display: none;
       flex-direction: column;
       justify-content: space-between;
       padding: 16px;
+    }
+
+    #ar-ui-container > * {
       pointer-events: auto;
     }
 
+    /* 1. Top Bar: Focus View Toggle, Active Title & Instant Manual Selector */
     .ar-top-bar {
       display: flex;
       flex-direction: column;
@@ -130,19 +188,30 @@
       border: 1px solid var(--sys-border);
       padding: 10px 16px;
       border-radius: 20px;
+      box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.3);
       width: 100%;
       max-width: 420px;
       margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
     }
 
-    .ar-top-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-    .organ-badge { display: flex; align-items: center; gap: 10px; }
-    #active-organ-title { font-size: 0.9375rem; font-weight: 700; color: var(--sys-text); }
+    .ar-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-    #organ-icon { font-size: 1.4rem; display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; background: rgba(255,255,255,0.03); border-radius: 10px; }
+    .organ-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #active-organ-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--sys-text);
+      letter-spacing: 0.03em;
+    }
 
     .chip {
       font-size: 0.6875rem;
@@ -151,7 +220,52 @@
       border-radius: var(--radius-pill);
       text-transform: uppercase;
     }
+    .chip.green { background: rgba(74, 222, 128, 0.15); color: var(--sys-success); border: 1px solid rgba(74, 222, 128, 0.3); }
+    .chip.yellow { background: rgba(250, 204, 21, 0.15); color: var(--sys-warning); border: 1px solid rgba(250, 204, 21, 0.3); }
+    .chip.red { background: rgba(251, 113, 133, 0.15); color: var(--sys-danger); border: 1px solid rgba(251, 113, 133, 0.3); }
 
+    .glass-icon-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--sys-border);
+      color: var(--sys-primary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .glass-icon-btn:active { background: rgba(255, 255, 255, 0.18); }
+
+    /* Instant Manual Selector Safety Net for Classroom Testing */
+    .manual-selector-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-top: 4px;
+      scrollbar-width: none;
+    }
+    .manual-selector-bar::-webkit-scrollbar { display: none; }
+
+    .manual-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--sys-border);
+      color: var(--sys-subtext);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .manual-pill.is-active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--sys-primary);
+      color: var(--sys-text);
+    }
+
+    /* 2. Progressive Disclosure Bottom Sheet */
     .bottom-sheet {
       background: var(--sys-surface-glass);
       backdrop-filter: blur(24px);
@@ -162,43 +276,103 @@
       max-width: 420px;
       margin: 0 auto;
       box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
-      pointer-events: auto !important;
-      transition: transform 260ms cubic-bezier(.22,.9,.34,1);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
     }
 
     .sheet-handle-bar {
-      padding: 14px 20px;
+      padding: 12px 20px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 6px;
+      background: rgba(255, 255, 255, 0.02);
     }
 
-    .drag-indicator { width: 36px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.25); }
-    .summary-line { display: flex; justify-content: space-between; width: 100%; align-items: center; font-size: 0.8125rem; font-weight: 600; color: var(--sys-subtext); }
+    .drag-indicator {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.25);
+    }
 
-    .bottom-sheet.collapsed { transform: translateY(56%); }
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      align-items: center;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--sys-subtext);
+    }
+
+    .expand-icon {
+      color: var(--sys-primary);
+      font-size: 0.75rem;
+      transition: transform 0.3s ease;
+    }
+
+    /* Sheet Collapse/Expand Mechanics */
+    .bottom-sheet.collapsed .sheet-content {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      pointer-events: none;
+    }
+    .bottom-sheet.collapsed .expand-icon {
+      transform: rotate(0deg);
+    }
+
+    .bottom-sheet:not(.collapsed) .expand-icon {
+      transform: rotate(180deg);
+    }
 
     .sheet-content {
+      max-height: 360px;
+      opacity: 1;
       padding: 0 20px 20px 20px;
       display: flex;
       flex-direction: column;
       gap: 14px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
     }
 
-    .chip-group { display: flex; gap: 8px; }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--sys-subtext);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .chip-group {
+      display: flex;
+      gap: 8px;
+    }
+
     .chip-toggle {
       flex: 1;
-      padding: 8px;
+      padding: 8px 10px;
       border: 1px solid var(--sys-border);
       background: rgba(255, 255, 255, 0.03);
       color: var(--sys-subtext);
       font-size: 0.78125rem;
+      font-weight: 500;
       border-radius: 12px;
       cursor: pointer;
       text-align: center;
+      transition: all 0.2s ease;
     }
+
     .chip-toggle.active {
       background: rgba(56, 189, 248, 0.15);
       border-color: var(--sys-primary);
@@ -206,296 +380,798 @@
       font-weight: 600;
     }
 
-    input[type=range] { width: 100%; accent-color: var(--sys-primary); }
-    .symptom-card { background: rgba(0, 0, 0, 0.3); border: 1px solid var(--sys-border); border-radius: 14px; padding: 12px; }
-    #symptom-list { margin: 0; padding-left: 16px; font-size: 0.78125rem; color: var(--sys-text); }
-
-    /* debug overlay */
-    #debugOverlay {
-      position: fixed;
-      right: 12px;
-      top: 12px;
-      z-index: 1200;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      padding: 8px 10px;
-      border-radius: 10px;
-      font-size: 12px;
-      pointer-events: none;
-      max-width: 220px;
-      backdrop-filter: blur(6px);
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--sys-text);
     }
 
-    /* focus and accessibility */
-    button:focus { outline: 3px solid rgba(56,189,248,0.18); outline-offset: 2px; }
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.12);
+      accent-color: var(--sys-primary);
+      cursor: pointer;
+      margin: 4px 0;
+    }
+
+    .slider-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.6875rem;
+      color: var(--sys-subtext);
+    }
+
+    .symptom-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--sys-border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .symptom-card h4 {
+      margin: 0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--sys-primary);
+      letter-spacing: 0.05em;
+    }
+
+    #symptom-list {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 0.78125rem;
+      color: var(--sys-text);
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    /* Clean Canvas / Focus View Mode */
+    body.clean-canvas #ar-ui-container {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #exit-focus-toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--sys-primary);
+      color: var(--sys-primary);
+      padding: 8px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      z-index: 1000;
+      display: none;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    body.clean-canvas #exit-focus-toast {
+      display: block;
+    }
   </style>
 
   <script>
+    // Clinical-Grade Organ Data Model mapped across 4 precise educational timelines
     const ORGAN_DATA = {
-      BRAIN: { name: "Brain", substances: ["alcohol", "smoking", "narcotics"], emoji: "🧠" },
-      KIDNEYS: { name: "Kidneys", substances: ["alcohol", "narcotics", "smoking"], emoji: "🫀" },
-      LUNGS: { name: "Lungs", substances: ["smoking", "narcotics", "alcohol"], emoji: "🫁" },
-      HEART: { name: "Heart", substances: ["alcohol", "smoking", "narcotics"], emoji: "❤️" },
-      LIVER: { name: "Liver", substances: ["alcohol", "narcotics", "smoking"], emoji: "🟤" },
-      STOMACH: { name: "Stomach", substances: ["alcohol", "smoking", "narcotics"], emoji: "🍽️" },
-      EYES: { name: "Eyes", substances: ["narcotics", "alcohol", "smoking"], emoji: "👁️" }
+      BRAIN: {
+        name: "Brain",
+        substances: ["alcohol", "smoking", "narcotics"],
+        annotations: [
+          { text: "FRONTAL CORTEX", origin: "0 0.1 0", target: "0 0.5 0.5", sub: "Executive function & impulse control" },
+          { text: "LIMBIC SYSTEM", origin: "0 0 0", target: "-0.5 0.3 0", sub: "Dopamine reward & emotional regulation" },
+          { text: "CEREBELLUM", origin: "0 -0.1 0", target: "0 -0.2 -0.5", sub: "Motor coordination & balance control" }
+        ],
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Dopamine receptor downregulation", "Episodic short-term memory fatigue", "Initial mood fluctuations"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Beginning gray matter volume reduction", "Persistent sleep architecture disruption", "Elevated impulsive decision making"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Pronounced cortical thinning & white matter damage", "Working memory consolidation failure", "Compulsive habit reinforcement"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Severe structural brain atrophy", "Enlarged ventricles & cognitive decline", "Permanent Korsakoff / dementia risk"] }
+        }
+      },
+      LUNGS: {
+        name: "Lungs",
+        substances: ["smoking", "narcotics", "alcohol"],
+        annotations: [
+          { text: "UPPER BRONCHI", origin: "0 0.1 0", target: "0 0.5 0", sub: "Epithelial tissue lining & mucus defense" },
+          { text: "ALVEOLAR CLUSTERS", origin: "-0.1 0 0", target: "-0.6 0 0.3", sub: "Microscopic gas exchange units (O2/CO2)" },
+          { text: "PLEURAL MEMBRANE", origin: "0.1 -0.1 0", target: "0.6 -0.3 -0.3", sub: "Protective chest wall lining & expansion" }
+        ],
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Cilia paralysis & increased morning mucus", "Mild chronic smoker's cough", "Slight exertion breathlessness"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Goblet cell hyperplasia & airway narrowing", "Reduced vital lung capacity", "Frequent respiratory infections"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Alveolar septal wall breakdown (emphysema precursors)", "Persistent hypoxemia during exercise", "Chronic bronchitis staging"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Established COPD & irreversible scarring", "Severe respiratory failure risk", "High pulmonary carcinoma probability"] }
+        }
+      },
+      HEART: {
+        name: "Heart",
+        substances: ["alcohol", "smoking", "narcotics"],
+        annotations: [
+          { text: "AORTIC ARCH", origin: "0 0.15 0", target: "0 0.5 0", sub: "Major systemic blood distribution artery" },
+          { text: "LEFT VENTRICLE", origin: "-0.1 0 0", target: "-0.5 0 0.3", sub: "Primary high-pressure pumping chamber" },
+          { text: "CORONARY ARTERY", origin: "0.1 0.05 0", target: "0.5 0.2 -0.3", sub: "Myocardial blood supply vessel network" }
+        ],
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Episodic resting heart rate elevation", "Transient blood pressure spikes", "Vascular endothelial irritation"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Early atherosclerotic plaque deposition", "Myocardial wall stiffness increase", "Reduced heart rate variability"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Left ventricular hypertrophy (thickening)", "Compromised coronary perfusion", "Alcoholic cardiomyopathy indicators"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Congestive heart failure vulnerability", "High myocardial infarction risk", "Ischemic stroke susceptibility"] }
+        }
+      },
+      LIVER: {
+        name: "Liver",
+        substances: ["alcohol", "narcotics", "smoking"],
+        annotations: [
+          { text: "RIGHT HEPATIC LOBE", origin: "0.1 0.1 0", target: "0.5 0.3 0", sub: "Main metabolic filtration & detox zone" },
+          { text: "PORTAL VEIN TRACT", origin: "-0.1 0 0", target: "-0.4 0 0.3", sub: "Primary visceral blood supply channel" },
+          { text: "FIBROTIC SEPTA", origin: "0 -0.1 0", target: "0 -0.4 -0.3", sub: "Scar tissue accumulation matrix" }
+        ],
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Hepatic steatosis (fatty liver infiltration)", "Elevated liver enzyme biomarkers (AST/ALT)", "Mild metabolic fatigue"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Chronic inflammatory hepatitis staging", "Hepatocyte oxidative stress damage", "Reduced lipid processing capacity"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Extensive collagen scar tissue deposits", "Sinusoidal capillarization & restricted flow", "Persistent upper abdominal discomfort"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Nodular cirrhosis and organ shrinkage", "Portal hypertension & fluid retention", "Complete hepatic failure & jaundice"] }
+        }
+      },
+      STOMACH: {
+        name: "Stomach",
+        substances: ["alcohol", "smoking", "narcotics"],
+        annotations: [
+          { text: "FUNDUS MUCOSA", origin: "0 0.15 0", target: "0 0.5 0", sub: "Acid secretion & mucosal barrier" },
+          { text: "GASTRIC BODY", origin: "-0.1 0 0", target: "-0.5 0 0.3", sub: "Enzymatic food breakdown zone" },
+          { text: "PYLORIC SPHINCTER", origin: "0.1 -0.1 0", target: "0.5 -0.3 -0.3", sub: "Duodenal exit valve control" }
+        ],
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Acute mucosal lining irritation", "Frequent acid reflux (GERD) episodes", "Episodic dyspepsia & heartburn"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Parietal cell degradation & thinning barrier", "Gastric mucosal erosion spots", "Nutrient absorption inefficiencies"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Chronic peptic ulceration development", "Occult gastrointestinal bleeding risk", "Severe vitamin B12 / thiamine malabsorption"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Atrophic gastritis & intestinal metaplasia", "Significant gastric perforation risk", "Elevated gastric malignancy probability"] }
+        }
+      },
+      KIDNEYS: {
+        name: "Kidneys",
+        substances: ["alcohol", "narcotics", "smoking"],
+        annotations: [
+          { text: "RENAL CORTEX", origin: "0 0.1 0.1", target: "0 0.4 0.3", sub: "Glomerular blood filtration network" },
+          { text: "MEDULLARY PYRAMIDS", origin: "-0.1 -0.05 0", target: "-0.4 -0.2 0", sub: "Tubular reabsorption & concentration" },
+          { text: "RENAL PELVIS", origin: "0.1 -0.1 0", target: "0.4 -0.3 0", sub: "Urine collection funnel pathway" }
+        ],
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Glomerular filtration rate (GFR) fluctuations", "Systemic dehydration strain", "Episodic electrolyte imbalances"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Early microvascular endothelial damage", "Trace proteinuria (albumin leakage)", "Reduced renal clearance efficiency"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Glomerulosclerosis (scarring of filters)", "Chronic tubular ischemia", "Persistent hypertension compounding damage"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Chronic Kidney Disease (CKD) progression", "Uremic toxin accumulation in blood", "Dialysis dependency risk"] }
+        }
+      },
+      EYES: {
+        name: "Eyes",
+        substances: ["narcotics", "alcohol", "smoking"],
+        annotations: [
+          { text: "CORNEA & LENS", origin: "0 0.1 0.1", target: "0 0.4 0.4", sub: "Light refraction & focusing media" },
+          { text: "RETINAL MACULA", origin: "-0.1 0 0", target: "-0.5 0 0", sub: "High-acuity central vision zone" },
+          { text: "OPTIC NERVE", origin: "0 -0.1 -0.1", target: "0 -0.3 -0.5", sub: "Visual signal transmission cable to brain" }
+        ],
+        timelines: {
+          "1-3": { badge: "Reversible (Mild)", colorClass: "green", desc: ["Chronic dry eye syndrome", "Mild pupillary response sluggishness", "Night vision accommodation strain"] },
+          "3-5": { badge: "Progressive (Moderate)", colorClass: "yellow", desc: ["Retinal microvasculopathy changes", "Early lenticular protein oxidation", "Contrast sensitivity degradation"] },
+          "5-10": { badge: "Degenerative (Severe)", colorClass: "red", desc: ["Accelerated cataract formation risk", "Macular capillary restriction", "Peripheral visual field fatigue"] },
+          "10-20+": { badge: "Irreversible (Critical)", colorClass: "red", desc: ["Ischemic optic neuropathy", "Permanent visual acuity loss", "Severe optic nerve fiber atrophy"] }
+        }
+      }
     };
 
-    const TARGET_MAP = { 0: "BRAIN", 1: "KIDNEYS", 2: "LUNGS", 3: "HEART", 4: "LIVER", 5: "STOMACH", 6: "EYES" };
+    // Explicit Target ID Mapping Dictionary (7 targets, index 0 is Brain)
+    const TARGET_MAP = {
+      0: "BRAIN",
+      1: "LUNGS",
+      2: "HEART",
+      3: "LIVER",
+      4: "STOMACH",
+      5: "KIDNEYS",
+      6: "EYES"
+    };
 
-    const AppState = { activeKey: null, activeSubstances: new Set(["alcohol"]), years: 1 };
+    const MODEL_SOURCES = {
+      BRAIN: "#brainModel",
+      LUNGS: "#lungModel",
+      HEART: "#heartModel",
+      LIVER: "#liverModel",
+      STOMACH: "#stomachModel",
+      KIDNEYS: "#kidneyModel",
+      EYES: "#eyeModel"
+    };
+
+    // Pre-instantiated object pool for instant zero-latency switching
+    let organCache = {};
+    let currentTargetIndex = null;
+    let consecutiveTrackingFrames = {};
 
     function startApp() {
       document.getElementById("welcomeGate").style.display = "none";
       const sceneEl = document.querySelector("a-scene");
-      // Start MindAR image-tracking system
-      const arSystem = sceneEl.systems["mindar-image-system"];
-      if (arSystem && typeof arSystem.start === 'function') {
-        arSystem.start();
+      
+      if (sceneEl.hasLoaded) {
+        initARSystem(sceneEl);
+      } else {
+        sceneEl.addEventListener("loaded", () => initARSystem(sceneEl));
       }
-
-      // Ensure UI is hidden until a target is found
-      document.getElementById("ar-ui-container").style.display = "none";
-
-      // show scanning debug UI
-      const dbg = document.getElementById('debugOverlay');
-      if (dbg) dbg.innerText = 'Scanning for targets...';
     }
 
+    function initARSystem(sceneEl) {
+      if (sceneEl.renderer) {
+        sceneEl.renderer.setClearColor(0x000000, 0);
+      }
+      const arSystem = sceneEl.systems["mindar-image-system"];
+      if (arSystem) {
+        arSystem.start();
+      } else {
+        setTimeout(() => {
+          const retrySystem = sceneEl.systems["mindar-image-system"];
+          if (retrySystem) retrySystem.start();
+        }, 1000);
+      }
+    }
+
+    // Fast multi-frame consensus tracking (reduced threshold to 4 frames for snappier lock-on)
+    function handleTargetTrackingTick(targetIndex, isFound) {
+      const radarEl = document.getElementById("scanRadar");
+      const radarText = document.getElementById("radarText");
+
+      if (!consecutiveTrackingFrames[targetIndex]) {
+        consecutiveTrackingFrames[targetIndex] = 0;
+      }
+
+      if (isFound) {
+        consecutiveTrackingFrames[targetIndex]++;
+        radarEl.style.display = "flex";
+        radarText.innerText = `Locking ${TARGET_MAP[targetIndex]}...`;
+
+        if (consecutiveTrackingFrames[targetIndex] === 4) {
+          radarEl.style.display = "none";
+          activateOrgan(targetIndex);
+        }
+      } else {
+        consecutiveTrackingFrames[targetIndex] = 0;
+        radarEl.style.display = "none";
+      }
+    }
+
+    // Instant Zero-Latency Activation via DOM Caching
     function activateOrgan(targetIndex) {
       const organKey = TARGET_MAP[targetIndex];
       if (!organKey) return;
 
+      currentTargetIndex = targetIndex;
       AppState.activeKey = organKey;
 
-      // show only the matched AR node and hide others
+      const targetNode = document.getElementById(`arTargetNode${targetIndex}`);
+      if (!targetNode) return;
+
+      // Hide all other cached models across target nodes
       for (let i = 0; i <= 6; i++) {
         const node = document.getElementById(`arTargetNode${i}`);
-        if (node && node.object3D) {
+        if (node && organCache[i]) {
           node.object3D.visible = (i === targetIndex);
         }
       }
 
-      // update top UI with organ name + emoji
-      const titleEl = document.getElementById("active-organ-title");
-      const iconEl = document.getElementById("organ-icon");
-      titleEl.innerText = ORGAN_DATA[organKey].name || organKey;
-      iconEl.innerText = ORGAN_DATA[organKey].emoji || "🔬";
+      // If already cached and attached, simply make visible
+      if (organCache[targetIndex]) {
+        organCache[targetIndex].object3D.visible = true;
+      } else {
+        // Build once and cache
+        const pivotEl = document.createElement('a-entity');
+        pivotEl.setAttribute('organ-pivot-anchor', '');
 
-      // show the UI overlay
+        const modelEl = document.createElement('a-gltf-model');
+        modelEl.setAttribute('class', 'ar-model');
+        modelEl.setAttribute('data-key', organKey);
+        modelEl.setAttribute('src', MODEL_SOURCES[organKey]);
+        pivotEl.appendChild(modelEl);
+
+        const annotEl = document.createElement('a-entity');
+        annotEl.setAttribute('spatial-annotations', `organKey: ${organKey}`);
+        pivotEl.appendChild(annotEl);
+
+        targetNode.appendChild(pivotEl);
+        organCache[targetIndex] = pivotEl;
+      }
+
+      updateUIHeader(organKey);
+      updateManualSelectorActiveState(targetIndex);
+      window.updateUIAndShaders();
+    }
+
+    // Instant Manual Override Safety Net
+    function forceSelectOrgan(organKey, targetIndex) {
+      console.log(`[Manual Override] Forcing organ load: ${organKey}`);
+      document.getElementById("scanRadar").style.display = "none";
+      activateOrgan(targetIndex);
+    }
+
+    function updateManualSelectorActiveState(targetIndex) {
+      const pills = document.querySelectorAll('.manual-pill');
+      pills.forEach((pill, idx) => {
+        if (idx === targetIndex) {
+          pill.classList.add('is-active');
+        } else {
+          pill.classList.remove('is-active');
+        }
+      });
+    }
+
+    function handleTargetLost(targetIndex) {
+      consecutiveTrackingFrames[targetIndex] = 0;
+      document.getElementById("scanRadar").style.display = "none";
+      
+      // Keep model cached and active on the marker unless another target is found
+    }
+
+    function updateUIHeader(organKey) {
+      const organObj = ORGAN_DATA[organKey];
+      if (!organObj) return;
+
+      document.getElementById("active-organ-title").innerText = organObj.name.toUpperCase();
+
+      const substanceGrid = document.getElementById("substanceGrid");
+      substanceGrid.innerHTML = "";
+      organObj.substances.forEach((sub) => {
+        const btn = document.createElement("button");
+        btn.className = `chip-toggle ${AppState.activeSubstances.has(sub) ? 'active' : ''}`;
+        btn.dataset.substance = sub;
+        btn.innerText = sub === "alcohol" ? `🍺 Alcohol` : sub === "narcotics" ? `💊 Narcotics` : `🚬 Smoking`;
+        substanceGrid.appendChild(btn);
+      });
+
       document.getElementById("ar-ui-container").style.display = "flex";
-
-      // update health chip text (placeholder — you can compute actual health values)
-      const healthChip = document.getElementById("active-health-chip");
-      if (healthChip) healthChip.innerText = "100% HEALTH";
-
-      // update debug overlay
-      const dbg = document.getElementById('debugOverlay');
-      if (dbg) dbg.innerText = `Detected: ${organKey} (index ${targetIndex})`;
-      console.log(`[AR] targetFound index=${targetIndex} organ=${organKey}`);
-
-      // visual flash on organ icon to indicate detection
-      if (iconEl) {
-        iconEl.style.transition = 'transform 220ms ease, box-shadow 220ms ease';
-        iconEl.style.transform = 'scale(1.12)';
-        iconEl.style.boxShadow = '0 6px 18px rgba(56,189,248,0.18)';
-        setTimeout(() => {
-          iconEl.style.transform = '';
-          iconEl.style.boxShadow = '';
-        }, 420);
-      }
     }
 
-    function deactivateAllNodes() {
-      for (let i = 0; i <= 6; i++) {
-        const node = document.getElementById(`arTargetNode${i}`);
-        if (node && node.object3D) node.object3D.visible = false;
-      }
-      AppState.activeKey = null;
-      document.getElementById("ar-ui-container").style.display = "none";
-
-      const dbg = document.getElementById('debugOverlay');
-      if (dbg) dbg.innerText = 'Scanning for targets...';
-    }
-
-    function toggleSheet() {
-      document.getElementById("bottom-sheet").classList.toggle("collapsed");
-    }
-
-    // Utility — called once DOM is ready to wire events
     document.addEventListener("DOMContentLoaded", () => {
-      // add debug overlay element (keeps visible even if we update file later)
-      let dbg = document.getElementById('debugOverlay');
-      if (!dbg) {
-        dbg = document.createElement('div');
-        dbg.id = 'debugOverlay';
-        dbg.innerText = 'Idle';
-        document.body.appendChild(dbg);
-      }
+      const activeHealthChip = document.getElementById("active-health-chip");
+      const sheetPhaseSummary = document.getElementById("sheet-phase-summary");
+      const symptomList = document.getElementById("symptom-list");
+      const anatomyCardTitle = document.getElementById("anatomy-card-title");
+      const sliderYearLabel = document.getElementById("slider-year-label");
+      const exposureSlider = document.getElementById("timeline-slider");
+      const substanceGrid = document.getElementById("substanceGrid");
 
-      // Initially hide all target nodes so nothing flashes until detection
-      for (let i = 0; i <= 6; i++) {
-        const node = document.getElementById(`arTargetNode${i}`);
-        if (node && node.object3D) node.object3D.visible = false;
+      const updateUIAndShaders = () => {
+        const organObj = ORGAN_DATA[AppState.activeKey];
+        if (!organObj) return;
 
-        // hook into MindAR target events — targetFound/targetLost fire on the a-entity
-        if (node) {
-          node.addEventListener("targetFound", (evt) => {
-            console.log('[AR] event targetFound', i, evt);
-            // when the image target is found, activate the corresponding organ view
-            // force visible true here to ensure A-Frame displays it
-            if (node.object3D) node.object3D.visible = true;
-            activateOrgan(i);
-          });
-          node.addEventListener("targetLost", (evt) => {
-            console.log('[AR] event targetLost', i, evt);
-            // when lost, hide the overlay and the mesh
-            // but only clear if the lost target matches the active one
-            if (AppState.activeKey === TARGET_MAP[i]) {
-              // small delay so flicker doesn't hide immediately if reacquired quickly
-              setTimeout(() => {
-                // hide the node explicitly
-                if (node && node.object3D) node.object3D.visible = false;
-                // if not reacquired, clear UI
-                if (AppState.activeKey === TARGET_MAP[i]) deactivateAllNodes();
-              }, 300);
-            } else {
-              // ensure node hidden when lost
-              if (node && node.object3D) node.object3D.visible = false;
+        let timelineKey = "1-3";
+        if (AppState.years >= 3 && AppState.years < 5) timelineKey = "3-5";
+        else if (AppState.years >= 5 && AppState.years < 10) timelineKey = "5-10";
+        else if (AppState.years >= 10) timelineKey = "10-20+";
+
+        const timelineData = organObj.timelines[timelineKey];
+        const activeCount = Math.max(1, AppState.activeSubstances.size);
+        const healthScore = Math.max(12, Math.round(100 - (AppState.years * activeCount * 3.8)));
+
+        sheetPhaseSummary.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''} (${timelineData.badge})`;
+        
+        activeHealthChip.innerText = `${healthScore}% HEALTH`;
+        activeHealthChip.className = `chip ${timelineData.colorClass}`;
+
+        anatomyCardTitle.innerText = `${organObj.name} Parts & ${timelineKey} Yr Impact`;
+        symptomList.innerHTML = "";
+        timelineData.desc.forEach(symptom => {
+          const li = document.createElement("li");
+          li.innerText = symptom;
+          symptomList.appendChild(li);
+        });
+
+        sliderYearLabel.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
+
+        const yearRatio = AppState.years / 20.0;
+        document.querySelectorAll(".ar-model").forEach((modelEl) => {
+          if (modelEl.dataset.key !== AppState.activeKey) return;
+          
+          const mesh = modelEl.getObject3D('mesh');
+          if (!mesh) return;
+
+          mesh.traverse((node) => {
+            if (node.isMesh && node.material) {
+              let color = new THREE.Color(0xffffff);
+              let roughness = 0.4;
+
+              if (timelineKey === "1-3") {
+                color.lerp(new THREE.Color(0x38bdf8), yearRatio * 0.4 * activeCount);
+                roughness = 0.3;
+              } else if (timelineKey === "3-5") {
+                color.lerp(new THREE.Color(0xfacc15), yearRatio * 0.6 * activeCount);
+                roughness = 0.5;
+              } else if (timelineKey === "5-10") {
+                color.lerp(new THREE.Color(0xfb923c), yearRatio * 0.8 * activeCount);
+                roughness = 0.7;
+              } else {
+                color.lerp(new THREE.Color(0xfb7185), yearRatio * 0.95 * activeCount);
+                roughness = 0.9;
+              }
+              color.multiplyScalar(1.0 - (yearRatio * 0.3 * activeCount));
+
+              node.material.color = color;
+              node.material.roughness = roughness;
+              node.material.needsUpdate = true;
             }
           });
+        });
+      };
+
+      window.updateUIAndShaders = updateUIAndShaders;
+
+      // Bind all 7 target nodes
+      for (let i = 0; i <= 6; i++) {
+        const node = document.getElementById(`arTargetNode${i}`);
+        if (node) {
+          node.addEventListener("targetFound", () => handleTargetTrackingTick(i, true));
+          node.addEventListener("targetLost", () => handleTargetLost(i));
         }
       }
 
-      // Listen to scene-level MindAR events (optional) to debug
-      const sceneEl = document.querySelector('a-scene');
-      if (sceneEl) {
-        sceneEl.addEventListener('arReady', () => console.log('AR system ready'));
-        sceneEl.addEventListener('cameraPermissionRequested', () => console.log('camera permission requested'));
-        sceneEl.addEventListener('cameraPermissionGranted', () => console.log('camera permission granted'));
-        sceneEl.addEventListener('cameraPermissionDenied', () => console.log('camera permission denied'));
-      }
+      substanceGrid.addEventListener("click", (e) => {
+        const chip = e.target.closest(".chip-toggle");
+        if (!chip) return;
 
-      // Helpful tip: print system state if available
-      try {
-        const sys = sceneEl.systems && sceneEl.systems['mindar-image-system'];
-        if (sys) {
-          console.log('[AR] mindar-image-system available', sys);
+        const substance = chip.dataset.substance;
+        if (AppState.activeSubstances.has(substance)) {
+          if (AppState.activeSubstances.size > 1) {
+            AppState.activeSubstances.delete(substance);
+            chip.classList.remove("active");
+          }
         } else {
-          console.warn('[AR] mindar-image-system not available on scene.systems');
+          AppState.activeSubstances.add(substance);
+          chip.classList.add("active");
         }
-      } catch (e) {
-        console.warn('[AR] sys check failed', e);
-      }
+
+        updateUIAndShaders();
+      });
+
+      exposureSlider.addEventListener("input", (e) => {
+        AppState.years = parseInt(e.target.value, 10);
+        updateUIAndShaders();
+      });
     });
+
+    const AppState = {
+      activeKey: "BRAIN",
+      activeSubstances: new Set(["alcohol"]),
+      years: 1
+    };
   </script>
 </head>
 <body>
 
+  <!-- Onboarding & Scholar Header Screen -->
   <div id="welcomeGate">
     <div class="welcome-card">
       <div class="scholar-meta">
-        <span class="scholar-name">OrganoAR Education Suite</span>
-        <span class="scholar-title">Substance Pathology Visualizer</span>
+        <span class="scholar-name">Karthick B</span>
+        <span class="scholar-title">UX / HCI Research Scholar</span>
+        <span class="scholar-org">NITTTR Chennai</span>
       </div>
-      <p class="welcome-desc">Scan the target card. The system will detect the organ and show a 3D view automatically.</p>
-      <button class="btn-start" onclick="startApp()" aria-label="Start AR Camera">Start AR Camera</button>
+
+      <h1 class="welcome-title">OrganoAR Education Suite</h1>
+      <p class="welcome-desc">Authenticate to initialize pre-cached 3D models and instant zero-latency tracking.</p>
+
+      <div class="sso-stack">
+        <button class="btn-sso" onclick="startApp()">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          Continue with Google
+        </button>
+
+        <button class="btn-sso" onclick="startApp()">
+          <svg width="18" height="18" viewBox="0 0 23 23"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/></svg>
+          Continue with Microsoft
+        </button>
+      </div>
     </div>
   </div>
 
+  <!-- Lightweight Scanning Radar Feedback Overlay -->
+  <div id="scanRadar">
+    <div class="radar-ring">
+      <span style="font-size: 1.2rem;">🎯</span>
+    </div>
+    <div class="radar-text" id="radarText">Locking Target...</div>
+  </div>
+
+  <!-- Exit Focus Mode Toast -->
+  <div id="exit-focus-toast" onclick="toggleCleanCanvas()">
+    ✕ Exit Focus View
+  </div>
+
+  <!-- Responsive Mobile AR Overlay Structure -->
   <div id="ar-ui-container">
+
+    <!-- 1. Top Bar: Focus View Toggle, Active Title & Instant Manual Selector Pills -->
     <header class="ar-top-bar">
       <div class="ar-top-row">
         <div class="organ-badge">
-          <span id="organ-icon">🔬</span>
-          <span id="active-organ-title">—</span>
+          <span id="active-organ-title">BRAIN</span>
           <span id="active-health-chip" class="chip green">100% HEALTH</span>
         </div>
+        <button id="btn-focus-mode" class="glass-icon-btn" onclick="toggleCleanCanvas()">
+          👁️ Focus View
+        </button>
       </div>
-      <!-- manual selector removed: targets are chosen by image-tracking automatically -->
+      <!-- Instant Manual Selector Safety Net -->
+      <div class="manual-selector-bar" id="manualSelectorBar">
+        <button class="manual-pill is-active" onclick="forceSelectOrgan('BRAIN', 0)">Brain</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('LUNGS', 1)">Lungs</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('HEART', 2)">Heart</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('LIVER', 3)">Liver</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('STOMACH', 4)">Stomach</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('KIDNEYS', 5)">Kidneys</button>
+        <button class="manual-pill" onclick="forceSelectOrgan('EYES', 6)">Eyes</button>
+      </div>
     </header>
 
+    <!-- 2. Progressive Disclosure Bottom Sheet -->
     <div id="bottom-sheet" class="bottom-sheet collapsed">
-      <div class="sheet-handle-bar" onclick="toggleSheet()">
+      
+      <!-- Drag Handle / Tap Header -->
+      <div class="sheet-handle-bar" onclick="toggleBottomSheet()">
         <div class="drag-indicator"></div>
         <div class="summary-line">
-          <span id="exposure-line">1 Year Exposure</span>
-          <span>▲ Expand</span>
+          <span id="sheet-phase-summary">1–3 Years (Mild Impact)</span>
+          <span class="expand-icon">▲ Expand Anatomy & Impact</span>
         </div>
       </div>
+
+      <!-- Collapsible Extended Content Area -->
       <div class="sheet-content">
+        
+        <!-- Substance Multi-Select Toggle Chips -->
         <div class="control-group">
-          <div class="chip-group">
-            <button class="chip-toggle active">🍺 Alcohol</button>
-            <button class="chip-toggle">💊 Narcotics</button>
-            <button class="chip-toggle">🚬 Smoking</button>
+          <label>Active Habits (Poly-Substance):</label>
+          <div class="chip-group" id="substanceGrid">
+            <button class="chip-toggle active" data-substance="alcohol">🍺 Alcohol</button>
+            <button class="chip-toggle" data-substance="narcotics">💊 Narcotics</button>
+            <button class="chip-toggle" data-substance="smoking">🚬 Smoking</button>
           </div>
         </div>
-        <input type="range" min="1" max="20" value="1" aria-label="Exposure years">
+
+        <!-- Exposure Timeline Slider -->
+        <div class="control-group">
+          <div class="slider-header">
+            <span>Exposure Timeline</span>
+            <span id="slider-year-label">1 Year</span>
+          </div>
+          <input type="range" id="timeline-slider" min="1" max="20" value="1" step="1">
+          <div class="slider-ticks">
+            <span>1 Yr</span>
+            <span>3 Yrs</span>
+            <span>5 Yrs</span>
+            <span>10 Yrs</span>
+            <span>20+ Yrs</span>
+          </div>
+        </div>
+
+        <!-- Expanded Anatomical Parts & Clinical Impact Card -->
         <div class="symptom-card">
+          <h4 id="anatomy-card-title">Anatomical Regions & Degradation Impact</h4>
           <ul id="symptom-list">
-            <li>Episodic resting heart rate elevation</li>
-            <li>Transient blood pressure spikes</li>
+            <li>Dopamine receptor downregulation</li>
+            <li>Episodic short-term memory fatigue</li>
+            <li>Initial mood fluctuations</li>
           </ul>
         </div>
+
       </div>
     </div>
+
   </div>
 
+  <!-- WebAR Scene Engine configured with Preloading / Pre-caching Asset Pipeline -->
   <a-scene 
-    mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/examples/image-tracking/assets/card-example/card.mind; autoStart: false; uiScanning: yes;" 
-    embedded 
-    renderer="colorManagement: true; alpha: true; transparent: true;" 
+    mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: false; uiScanning: no;" 
+    embedded
+    color-space="sRGB" 
+    renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true; transparent: true;" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
+    
+    <a-assets>
+      <a-asset-item id="brainModel" src="./assets/models/brain.glb" preload="auto"></a-asset-item>
+      <a-asset-item id="lungModel" src="./assets/models/lung.glb" preload="auto"></a-asset-item>
+      <a-asset-item id="heartModel" src="./assets/models/heart.glb" preload="auto"></a-asset-item>
+      <a-asset-item id="liverModel" src="./assets/models/liver.glb" preload="auto"></a-asset-item>
+      <a-asset-item id="stomachModel" src="./assets/models/stomach.glb" preload="auto"></a-asset-item>
+      <a-asset-item id="kidneyModel" src="./assets/models/kidney.glb" preload="auto"></a-asset-item>
+      <a-asset-item id="eyeModel" src="./assets/models/eyes.glb" preload="auto"></a-asset-item>
+    </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-    <a-light type="ambient" intensity="1.5"></a-light>
+
+    <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
-    <!-- Target Node 0: Brain -->
-    <a-entity mindar-image-target="targetIndex: 0" id="arTargetNode0">
-      <a-sphere radius="0.3" color="#38bdf8"></a-sphere>
-    </a-entity>
-    <a-entity mindar-image-target="targetIndex: 1" id="arTargetNode1">
-      <a-sphere radius="0.3" color="#facc15"></a-sphere>
-    </a-entity>
-    <a-entity mindar-image-target="targetIndex: 2" id="arTargetNode2">
-      <a-sphere radius="0.3" color="#4ade80"></a-sphere>
-    </a-entity>
-    
-    <!-- Heart Node Target Index 3 -->
-    <a-entity mindar-image-target="targetIndex: 3" id="arTargetNode3">
-      <!-- 3D Heart Geometry Fallback Mesh -->
-      <a-entity id="heart3DMesh" position="0 0 0" rotation="0 0 0">
-        <a-octahedron radius="0.35" color="#ef4444" animation="property: scale; to: 1.1 1.1 1.1; dir: alternate; dur: 800; loop: true"></a-octahedron>
-        <a-cylinder radius="0.08" height="0.4" color="#cbd5e1" position="0 0.25 0"></a-cylinder>
-      </a-entity>
-    </a-entity>
-
-    <a-entity mindar-image-target="targetIndex: 4" id="arTargetNode4">
-      <a-sphere radius="0.3" color="#fb923c"></a-sphere>
-    </a-entity>
-    <a-entity mindar-image-target="targetIndex: 5" id="arTargetNode5">
-      <a-sphere radius="0.3" color="#a855f7"></a-sphere>
-    </a-entity>
-    <a-entity mindar-image-target="targetIndex: 6" id="arTargetNode6">
-      <a-sphere radius="0.3" color="#ec4899"></a-sphere>
-    </a-entity>
+    <!-- 7 Universal Target Anchor Nodes mapping indices 0 through 6 -->
+    <a-entity mindar-image-target="targetIndex: 0" id="arTargetNode0"></a-entity>
+    <a-entity mindar-image-target="targetIndex: 1" id="arTargetNode1"></a-entity>
+    <a-entity mindar-image-target="targetIndex: 2" id="arTargetNode2"></a-entity>
+    <a-entity mindar-image-target="targetIndex: 3" id="arTargetNode3"></a-entity>
+    <a-entity mindar-image-target="targetIndex: 4" id="arTargetNode4"></a-entity>
+    <a-entity mindar-image-target="targetIndex: 5" id="arTargetNode5"></a-entity>
+    <a-entity mindar-image-target="targetIndex: 6" id="arTargetNode6"></a-entity>
   </a-scene>
 
   <script>
-    // Defensive: if MindAR is not available, ensure app doesn't crash
-    document.addEventListener("DOMContentLoaded", () => {
-      // Ensure nodes start hidden so they only appear when the system tells us they're found
-      for (let i = 0; i <= 6; i++) {
-        const node = document.getElementById(`arTargetNode${i}`);
-        if (node && node.object3D) node.object3D.visible = false;
-      }
+    // Component registration for pivot anchor & touch gestures
+    AFRAME.registerComponent('organ-pivot-anchor', {
+      schema: { rotateSpeed: { type: 'number', default: 0.5 } },
+      init: function () {
+        this.lastX = 0;
+        this.lastY = 0;
+        this.initialPinchDistance = null;
 
-      // If the MindAR system fails to attach events, log to help debugging
-      const scene = document.querySelector('a-scene');
-      if (!scene) console.warn('A-Frame scene missing');
+        this.el.setAttribute('position', '0 0.35 0');
+
+        this.el.addEventListener('model-loaded', () => {
+          const mesh = this.el.getObject3D('mesh');
+          if (mesh) {
+            const box = new THREE.Box3().setFromObject(mesh);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            
+            mesh.position.sub(center);
+
+            const maxDim = Math.max(size.x, size.y, size.z);
+            if (maxDim > 0) {
+              const targetSize = 0.45;
+              const scaleFactor = targetSize / maxDim;
+              mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            }
+          }
+        });
+
+        window.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            this.lastX = e.touches[0].clientX;
+            this.lastY = e.touches[0].clientY;
+          } else if (e.touches.length === 2) {
+            this.initialPinchDistance = this.getDistance(e.touches);
+          }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+          if (e.touches.length === 1) {
+            const deltaX = e.touches[0].clientX - this.lastX;
+            const rot = this.el.getAttribute('rotation');
+
+            this.el.setAttribute('rotation', {
+              x: rot.x,
+              y: rot.y + deltaX * this.data.rotateSpeed,
+              z: rot.z
+            });
+
+            this.lastX = e.touches[0].clientX;
+            this.lastY = e.touches[0].clientY;
+          } else if (e.touches.length === 2 && this.initialPinchDistance) {
+            const currentDistance = this.getDistance(e.touches);
+            const factor = currentDistance / this.initialPinchDistance;
+            const currentScale = this.el.getAttribute('scale').x;
+            
+            let newScale = currentScale * factor;
+            newScale = Math.min(Math.max(newScale, 0.3), 1.8);
+
+            this.el.setAttribute('scale', `${newScale} ${newScale} ${newScale}`);
+            this.initialPinchDistance = currentDistance;
+          }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+          this.initialPinchDistance = null;
+        });
+      },
+      getDistance: function (touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+    });
+
+    // Spatial Annotations Component with Leader Line Arrows & Crisp Canvas 2D Text Sprites
+    AFRAME.registerComponent('spatial-annotations', {
+      schema: { organKey: { type: 'string', default: 'BRAIN' } },
+      init: function () {
+        this.group = new THREE.Group();
+        this.el.setObject3D('annotations', this.group);
+        this.buildAnnotations();
+      },
+      update: function (oldData) {
+        if (oldData.organKey !== this.data.organKey) {
+          this.buildAnnotations();
+        }
+      },
+      buildAnnotations: function () {
+        while (this.group.children.length > 0) {
+          const obj = this.group.children[0];
+          this.group.remove(obj);
+        }
+
+        const organData = ORGAN_DATA[this.data.organKey];
+        if (!organData || !organData.annotations) return;
+
+        organData.annotations.forEach(ann => {
+          const annotGroup = new THREE.Group();
+
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 160;
+          const ctx = canvas.getContext('2d');
+
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.roundRect(8, 8, 496, 144, 24);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 36px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(ann.text, 256, 56);
+
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '500 22px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(ann.sub, 256, 104);
+
+          const texture = new THREE.CanvasTexture(canvas);
+          texture.minFilter = THREE.LinearFilter;
+          const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+          const sprite = new THREE.Sprite(material);
+
+          const targetParts = ann.target.split(' ').map(Number);
+          sprite.position.set(targetParts[0], targetParts[1], targetParts[2]);
+          sprite.scale.set(0.7, 0.22, 1);
+          annotGroup.add(sprite);
+
+          const originParts = ann.origin.split(' ').map(Number);
+          const startVec = new THREE.Vector3(originParts[0], originParts[1], originParts[2]);
+          const endVec = new THREE.Vector3(targetParts[0], targetParts[1], targetParts[2]);
+          
+          const direction = new THREE.Vector3().subVectors(endVec, startVec);
+          const length = direction.length();
+          direction.normalize();
+
+          const lineGeo = new THREE.CylinderGeometry(0.003, 0.003, length, 6);
+          lineGeo.translate(0, length / 2, 0);
+          lineGeo.rotateX(Math.PI / 2);
+
+          const lineMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8, depthTest: false });
+          const lineMesh = new THREE.Mesh(lineGeo, lineMat);
+          lineMesh.position.copy(startVec);
+          lineMesh.lookAt(endVec);
+          annotGroup.add(lineMesh);
+
+          const coneGeo = new THREE.ConeGeometry(0.015, 0.04, 8);
+          coneGeo.rotateX(Math.PI / 2);
+          const coneMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, depthTest: false });
+          const coneMesh = new THREE.Mesh(coneGeo, coneMat);
+          coneMesh.position.copy(endVec);
+          coneMesh.lookAt(startVec);
+          annotGroup.add(coneMesh);
+
+          this.group.add(annotGroup);
+        });
+      }
     });
   </script>
 </body>
