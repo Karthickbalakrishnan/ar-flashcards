@@ -11,17 +11,27 @@
 
   <style>
     :root {
-      --sys-surface: rgba(15, 23, 42, 0.88);
-      --sys-surface-glass: rgba(15, 23, 42, 0.75);
-      --sys-border: rgba(255, 255, 255, 0.12);
-      --sys-primary: #38bdf8;
-      --sys-danger: #fb7185;
-      --sys-warning: #facc15;
-      --sys-success: #4ade80;
-      --sys-text: #f8fafc;
-      --sys-subtext: #94a3b8;
-      --radius-sheet: 28px;
+      --sys-bg: #f8fafc;
+      --sys-surface: #ffffff;
+      --sys-border: #e2e8f0;
+      --sys-border-subtle: #f1f5f9;
+      --sys-primary: #0284c7;
+      --sys-primary-light: #e0f2fe;
+      --sys-primary-subtle: #f0f9ff;
+      --sys-danger: #e11d48;
+      --sys-danger-light: #ffe4e6;
+      --sys-warning: #d97706;
+      --sys-warning-light: #fef3c7;
+      --sys-success: #16a34a;
+      --sys-success-light: #dcfce7;
+      --sys-text: #0f172a;
+      --sys-subtext: #64748b;
+      --radius-sheet: 20px;
+      --radius-card: 16px;
       --radius-pill: 9999px;
+      --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 8px 16px -2px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.1);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -32,7 +42,7 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: transparent !important;
       color: var(--sys-text);
     }
@@ -55,12 +65,12 @@
       z-index: 0 !important;
     }
 
-    /* Onboarding & Scholar Header Screen */
+    /* Minimalist Onboarding Screen */
     #welcomeGate {
       position: fixed;
       inset: 0;
       z-index: 999;
-      background: radial-gradient(circle at 50% 30%, #1e293b, #020617);
+      background: #f1f5f9;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -68,57 +78,56 @@
     }
 
     .welcome-card {
-      background: rgba(15, 23, 42, 0.92);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: var(--sys-surface);
       border: 1px solid var(--sys-border);
-      border-radius: 32px;
-      padding: 36px 28px;
+      border-radius: 24px;
+      padding: 32px 28px;
       width: 100%;
-      max-width: 400px;
+      max-width: 380px;
       text-align: center;
-      box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
+      box-shadow: var(--shadow-lg);
     }
 
     .scholar-meta {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      margin-bottom: 24px;
+      gap: 2px;
+      margin-bottom: 20px;
       padding-bottom: 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--sys-border-subtle);
     }
 
-    .scholar-name { font-size: 1.125rem; font-weight: 700; color: var(--sys-text); letter-spacing: -0.01em; }
+    .scholar-name { font-size: 1rem; font-weight: 700; color: var(--sys-text); }
     .scholar-title { font-size: 0.8125rem; color: var(--sys-primary); font-weight: 600; }
     .scholar-org { font-size: 0.75rem; color: var(--sys-subtext); font-weight: 500; }
 
-    .welcome-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.02em; }
-    .welcome-desc { font-size: 0.875rem; color: var(--sys-subtext); margin: 0 0 28px 0; line-height: 1.5; }
+    .welcome-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 6px 0; color: var(--sys-text); }
+    .welcome-desc { font-size: 0.875rem; color: var(--sys-subtext); margin: 0 0 24px 0; line-height: 1.4; }
 
-    .sso-stack { display: flex; flex-direction: column; gap: 12px; }
+    .sso-stack { display: flex; flex-direction: column; gap: 10px; }
 
     .btn-sso {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
-      padding: 14px 18px;
-      background: rgba(255, 255, 255, 0.08);
+      padding: 12px 16px;
+      background: var(--sys-surface);
       border: 1px solid var(--sys-border);
-      border-radius: 16px;
+      border-radius: 12px;
       color: var(--sys-text);
-      font-size: 0.9375rem;
+      font-size: 0.875rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s ease, transform 0.1s ease;
+      box-shadow: var(--shadow-sm);
+      transition: background 0.15s ease;
     }
 
-    .btn-sso:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
+    .btn-sso:active { background: var(--sys-border-subtle); }
 
-    /* Top Navigation Bar */
+    /* Minimalist Top Navigation Bar */
     #topNavbar {
       position: fixed;
       top: 16px;
@@ -129,46 +138,46 @@
       justify-content: space-between;
       align-items: center;
       background: var(--sys-surface);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--sys-border);
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-radius: var(--radius-pill);
-      box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.3);
+      box-shadow: var(--shadow-md);
+      max-width: 440px;
+      margin: 0 auto;
     }
 
     .nav-back-btn {
-      background: none;
+      background: var(--sys-primary-light);
       border: none;
       color: var(--sys-primary);
-      font-size: 0.875rem;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.8125rem;
       font-weight: 600;
       cursor: pointer;
     }
 
     .nav-title {
-      font-size: 0.9375rem;
+      font-size: 0.875rem;
       font-weight: 700;
       color: var(--sys-text);
     }
 
-    /* Floating Info Card (Lower-Middle Viewport) */
+    /* Clean Floating Info Card */
     #infoCard {
       position: fixed;
-      bottom: 180px;
+      bottom: 170px;
       left: 16px;
       right: 16px;
       z-index: 100;
       display: none;
-      max-width: 420px;
+      max-width: 440px;
       margin: 0 auto;
-      background: var(--sys-surface-glass);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: var(--sys-surface);
       border: 1px solid var(--sys-border);
-      border-radius: 20px;
+      border-radius: var(--radius-card);
       padding: 16px;
-      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+      box-shadow: var(--shadow-md);
     }
 
     .info-card-header {
@@ -176,62 +185,68 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--sys-border-subtle);
     }
 
     .health-score-pill {
-      font-size: 0.78125rem;
+      font-size: 0.75rem;
       font-weight: 700;
-      padding: 4px 10px;
+      padding: 3px 10px;
       border-radius: var(--radius-pill);
-      background: rgba(56, 189, 248, 0.15);
+      background: var(--sys-primary-light);
       color: var(--sys-primary);
-      border: 1px solid rgba(56, 189, 248, 0.3);
     }
-    .health-score-pill.is-critical { background: rgba(251, 113, 133, 0.15); color: var(--sys-danger); border: 1px solid rgba(251, 113, 133, 0.3); }
+    .health-score-pill.is-critical { background: var(--sys-danger-light); color: var(--sys-danger); }
 
     .phase-badge {
       font-size: 0.75rem;
       font-weight: 700;
-      padding: 4px 10px;
+      padding: 3px 10px;
       border-radius: var(--radius-pill);
+    }
+    .phase-badge.is-early { background: var(--sys-success-light); color: var(--sys-success); }
+    .phase-badge.is-mid { background: var(--sys-warning-light); color: var(--sys-warning); }
+    .phase-badge.is-late { background: var(--sys-danger-light); color: var(--sys-danger); }
+
+    .node-focus-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--sys-primary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      margin-bottom: 6px;
     }
-    .phase-badge.is-early { background: rgba(74, 222, 128, 0.15); color: var(--sys-success); border: 1px solid rgba(74, 222, 128, 0.3); }
-    .phase-badge.is-mid { background: rgba(250, 204, 21, 0.15); color: var(--sys-warning); border: 1px solid rgba(250, 204, 21, 0.3); }
-    .phase-badge.is-late { background: rgba(251, 113, 133, 0.15); color: var(--sys-danger); border: 1px solid rgba(251, 113, 133, 0.3); }
 
     .symptoms-list {
       margin: 0;
-      padding-left: 16px;
+      padding-left: 18px;
       font-size: 0.8125rem;
       color: var(--sys-text);
-      line-height: 1.4;
+      line-height: 1.5;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
-    /* Bottom Control Dock */
+    /* Clean Bottom Control Dock */
     .sheet-overlay {
       position: fixed;
-      bottom: 20px;
+      bottom: 16px;
       left: 16px;
       right: 16px;
       z-index: 100;
-      max-width: 420px;
+      max-width: 440px;
       margin: 0 auto;
       display: none;
     }
 
     .sheet-card {
       background: var(--sys-surface);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--sys-border);
       border-radius: var(--radius-sheet);
       padding: 16px;
-      box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5);
+      box-shadow: var(--shadow-lg);
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -241,39 +256,37 @@
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      padding-bottom: 2px;
     }
 
     .substance-chip {
       flex: 1;
-      padding: 10px 12px;
+      padding: 8px 12px;
       border: 1px solid var(--sys-border);
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--sys-surface);
       color: var(--sys-subtext);
       font-size: 0.8125rem;
-      font-weight: 500;
-      border-radius: 14px;
+      font-weight: 600;
+      border-radius: 10px;
       cursor: pointer;
       text-align: center;
       white-space: nowrap;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
 
     .substance-chip.is-active {
-      background: rgba(56, 189, 248, 0.15);
+      background: var(--sys-primary-light);
       border-color: var(--sys-primary);
-      color: var(--sys-text);
-      font-weight: 600;
+      color: var(--sys-primary);
     }
 
-    .slider-container { display: flex; flex-direction: column; gap: 6px; }
-    .slider-labels { display: flex; justify-content: space-between; font-size: 0.8125rem; color: var(--sys-subtext); font-weight: 500; }
+    .slider-container { display: flex; flex-direction: column; gap: 4px; }
+    .slider-labels { display: flex; justify-content: space-between; font-size: 0.8125rem; color: var(--sys-subtext); font-weight: 600; }
 
     input[type=range] {
       width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: rgba(255, 255, 255, 0.12);
+      height: 4px;
+      border-radius: 2px;
+      background: var(--sys-border);
       accent-color: var(--sys-primary);
       cursor: pointer;
     }
@@ -283,7 +296,7 @@
       justify-content: space-between;
       font-size: 0.6875rem;
       color: var(--sys-subtext);
-      padding: 0 2px;
+      font-weight: 500;
     }
   </style>
 
@@ -346,7 +359,7 @@
       }
     };
 
-    // Explicit string-keyed Target-to-Organ Dictionary to fix index mapping bugs
+    // Explicit string-keyed Target-to-Organ Dictionary
     const TARGET_MAP = {
       "target_brain": "BRAIN",
       "target_lungs": "LUNGS",
@@ -420,6 +433,26 @@
         return Math.sqrt(dx * dx + dy * dy);
       }
     });
+
+    // Node Dot Click Selection Handler Component
+    AFRAME.registerComponent('interactive-node-dot', {
+      schema: {
+        partName: { type: 'string', default: 'Anatomical Region' }
+      },
+      init: function () {
+        this.el.addEventListener('click', () => {
+          selectAnatomicalNode(this.data.partName);
+        });
+      }
+    });
+
+    function selectAnatomicalNode(partName) {
+      const focusLabel = document.getElementById("nodeFocusLabel");
+      if (focusLabel) {
+        focusLabel.innerText = `Selected Region: ${partName}`;
+        focusLabel.style.display = "block";
+      }
+    }
   </script>
 </head>
 <body>
@@ -443,26 +476,27 @@
         </button>
 
         <button class="btn-sso" onclick="startApp()">
-          <svg width="18" height="18" viewBox="0 0 23 23"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 23 23"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H1z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H1z"/></svg>
           Continue with Microsoft
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Top Navigation Bar -->
+  <!-- Minimalist Top Navigation Bar -->
   <nav id="topNavbar">
     <button class="nav-back-btn" onclick="resetARView()">← Scan Card</button>
-    <span class="nav-title" id="navTitle">Brain - Central Command</span>
+    <span class="nav-title" id="navTitle">Brain Pathology</span>
     <span style="width: 48px;"></span>
   </nav>
 
-  <!-- Floating Info Card (Lower-Middle Viewport) -->
+  <!-- Clean Floating Info Card -->
   <aside id="infoCard">
     <div class="info-card-header">
       <span class="phase-badge" id="phaseBadge">Early Phase (1–3 Yrs)</span>
       <span class="health-score-pill" id="healthScorePill">Health: 100%</span>
     </div>
+    <div class="node-focus-label" id="nodeFocusLabel" style="display: none;"></div>
     <ul class="symptoms-list" id="symptomsList">
       <li>Dopamine receptor downregulation</li>
       <li>Mild cognitive fatigue</li>
@@ -470,7 +504,7 @@
     </ul>
   </aside>
 
-  <!-- Bottom Control Dock -->
+  <!-- Clean Bottom Control Dock -->
   <main class="sheet-overlay" id="sheetControls">
     <section class="sheet-card">
       <div class="substance-grid" id="substanceGrid">
@@ -495,7 +529,7 @@
     </section>
   </main>
 
-  <!-- WebAR Scene Engine -->
+  <!-- WebAR Scene Engine with Cursor / Raycaster for Hotspot Clicking -->
   <a-scene 
     mindar-image="imageTargetSrc: ./assets/targets/organs.mind; autoStart: false; uiScanning: no;" 
     embedded
@@ -513,45 +547,57 @@
       <a-asset-item id="stomachModel" src="./assets/models/stomach.glb"></a-asset-item>
     </a-assets>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-camera position="0 0 0" look-controls="enabled: false">
+      <!-- Touch-based raycaster to select 3D dots directly -->
+      <a-cursor raycaster="objects: .clickable-dot" cursor="rayOrigin: mouse"></a-cursor>
+    </a-camera>
 
     <a-light type="ambient" intensity="1.8"></a-light>
     <a-light type="directional" position="1 2 3" intensity="2.0"></a-light>
 
-    <!-- Target Entities mapped securely via ID strings -->
+    <!-- Target Entities mapped securely via ID strings with Interactive Node Dots -->
     <a-entity mindar-image-target="targetIndex: 0" id="target_brain">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="BRAIN" src="#brainModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-sphere class="clickable-dot" interactive-node-dot="partName: Frontal Lobe" position="0 0.3 0.2" radius="0.04" color="#0284c7"></a-sphere>
+        <a-sphere class="clickable-dot" interactive-node-dot="partName: Cerebellum" position="0 -0.2 -0.2" radius="0.04" color="#0284c7"></a-sphere>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 1" id="target_lungs">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="LUNGS" src="#lungModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-sphere class="clickable-dot" interactive-node-dot="partName: Left Bronchus" position="-0.15 0.1 0.1" radius="0.04" color="#0284c7"></a-sphere>
+        <a-sphere class="clickable-dot" interactive-node-dot="partName: Right Alveoli" position="0.15 -0.1 0.1" radius="0.04" color="#0284c7"></a-sphere>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 2" id="target_heart">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="HEART" src="#heartModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-sphere class="clickable-dot" interactive-node-dot="partName: Left Ventricle" position="-0.1 -0.1 0.2" radius="0.04" color="#0284c7"></a-sphere>
+        <a-sphere class="clickable-dot" interactive-node-dot="partName: Aortic Arch" position="0 0.25 0" radius="0.04" color="#0284c7"></a-sphere>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 3" id="target_liver">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="LIVER" src="#liverModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-sphere class="clickable-dot" interactive-node-dot="partName: Right Hepatic Lobe" position="0.2 0 0.1" radius="0.04" color="#0284c7"></a-sphere>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 4" id="target_kidneys">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="KIDNEYS" src="#kidneyModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-sphere class="clickable-dot" interactive-node-dot="partName: Renal Cortex" position="0.1 0.15 0.1" radius="0.04" color="#0284c7"></a-sphere>
       </a-entity>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 5" id="target_stomach">
       <a-entity organ-pivot-anchor>
         <a-gltf-model class="ar-model" data-key="STOMACH" src="#stomachModel" scale="0.8 0.8 0.8"></a-gltf-model>
+        <a-sphere class="clickable-dot" interactive-node-dot="partName: Gastric Mucosa" position="0 0.1 0.15" radius="0.04" color="#0284c7"></a-sphere>
       </a-entity>
     </a-entity>
 
@@ -560,7 +606,7 @@
   <script>
     const AppState = {
       activeKey: "BRAIN",
-      activeSubstances: new Set(["Alcohol"]), // Poly-Substance Multi-Selection State
+      activeSubstances: new Set(["Alcohol"]),
       years: 1
     };
 
@@ -594,9 +640,10 @@
       document.getElementById("topNavbar").style.display = "none";
       document.getElementById("infoCard").style.display = "none";
       document.getElementById("sheetControls").style.display = "none";
+      const focusLabel = document.getElementById("nodeFocusLabel");
+      if (focusLabel) focusLabel.style.display = "none";
     }
 
-    // Target Found Dispatcher using explicit TARGET_MAP dictionary
     function onTargetFound(targetName) {
       const organKey = TARGET_MAP[targetName];
       if (organKey) {
@@ -612,10 +659,9 @@
       const navTitle = document.getElementById("navTitle");
       navTitle.innerText = `${organObj.name} Pathology`;
 
-      // Populate dynamic substance selector pills for multi-selection
       const substanceGrid = document.getElementById("substanceGrid");
       substanceGrid.innerHTML = "";
-      organObj.substances.forEach((sub, i) => {
+      organObj.substances.forEach((sub) => {
         const btn = document.createElement("button");
         btn.className = `substance-chip ${AppState.activeSubstances.has(sub) ? 'is-active' : ''}`;
         btn.dataset.substance = sub;
@@ -642,18 +688,15 @@
         const organObj = ORGAN_DATA[AppState.activeKey];
         if (!organObj) return;
 
-        // Determine phase based on timeline scrubber state
         let phaseKey = "early";
         if (AppState.years >= 3 && AppState.years < 10) phaseKey = "mid";
         else if (AppState.years >= 10) phaseKey = "late";
 
         const phaseData = organObj.phases[phaseKey];
 
-        // Dynamic Organ Health Scoring Engine calculation
         const activeCount = Math.max(1, AppState.activeSubstances.size);
         const healthScore = Math.max(12, Math.round(100 - (AppState.years * activeCount * 3.8)));
 
-        // Update Floating Info Card Content & Health Pill
         phaseBadge.innerText = `${phaseKey === 'early' ? 'Early Phase (1–3 Yrs)' : phaseKey === 'mid' ? 'Mid Phase (3–10 Yrs)' : 'Late Phase (10–20+ Yrs)'}`;
         phaseBadge.className = `phase-badge is-${phaseKey}`;
         
@@ -673,7 +716,6 @@
 
         durationLabel.innerText = `${AppState.years} Year${AppState.years > 1 ? 's' : ''}`;
 
-        // Procedural Shader & Scale Modulation on 3D Models
         const yearRatio = AppState.years / 20.0;
         document.querySelectorAll(".ar-model").forEach((modelEl) => {
           if (modelEl.dataset.key !== AppState.activeKey) return;
@@ -691,13 +733,13 @@
               let roughness = 0.4;
 
               if (phaseKey === "early") {
-                color.lerp(new THREE.Color(0x38bdf8), yearRatio * 0.5 * activeCount);
+                color.lerp(new THREE.Color(0x0284c7), yearRatio * 0.5 * activeCount);
                 roughness = 0.3;
               } else if (phaseKey === "mid") {
-                color.lerp(new THREE.Color(0xfacc15), yearRatio * 0.7 * activeCount);
+                color.lerp(new THREE.Color(0xd97706), yearRatio * 0.7 * activeCount);
                 roughness = 0.6;
               } else {
-                color.lerp(new THREE.Color(0xfb7185), yearRatio * 0.9 * activeCount);
+                color.lerp(new THREE.Color(0xe11d48), yearRatio * 0.9 * activeCount);
                 roughness = 0.9;
               }
               color.multiplyScalar(1.0 - (yearRatio * 0.3 * activeCount));
@@ -710,10 +752,8 @@
         });
       };
 
-      // Attach global scope reference so render loop accesses it cleanly
       window.updateUIAndShaders = updateUIAndShaders;
 
-      // Secure Target Tracking Event Listeners mapping via TARGET_MAP
       document.querySelectorAll("[mindar-image-target]").forEach((targetEl) => {
         const targetId = targetEl.getAttribute("id");
 
@@ -726,14 +766,12 @@
         });
       });
 
-      // Poly-Substance Multi-Selection Click Handler
       substanceGrid.addEventListener("click", (e) => {
         const chip = e.target.closest(".substance-chip");
         if (!chip) return;
 
         const substance = chip.dataset.substance;
         if (AppState.activeSubstances.has(substance)) {
-          // Prevent deselecting the last active substance to maintain simulation state
           if (AppState.activeSubstances.size > 1) {
             AppState.activeSubstances.delete(substance);
             chip.classList.remove("is-active");
@@ -746,7 +784,6 @@
         updateUIAndShaders();
       });
 
-      // Timeline Scrubber Input Handler
       exposureSlider.addEventListener("input", (e) => {
         AppState.years = parseInt(e.target.value, 10);
         updateUIAndShaders();
